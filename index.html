@@ -1,0 +1,2452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>习惯养成</title>
+<style>
+/* ===== Reset & Variables ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f7f4;
+  --card:#fff;
+  --text:#1e1e2e;
+  --text2:#6b7280;
+  --text3:#9ca3af;
+  --border:#e5e7eb;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --radius:14px;
+  --radius-sm:10px;
+  --hp:#ef4444; --hp-bg:#fee2e2;
+  --xp:#3b82f6; --xp-bg:#dbeafe;
+  --gold:#f59e0b; --gold-bg:#fef3c7;
+  --good:#10b981; --good-bg:#d1fae5;
+  --bad:#f43f5e; --bad-bg:#ffe4e6;
+  --tab:#6366f1; --tab-bg:#eef2ff;
+  --focus:#f97316; --focus-bg:#fff7ed;
+  --short-b:#10b981; --short-b-bg:#d1fae5;
+  --long-b:#3b82f6; --long-b-bg:#dbeafe;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans SC',sans-serif;
+}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100dvh;
+  line-height:1.5;
+  -webkit-tap-highlight-color:transparent;
+}
+.app{max-width:540px;margin:0 auto;padding:16px 16px 100px}
+
+/* ===== Stats Bar ===== */
+.stats-bar{
+  background:var(--card);border-radius:var(--radius);
+  padding:20px 22px;box-shadow:0 2px 12px rgba(0,0,0,.05),0 1px 3px rgba(0,0,0,.04);
+  display:flex;flex-direction:column;gap:14px;
+  margin-bottom:16px;position:relative;
+}
+/* Top row */
+.stats-top{
+  display:flex;align-items:flex-start;justify-content:space-between;
+}
+.char-box{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#eef2ff,#e0e7ff);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.stats-badges{
+  display:flex;gap:8px;align-items:center;
+}
+/* Level badge */
+.stats-bar .level-badge{
+  display:flex;align-items:center;gap:0;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 0 0 3px #fff,0 4px 16px rgba(99,102,241,.45);
+  transition:transform .3s,box-shadow .3s;
+}
+.stats-bar .level-badge .lv-label{
+  font-size:12px;font-weight:700;color:rgba(255,255,255,.85);
+  padding:7px 10px 7px 14px;letter-spacing:.5px;
+  border-right:1px solid rgba(255,255,255,.2);
+}
+.stats-bar .level-badge .lv-num{
+  font-size:17px;font-weight:800;color:#fff;
+  padding:7px 14px 7px 10px;
+  background:rgba(255,255,255,.1);
+}
+.stats-bar .level-badge.pulse{animation:levelPulse .5s ease}
+/* Stat items */
+.stat-item{display:flex;flex-direction:column;gap:6px}
+.stat-label{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:13px;font-weight:600;color:var(--text2);
+}
+.stat-label span:first-child{display:inline-flex;align-items:center;gap:5px}
+.stat-label span:last-child{font-size:12px;color:var(--text3);font-weight:600}
+.progress-track{
+  height:10px;border-radius:5px;overflow:hidden;
+  background:var(--border);position:relative;
+}
+.progress-track.hp-bg{background:var(--hp-bg)}
+.progress-track.xp-bg{background:var(--xp-bg)}
+.progress-fill{
+  height:100%;border-radius:5px;
+  transition:width .6s cubic-bezier(.4,0,.2,1);
+}
+.progress-fill.hp{background:linear-gradient(90deg,#f87171,#ef4444)}
+.progress-fill.xp{background:linear-gradient(90deg,#60a5fa,#3b82f6)}
+/* Bottom row */
+.stats-bottom{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+.stat-mini{
+  padding:6px 14px;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;gap:0;
+  transition:opacity .3s;
+}
+.stat-mini.dim{opacity:.45}
+#streakBadge{
+  background:linear-gradient(135deg,#fff7ed,#fed7aa);
+}
+#streakBadge .stat-mini-main{color:#c2410c}
+#streakBadge .stat-mini-main span{color:#ea580c}
+#streakBadge .stat-mini-sub{color:#c2410c}
+.stat-mini-sm{
+  padding:5px 10px;border-radius:10px;flex-direction:row;gap:4px;
+  font-size:12px;font-weight:600;
+}
+#todayBadge{
+  background:linear-gradient(135deg,#f0fdf4,#bbf7d0);color:#166534;
+}
+#todayBadge span{font-size:14px;font-weight:800;color:#15803d}
+.stat-mini-main{
+  display:flex;align-items:baseline;gap:4px;
+  font-size:13px;font-weight:600;white-space:nowrap;
+}
+.stat-mini-main span{
+  font-size:19px;font-weight:800;line-height:1;
+}
+.stat-mini-sub{font-size:11px;font-weight:500}
+.gold-display{
+  display:flex;align-items:center;gap:7px;
+  font-weight:800;font-size:18px;color:#92400e;
+  background:linear-gradient(135deg,#fffbeb,#fef3c7);
+  padding:6px 14px;border-radius:20px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+}
+.gold-display .coin{font-size:22px}
+
+/* ===== Mini Timer Bar ===== */
+.mini-timer{
+  display:none;grid-column:1/-1;
+  align-items:center;gap:10px;padding-top:8px;
+  border-top:1px solid var(--border);cursor:pointer;
+  transition:opacity .2s;
+}
+.mini-timer.active{display:flex}
+.mini-timer .mini-phase{font-size:16px;flex-shrink:0}
+.mini-timer .mini-time{font-size:13px;font-weight:700;color:var(--text);min-width:42px;text-align:right;flex-shrink:0}
+.mini-timer .mini-track{flex:1;height:6px;border-radius:3px;overflow:hidden;background:var(--border)}
+.mini-timer .mini-fill{height:100%;border-radius:3px;transition:width .5s linear}
+.mini-timer .mini-fill.focus{background:var(--focus)}
+.mini-timer .mini-fill.shortBreak{background:var(--short-b)}
+.mini-timer .mini-fill.longBreak{background:var(--long-b)}
+.mini-timer.urgent .mini-time{animation:urgentPulse .6s ease infinite}
+@keyframes urgentPulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ===== Tabs ===== */
+.tabs{
+  display:flex;gap:4px;margin-bottom:16px;
+  background:var(--card);border-radius:var(--radius);
+  padding:5px;box-shadow:var(--shadow);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{
+  flex-shrink:0;padding:10px 12px;border:none;
+  border-radius:var(--radius-sm);background:transparent;
+  color:var(--text2);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;font-family:var(--font);white-space:nowrap;
+}
+.tab-btn.active{background:var(--tab-bg);color:var(--tab)}
+.tab-btn:active{transform:scale(.96)}
+
+/* ===== Tab Content ===== */
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ===== Cards ===== */
+.card-list{display:flex;flex-direction:column;gap:10px}
+.card{
+  background:var(--card);border-radius:var(--radius);
+  padding:16px 18px;box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:12px;
+  transition:transform .15s,box-shadow .15s,opacity .3s;
+  position:relative;overflow:hidden;
+}
+.card:active{transform:scale(.985)}
+.card.completed{opacity:.55}
+.card.completed .card-name{text-decoration:line-through}
+.card-name{flex:1;font-size:15px;font-weight:500;word-break:break-word}
+.card-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.card-meta{font-size:12px;color:var(--text3);white-space:nowrap}
+
+/* ===== Buttons ===== */
+.btn{
+  border:none;cursor:pointer;font-family:var(--font);
+  font-weight:600;font-size:13px;border-radius:8px;
+  padding:8px 16px;transition:all .15s;
+  display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+}
+.btn:active{transform:scale(.95)}
+.btn-good{background:var(--good-bg);color:var(--good)}.btn-good:hover{background:#a7f3d0}
+.btn-bad{background:var(--bad-bg);color:var(--bad)}.btn-bad:hover{background:#fecdd3}
+.btn-done{background:var(--xp-bg);color:var(--xp)}.btn-done:hover{background:#bfdbfe}
+.btn-buy{background:var(--gold-bg);color:#92400e}.btn-buy:hover{background:#fde68a}
+.btn-icon{
+  width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;transition:all .15s;flex-shrink:0;
+}
+.btn-icon.good{background:var(--good-bg);color:var(--good)}
+.btn-icon.bad{background:var(--bad-bg);color:var(--bad)}
+.btn-icon.danger{background:var(--bad-bg);color:var(--bad)}
+.btn-icon:active{transform:scale(.9)}
+.habit-count{font-size:13px;font-weight:700;min-width:22px;text-align:center}
+.habit-count.positive{color:var(--good)}
+.habit-count.negative{color:var(--bad)}
+
+/* ===== Add Form ===== */
+.add-form{
+  background:var(--card);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow-md);
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  margin-top:12px;animation:slideDown .2s ease;
+}
+.add-form input{
+  flex:1;min-width:120px;
+  border:2px solid var(--border);border-radius:8px;
+  padding:9px 12px;font-size:14px;font-family:var(--font);
+  outline:none;transition:border-color .2s;background:var(--bg);
+}
+.add-form input:focus{border-color:var(--tab)}
+.add-form .type-toggle{display:flex;gap:4px;background:var(--border);border-radius:8px;padding:3px}
+.add-form .type-opt{
+  padding:6px 14px;border:none;border-radius:6px;cursor:pointer;
+  font-size:13px;font-weight:600;font-family:var(--font);
+  background:transparent;color:var(--text2);transition:all .15s;
+}
+.add-form .type-opt.active{background:#fff;color:var(--text);box-shadow:var(--shadow)}
+.add-form .btn-confirm{
+  background:var(--tab);color:#fff;border:none;border-radius:8px;
+  padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;
+  font-family:var(--font);transition:all .15s;
+}
+.add-form .btn-confirm:active{transform:scale(.95)}
+.add-form .btn-cancel{
+  background:transparent;color:var(--text2);border:none;
+  padding:10px 12px;font-size:14px;cursor:pointer;font-family:var(--font);
+}
+
+/* ===== FAB ===== */
+.fab{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  width:52px;height:52px;border-radius:50%;border:none;
+  background:var(--tab);color:#fff;font-size:28px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,.4);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;
+  z-index:10;line-height:1;
+}
+.fab:active{transform:translateX(-50%) scale(.9)}
+.fab.spin{transform:translateX(-50%) rotate(45deg)}
+.fab.hidden{opacity:0;pointer-events:none;transform:translateX(-50%) scale(.5)}
+
+/* ===== Toast ===== */
+.toast-container{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  z-index:100;display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;width:calc(100% - 32px);max-width:400px;
+}
+.toast{
+  padding:12px 18px;border-radius:var(--radius-sm);font-weight:600;font-size:14px;
+  text-align:center;animation:toastIn .3s ease,toastOut .3s ease 1.8s forwards;
+  box-shadow:var(--shadow-md);pointer-events:auto;
+}
+.toast.good{background:#d1fae5;color:#065f46}
+.toast.bad{background:#ffe4e6;color:#9f1239}
+.toast.info{background:#dbeafe;color:#1e40af}
+.toast.gold{background:#fef3c7;color:#92400e}
+.toast.warn{background:#fff7ed;color:#9a3412}
+
+/* ===== Float Text ===== */
+.float-text{
+  position:fixed;pointer-events:none;font-weight:700;font-size:15px;
+  animation:floatUp 1s ease forwards;z-index:50;
+}
+/* ===== Empty State ===== */
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty .icon{font-size:40px;display:block;margin-bottom:8px}
+.empty p{font-size:14px}
+/* ===== Reward Card ===== */
+.reward-price{font-weight:700;font-size:14px;color:#92400e;display:flex;align-items:center;gap:3px}
+/* ===== Streak Badge ===== */
+.streak{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:#f97316}
+/* Daily progress bar */
+.daily-prog{
+  width:100%;height:16px;border-radius:8px;overflow:hidden;
+  background:var(--border);position:relative;margin-top:4px;
+}
+.daily-prog-fill{
+  height:100%;border-radius:8px;
+  background:linear-gradient(90deg,#6ee7b7,#10b981);
+  transition:width .5s ease;
+}
+.daily-prog-text{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;
+}
+
+/* ===== Pomodoro ===== */
+.pomodoro-container{
+  display:flex;flex-direction:column;gap:16px;padding:4px 0;
+}
+/* Top row: stats left, action buttons right */
+.pomo-top{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.pomo-stats{
+  display:flex;gap:10px;font-size:13px;color:var(--text2);font-weight:600;
+}
+.pomo-stats span{background:var(--bg);padding:6px 12px;border-radius:16px}
+.pomo-actions{display:flex;gap:6px;flex-wrap:wrap}
+.pomo-btn-start,.pomo-btn-pause,.pomo-btn-skip,.pomo-btn-quit{
+  padding:8px 14px;border-radius:20px;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;font-family:var(--font);
+  transition:all .15s;white-space:nowrap;
+}
+.pomo-btn-start{background:var(--focus);color:#fff}
+.pomo-btn-pause{background:var(--text3);color:#fff}
+.pomo-btn-skip{background:var(--border);color:var(--text2)}
+.pomo-btn-quit{background:var(--bad-bg);color:var(--bad)}
+.pomo-btn-start:active,.pomo-btn-pause:active,.pomo-btn-skip:active,.pomo-btn-quit:active{transform:scale(.95)}
+/* Middle: timer ring */
+.pomo-middle{display:flex;justify-content:center}
+.pomo-ring-wrap{position:relative;width:200px;height:200px}
+.pomo-ring-wrap svg{transform:rotate(-90deg)}
+.pomo-ring-bg{fill:none;stroke:var(--border);stroke-width:8}
+.pomo-ring-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
+.pomo-ring-fg.focus{stroke:var(--focus)}
+.pomo-ring-fg.shortBreak{stroke:var(--short-b)}
+.pomo-ring-fg.longBreak{stroke:var(--long-b)}
+.pomo-time{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.pomo-time .time-num{font-size:38px;font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.pomo-time .time-label{font-size:13px;font-weight:600;color:var(--text2);margin-top:2px}
+/* Settings button */
+.pomo-settings-btn{
+  width:100%;padding:10px;border:2px solid var(--border);border-radius:20px;
+  background:var(--card);color:var(--text2);font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all .15s;
+}
+.pomo-settings-btn:hover{background:var(--bg);border-color:var(--tab)}
+.settings-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  background:var(--card);border-radius:var(--radius);padding:14px 16px;
+  box-shadow:var(--shadow);
+}
+.setting-item{display:flex;flex-direction:column;gap:3px}
+.setting-item label{font-size:12px;font-weight:600;color:var(--text2)}
+.setting-item input,.setting-item select{
+  padding:7px 10px;border:2px solid var(--border);border-radius:6px;
+  font-size:13px;font-family:var(--font);background:var(--bg);outline:none;
+}
+.setting-item input:focus,.setting-item select:focus{border-color:var(--tab)}
+.setting-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.setting-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--tab)}
+
+/* ===== Link Todo Select ===== */
+.link-todo-wrap{width:100%}
+.link-todo-wrap select{
+  width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;
+  font-size:13px;font-family:var(--font);background:var(--bg);color:var(--text);outline:none;
+}
+.link-todo-wrap select:focus{border-color:var(--tab)}
+.link-todo-wrap .link-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px}
+/* Linked task live card */
+.pomo-linked{display:flex;flex-direction:column;gap:6px;width:100%}
+.linked-task-card{
+  background:var(--bg);border-radius:10px;padding:10px 14px;
+}
+.linked-task-card.done{opacity:.6}
+.ltc-header{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600}
+.ltc-prog{
+  position:relative;height:14px;border-radius:7px;overflow:hidden;
+  background:var(--border);margin-top:6px;
+}
+.ltc-fill{
+  height:100%;border-radius:7px;
+  background:linear-gradient(90deg,#6ee7b7,#10b981);
+  transition:width .5s linear;
+}
+.ltc-text{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;
+}
+.link-row{display:flex;gap:10px;width:100%}
+.link-row .link-todo-wrap{flex:1;min-width:0}
+
+/* ===== Confirm Overlay ===== */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);
+  z-index:200;display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .2s ease;
+}
+.confirm-overlay.hidden{display:none}
+.confirm-dialog{
+  background:var(--card);border-radius:var(--radius);
+  padding:24px;margin:20px;max-width:340px;width:100%;
+  box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center;
+  animation:slideUp .25s ease;
+}
+.confirm-dialog .confirm-icon{font-size:40px;margin-bottom:12px}
+.confirm-dialog .confirm-title{font-size:17px;font-weight:700;margin-bottom:8px}
+.confirm-dialog .confirm-body{font-size:14px;color:var(--text2);margin-bottom:8px;line-height:1.6}
+.confirm-dialog .confirm-penalty{font-size:14px;font-weight:700;color:var(--bad);margin-bottom:16px}
+.confirm-dialog .confirm-btns{display:flex;gap:10px}
+.confirm-dialog .confirm-btns button{flex:1;padding:12px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);border:none;transition:all .15s}
+.confirm-dialog .btn-stay{background:var(--good-bg);color:var(--good)}
+.confirm-dialog .btn-quit{background:var(--border);color:var(--text2)}
+.confirm-dialog .btn-quit:hover{background:#fecdd3;color:var(--bad)}
+
+/* ===== Monthly Summary ===== */
+.summary-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.summary-header .month-title{font-size:18px;font-weight:700}
+.summary-header button{
+  background:var(--border);border:none;border-radius:50%;
+  width:34px;height:34px;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.summary-header button:active{transform:scale(.9)}
+.summary-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.summary-card{
+  background:var(--card);border-radius:var(--radius-sm);padding:12px 8px;
+  text-align:center;box-shadow:var(--shadow);
+}
+.summary-card .sc-val{font-size:20px;font-weight:700}
+.summary-card .sc-label{font-size:11px;color:var(--text3);margin-top:2px}
+.summary-card .sc-val.green{color:var(--good)}
+.summary-card .sc-val.red{color:var(--bad)}
+.summary-card .sc-val.amber{color:#92400e}
+
+.day-list{display:flex;flex-direction:column;gap:8px}
+.day-item{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.day-item summary{
+  padding:14px 16px;cursor:pointer;user-select:none;
+  display:flex;align-items:center;gap:10px;list-style:none;
+}
+.day-item summary::-webkit-details-marker{display:none}
+.day-item summary .day-date{font-weight:700;font-size:15px;min-width:50px}
+.day-item summary .day-week{font-size:12px;color:var(--text3);min-width:42px}
+.day-item summary .day-lunar{font-size:11px;color:var(--text3);min-width:70px}
+.day-item summary .day-summary{flex:1;text-align:right;font-size:12px;display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap}
+.stag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap}
+.stag-xp{background:var(--xp-bg);color:#1d4ed8}
+.stag-gold{background:var(--gold-bg);color:#92400e}
+.stag-hp{background:var(--hp-bg);color:#b91c1c}
+.day-item summary .day-arrow{font-size:12px;color:var(--text3);transition:transform .2s}
+.day-item[open] summary .day-arrow{transform:rotate(180deg)}
+.day-timeline{padding:0 16px 14px}
+.timeline-entry{
+  display:flex;gap:10px;padding:7px 0;font-size:13px;
+  border-bottom:1px solid var(--border);align-items:baseline;
+}
+.timeline-entry:last-child{border-bottom:none}
+.timeline-entry .tl-time{color:var(--text3);font-size:11px;min-width:42px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.timeline-entry .tl-icon{flex-shrink:0;font-size:14px}
+.timeline-entry .tl-detail{flex:1;word-break:break-word}
+.timeline-entry .tl-effect{flex-shrink:0;text-align:right;font-size:12px;font-weight:600;white-space:nowrap}
+.timeline-entry .tl-effect.gain{color:var(--good)}
+.timeline-entry .tl-effect.loss{color:var(--bad)}
+.timeline-entry .tl-effect.neutral{color:var(--text3)}
+.day-empty{text-align:center;padding:12px;color:var(--text3);font-size:13px}
+
+/* ===== Calendar Grid ===== */
+.view-toggle{
+  display:flex;gap:4px;background:var(--border);border-radius:8px;padding:3px;
+}
+.view-toggle button{
+  padding:6px 12px;border:none;border-radius:6px;cursor:pointer;
+  font-size:12px;font-weight:600;font-family:var(--font);
+  background:transparent;color:var(--text2);transition:all .15s;
+}
+.view-toggle button.active{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px}
+.cal-weekday{
+  text-align:center;font-size:11px;font-weight:700;color:var(--text3);
+  padding:6px 0;
+}
+.cal-cell{
+  aspect-ratio:1;border-radius:8px;background:var(--card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:13px;font-weight:600;cursor:pointer;position:relative;
+  transition:background .15s;min-width:0;
+}
+.cal-cell:hover{background:var(--tab-bg)}
+.cal-cell.other-month{color:var(--text3);font-weight:400;background:transparent}
+.cal-cell.today{box-shadow:inset 0 0 0 2px var(--tab);color:var(--tab)}
+.cal-cell .cal-dots{display:flex;gap:2px;margin-top:1px}
+.cal-cell .cal-dot{width:4px;height:4px;border-radius:50%}
+.cal-cell .cal-dot.good{background:var(--good)}
+.cal-cell .cal-dot.mix{background:var(--gold)}
+.cal-cell .cal-dot.bad{background:var(--bad)}
+/* Day detail summary strip */
+.day-summary-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  padding:8px 14px 12px;
+}
+.day-summary-strip .dss-item{
+  background:var(--bg);border-radius:8px;padding:7px 6px;
+  text-align:center;display:flex;flex-direction:column;gap:1px;
+}
+.dss-item .dss-val{font-size:14px;font-weight:700}
+.dss-item .dss-sub{font-size:10px;color:var(--text3)}
+.dss-item .dss-val.green{color:var(--good)}
+.dss-item .dss-val.red{color:var(--bad)}
+.dss-item .dss-val.amber{color:#92400e}
+
+/* ===== Animations ===== */
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-36px)}}
+@keyframes levelPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.shake{animation:shake .4s ease}
+
+/* ===== Responsive ===== */
+@media(max-width:400px){
+  .app{padding:10px 10px 80px}
+  .stats-bar{padding:12px 14px;gap:10px}
+  .char-box{width:42px;height:42px}
+  .char-box svg{width:38px;height:38px}
+  .stats-top{gap:8px}
+  .stats-bar .level-badge .lv-label{font-size:10px;padding:5px 7px 5px 9px}
+  .stats-bar .level-badge .lv-num{font-size:14px;padding:5px 10px 5px 7px}
+  .stat-mini{padding:4px 10px}
+  .stat-mini-main{font-size:12px}
+  .stat-mini-main span{font-size:16px}
+  .stat-mini-sub{font-size:10px}
+  .stag{font-size:10px;padding:2px 6px}
+  .tab-btn{font-size:11px;padding:7px 8px}
+  .card{padding:12px 14px}
+  .card-name{font-size:14px}
+  .pomo-ring-wrap{width:170px;height:170px}
+  .pomo-time .time-num{font-size:30px}
+  .pomo-btn-start,.pomo-btn-pause,.pomo-btn-skip,.pomo-btn-quit{font-size:12px;padding:7px 10px}
+  .cal-grid{gap:2px}
+  .cal-cell{font-size:11px;border-radius:5px}
+  .cal-weekday{font-size:9px;padding:4px 0}
+  .cal-cell .cal-dots{gap:1px;margin-top:0}
+  .cal-cell .cal-dot{width:3px;height:3px}
+  .day-summary-strip{grid-template-columns:repeat(2,1fr);gap:4px;padding:6px 8px 10px}
+  .dss-item{padding:5px 4px}
+  .dss-item .dss-val{font-size:12px}
+  .dss-item .dss-sub{font-size:9px}
+  .summary-cards{grid-template-columns:repeat(2,1fr);gap:6px}
+  .summary-card{padding:10px 6px}
+  .summary-card .sc-val{font-size:16px}
+  .day-item summary{padding:10px 12px;gap:6px}
+  .day-item summary .day-date{font-size:13px;min-width:40px}
+  .day-item summary .day-week{font-size:11px;min-width:34px}
+  .day-item summary .day-summary{font-size:11px}
+  .daily-prog{height:12px;border-radius:6px}
+  .daily-prog-text{font-size:9px}
+  .settings-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="statsBar">
+    <!-- Top row: character placeholder + level badge -->
+    <div class="stats-top">
+      <div class="char-box" id="charBox">
+        <svg width="52" height="52" viewBox="0 0 52 52" id="charSvg">
+          <!-- Soil mound -->
+          <ellipse cx="26" cy="42" rx="14" ry="5" fill="#d4c5b2"/>
+          <ellipse cx="26" cy="41" rx="11" ry="3.5" fill="#c4b5a2"/>
+          <!-- Stem -->
+          <path d="M26 40 Q24 30 27 22" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Left leaf -->
+          <ellipse cx="22" cy="22" rx="7" ry="4" fill="#a5b4fc" stroke="#6366f1" stroke-width="1.5" transform="rotate(-30 22 22)"/>
+          <!-- Right leaf -->
+          <ellipse cx="31" cy="20" rx="6" ry="3.5" fill="#a5b4fc" stroke="#6366f1" stroke-width="1.5" transform="rotate(25 31 20)"/>
+        </svg>
+      </div>
+      <div class="stats-badges">
+        <div class="level-badge" id="levelBadge">
+          <span class="lv-label">Lv</span>
+          <span class="lv-num" id="levelNum">1</span>
+        </div>
+      </div>
+    </div>
+    <!-- Middle: HP & XP bars -->
+    <div class="stat-item">
+      <div class="stat-label"><span>❤️ 生命</span><span id="hpText">50/50</span></div>
+      <div class="progress-track hp-bg"><div class="progress-fill hp" id="hpBar" style="width:100%"></div></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label"><span>⭐ 经验</span><span id="xpText">0/100</span></div>
+      <div class="progress-track xp-bg"><div class="progress-fill xp" id="xpBar" style="width:0%"></div></div>
+    </div>
+    <!-- Bottom: gold -->
+    <div class="stats-bottom">
+      <div class="stat-mini" id="streakBadge">
+        <div class="stat-mini-main">连续完成 🔥 <span id="streakDays">0</span> 天</div>
+        <div class="stat-mini-sub" id="streakMsg">开始今天</div>
+      </div>
+      <div class="stat-mini stat-mini-sm" id="todayBadge">✅ <span id="todayCount">0</span> 项</div>
+      <div class="gold-display"><span class="coin">🪙</span><span id="goldText">0</span></div>
+    </div>
+    <!-- Mini Timer Bar -->
+    <div class="mini-timer" id="miniTimer" data-action="go-pomodoro">
+      <span class="mini-phase" id="miniPhase">🍅</span>
+      <div class="mini-track"><div class="mini-fill focus" id="miniFill" style="width:100%"></div></div>
+      <span class="mini-time" id="miniTime">25:00</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabBar">
+    <button class="tab-btn active" data-tab="habits">🔄 习惯</button>
+    <button class="tab-btn" data-tab="dailies">📅 每日</button>
+    <button class="tab-btn" data-tab="todos">✅ 待办</button>
+    <button class="tab-btn" data-tab="rewards">🎁 奖励</button>
+    <button class="tab-btn" data-tab="pomodoro">🍅 番茄</button>
+    <button class="tab-btn" data-tab="summary">📊 月度</button>
+  </div>
+
+  <!-- Tab Contents -->
+  <div class="tab-content active" id="tab-habits">
+    <div class="card-list" id="habitsList"></div>
+    <div id="habitsAddArea"></div>
+  </div>
+  <div class="tab-content" id="tab-dailies">
+    <div class="card-list" id="dailiesList"></div>
+    <div id="dailiesAddArea"></div>
+  </div>
+  <div class="tab-content" id="tab-todos">
+    <div class="card-list" id="todosList"></div>
+    <div id="todosAddArea"></div>
+  </div>
+  <div class="tab-content" id="tab-rewards">
+    <div class="card-list" id="rewardsList"></div>
+    <div id="rewardsAddArea"></div>
+  </div>
+  <div class="tab-content" id="tab-pomodoro">
+    <div class="pomodoro-container" id="pomodoroContainer"></div>
+  </div>
+  <div class="tab-content" id="tab-summary">
+    <div id="summaryContainer"></div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" title="添加">+</button>
+
+<!-- Confirm Overlay -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-dialog">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle">确定要放弃吗？</div>
+    <div class="confirm-body" id="confirmBody"></div>
+    <div class="confirm-penalty" id="confirmPenalty"></div>
+    <div class="confirm-btns">
+      <button class="btn-stay" id="confirmStay">💪 再坚持一下</button>
+      <button class="btn-quit" id="confirmQuit">确认放弃</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+(function(){
+'use strict';
+
+// ========== Constants ==========
+const STORAGE_KEY = 'habit-tracker-v1'; // v2 state structure, backward-compat key
+const HP_BASE = 50;
+const HP_PER_LVL = 5;
+const XP_BASE = 100;
+const XP_PER_LVL = 50;
+
+const REWARDS = {
+  positiveHabit:  { xp: 8,  gold: 3, label: '好习惯' },
+  negativeHabit:  { hp: -8,              label: '坏习惯' },
+  daily:          { xp: 12, gold: 4,     label: '完成每日' },
+  dailyMiss:      { hp: -5,              label: '漏掉每日' },
+  todo:           { xp: 20, gold: 8,     label: '完成待办' },
+  pomodoro:       { xp: 25, gold: 10,    label: '完成番茄' },
+  levelUp:        { hpRestore: true,     label: '升级！' },
+  death:          { hpRestore: 0.5, goldLoss: 0.2, label: '角色昏倒了' },
+};
+
+const DIFFICULTY = {
+  easy:   { xp: 10, gold: 3, label: '简单' },
+  normal: { xp: 20, gold: 8, label: '普通' },
+  hard:   { xp: 35, gold: 15, label: '困难' },
+  epic:   { xp: 60, gold: 25, label: '史诗' },
+};
+
+const EVENT_ICONS = {
+  'habit-positive': '👍', 'habit-negative': '👎',
+  'daily-complete': '✅', 'daily-miss': '⚠️',
+  'todo-complete': '🏁', 'pomodoro-complete': '🍅',
+  'pomodoro-abandon': '💨', 'reward-buy': '🎁',
+  'level-up': '🎉', 'death': '💀'
+};
+
+// ========== Lunar Calendar Data (1900-2100) ==========
+const LUNAR_INFO = [
+  0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
+  0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,
+  0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,
+  0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,
+  0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,
+  0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,
+  0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,
+  0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,
+  0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,
+  0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,
+  0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+  0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+  0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+  0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x0d0b6,0x0d250,0x0d520,0x0dd45,
+  0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,
+  0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+  0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+  0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+  0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+  0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a4d0,0x0d150,0x0f252,
+  0x0d520
+];
+const LUNAR_MONTH_NAMES = ['正','二','三','四','五','六','七','八','九','十','冬','腊'];
+const LUNAR_DAY_NAMES = ['','初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+const TIANGAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const DIZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const SHENGXIAO = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+
+function getLunarYearDays(y){
+  let sum = 348; // 12 * 29
+  for(let i = 0x8000; i > 0x8; i >>= 1){
+    sum += (LUNAR_INFO[y - 1900] & i) ? 1 : 0;
+  }
+  return sum + getLeapMonthDays(y);
+}
+function getLeapMonth(y){
+  return LUNAR_INFO[y - 1900] & 0xf;
+}
+function getLeapMonthDays(y){
+  if(getLeapMonth(y)) return (LUNAR_INFO[y - 1900] & 0x10000) ? 30 : 29;
+  return 0;
+}
+function getMonthDays(y, m){
+  // m: 1-12 for regular months, returns 29 or 30
+  return (LUNAR_INFO[y - 1900] & (0x10000 >> m)) ? 30 : 29;
+}
+
+function solarToLunar(date){
+  const baseDate = new Date(1900, 0, 31);
+  let offset = Math.floor((date - baseDate) / 86400000);
+  let year = 1900;
+  let daysInYear;
+  while(year < 2101 && offset > 0){
+    daysInYear = getLunarYearDays(year);
+    if(offset < daysInYear) break;
+    offset -= daysInYear;
+    year++;
+  }
+  if(year > 2100) return { year: date.getFullYear(), month: date.getMonth()+1, day: date.getDate(), isLeap: false, monthName: '', dayName: '' };
+
+  let month = 1;
+  let isLeap = false;
+  const leap = getLeapMonth(year);
+  let monthDays;
+  while(year < 2101 && offset > 0){
+    if(leap > 0 && month === leap + 1 && !isLeap){
+      monthDays = getLeapMonthDays(year);
+      isLeap = true;
+    }else{
+      monthDays = getMonthDays(year, month);
+      isLeap = false;
+      if(leap > 0 && month > leap) {
+        // After leap month, month index shifts
+      }
+    }
+    if(offset < monthDays) break;
+    offset -= monthDays;
+    if(isLeap && leap > 0){
+      isLeap = false;
+    }else{
+      month++;
+    }
+    if(month > 12) break;
+  }
+
+  const day = offset + 1;
+  const monthIdx = month - 1;
+  const leapStr = isLeap ? '闰' : '';
+  const monthName = leapStr + (LUNAR_MONTH_NAMES[monthIdx] || month+'月');
+  const dayName = LUNAR_DAY_NAMES[day] || day+'日';
+
+  // Calculate year name
+  const tgIdx = (year - 4) % 10;
+  const dzIdx = (year - 4) % 12;
+  const yearName = TIANGAN[tgIdx] + DIZHI[dzIdx] + '年';
+
+  return { year, month, day, isLeap, monthName, dayName, yearName, shengxiao: SHENGXIAO[dzIdx] };
+}
+
+// Lazy: re-derive lunar month/days properly for months after leap
+// Corrected solarToLunar with proper leap month handling
+function solarToLunarFixed(date){
+  const baseDate = new Date(1900, 0, 31);
+  let offset = Math.floor((date - baseDate) / 86400000);
+  let year = 1900;
+  while(year < 2101){
+    const daysInYear = getLunarYearDays(year);
+    if(offset < daysInYear) break;
+    offset -= daysInYear;
+    year++;
+  }
+  if(year > 2100) return null;
+
+  const leap = getLeapMonth(year);
+  let month = 1;
+  let isLeap = false;
+
+  for(month = 1; month <= 12; month++){
+    let mDays = getMonthDays(year, month);
+    if(offset < mDays){
+      isLeap = false;
+      break;
+    }
+    offset -= mDays;
+
+    if(leap === month){
+      mDays = getLeapMonthDays(year);
+      if(offset < mDays){
+        isLeap = true;
+        break;
+      }
+      offset -= mDays;
+    }
+  }
+
+  if(month > 12) month = 12;
+  const day = offset + 1;
+  const monthIdx = Math.min(month - 1, 11);
+  const leapStr = isLeap ? '闰' : '';
+  const monthName = leapStr + LUNAR_MONTH_NAMES[monthIdx];
+  const dayName = LUNAR_DAY_NAMES[Math.min(day, 30)] || day+'日';
+  const tgIdx = (year - 4) % 10;
+  const dzIdx = (year - 4) % 12;
+  const yearName = TIANGAN[tgIdx] + DIZHI[dzIdx] + '年';
+
+  return { year, month, day, isLeap, monthName, dayName, yearName, shengxiao: SHENGXIAO[dzIdx] };
+}
+
+function formatLunarShort(date){
+  const l = solarToLunarFixed(date);
+  if(!l) return '';
+  if(l.day === 1) return l.monthName + '月';
+  return l.monthName + l.dayName;
+}
+
+// ========== Helpers ==========
+// 按本地时区把 Date 格式化为 YYYY-MM-DD
+// （修复：旧代码用 toISOString() 得到的是 UTC 日期，东八区凌晨 0-8 点会差一天）
+function localDay(date){ return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate()); }
+function today(){ return localDay(new Date()); }
+function yesterday(){
+  const d = new Date(); d.setDate(d.getDate()-1);
+  return localDay(d);
+}
+// 活动记录里的时间戳是 UTC ISO 字符串，取它对应的「本地」日期
+function tsDay(iso){ return localDay(new Date(iso)); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function ts(){ return new Date().toISOString(); }
+function pad(n){ return n.toString().padStart(2,'0'); }
+function fmtTime(iso){ const d=new Date(iso); return pad(d.getHours())+':'+pad(d.getMinutes()); }
+function fmtDuration(min){ const h=Math.floor(min/60),m=min%60; return h>0?h+'h'+m+'m':m+'min'; }
+
+// ========== State ==========
+function defaultState(){
+  return {
+    stats: { hp: 50, xp: 0, level: 1, gold: 15 },
+    habits: [
+      { id: uid(), name: '喝一杯水', type: 'positive', history: {} },
+      { id: uid(), name: '久坐超过1小时', type: 'negative', history: {} },
+    ],
+    dailies: [
+      { id: uid(), name: '运动30分钟', completedDates: [], estimatedMinutes: 30, accumulatedFocusMinutes: 0 },
+      { id: uid(), name: '阅读20分钟', completedDates: [], estimatedMinutes: 20, accumulatedFocusMinutes: 0 },
+    ],
+    todos: [
+      { id: uid(), name: '👋 欢迎！点击右侧按钮完成这个待办', completed: false, createdAt: today(), difficulty: 'normal', estimatedMinutes: 0, accumulatedFocusMinutes: 0 },
+    ],
+    rewards: [
+      { id: uid(), name: '看一集喜欢的剧', price: 20 },
+      { id: uid(), name: '吃一块巧克力', price: 15 },
+      { id: uid(), name: '买一个小玩意', price: 50 },
+    ],
+    lastResetDate: today(),
+    activityLog: [],
+    pomodoro: {
+      settings: { focus: 25, shortBreak: 5, longBreak: 15, longInterval: 4, autoStart: true },
+      current: {
+        phase: 'idle', startedAt: null, pausedAt: null,
+        elapsedBeforePause: 0, completedInCycle: 0, linkedTodoId: null, linkedDailyId: null,
+        tempFocusMinutes: 0
+      }
+    }
+  };
+}
+
+let state;
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      const def = defaultState();
+      for(const k of Object.keys(def)){
+        if(!(k in s)) s[k] = def[k];
+      }
+      s.stats = Object.assign({}, def.stats, s.stats);
+      if(!s.pomodoro) s.pomodoro = def.pomodoro;
+      if(!s.pomodoro.settings) s.pomodoro.settings = def.pomodoro.settings;
+      if(!s.pomodoro.current) s.pomodoro.current = def.pomodoro.current;
+      if(!s.activityLog) s.activityLog = [];
+      if(!Array.isArray(s.activityLog)) s.activityLog = [];
+      // Migration: ensure todos have new fields
+      if(s.todos) s.todos.forEach(t=>{
+        if(t.estimatedMinutes===undefined) t.estimatedMinutes = 0;
+        if(t.accumulatedFocusMinutes===undefined) t.accumulatedFocusMinutes = 0;
+        if(!t.difficulty) t.difficulty = 'normal';
+      });
+      return s;
+    }
+  }catch(e){}
+  return defaultState();
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+// ========== Activity Log ==========
+function logActivity(type, detail, xp, gold, hp){
+  if(!state.activityLog) state.activityLog = [];
+  state.activityLog.push({
+    ts: ts(),
+    type: type,
+    detail: detail,
+    xp: xp || 0,
+    gold: gold || 0,
+    hp: hp || 0
+  });
+  // Keep log size manageable (last 365 days)
+  const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 1);
+  const cutoffStr = cutoff.toISOString();
+  state.activityLog = state.activityLog.filter(e => e.ts >= cutoffStr);
+}
+
+// ========== Computed ==========
+function maxHp(){ return HP_BASE + state.stats.level * HP_PER_LVL; }
+function xpToNext(){ return XP_BASE + (state.stats.level - 1) * XP_PER_LVL; }
+function getDailyStreak(daily){
+  if(!daily.completedDates || daily.completedDates.length===0) return 0;
+  const dates = [...new Set(daily.completedDates)].sort().reverse();
+  let streak = 0;
+  const t = new Date();
+  for(let i=0; i<dates.length; i++){
+    const expected = new Date(t); expected.setDate(expected.getDate()-i);
+    if(dates[i] === localDay(expected)) streak++;
+    else break;
+  }
+  return streak;
+}
+
+// ========== Pomodoro Logic ==========
+function getPhaseMs(phase){
+  const s = state.pomodoro.settings;
+  const c = state.pomodoro.current;
+  switch(phase){
+    case 'focus': return (c.tempFocusMinutes || s.focus) * 60 * 1000;
+    case 'shortBreak': return s.shortBreak * 60 * 1000;
+    case 'longBreak': return s.longBreak * 60 * 1000;
+    default: return (c.tempFocusMinutes || s.focus) * 60 * 1000;
+  }
+}
+function getRemainingMs(){
+  const c = state.pomodoro.current;
+  if(c.phase === 'idle' || !c.startedAt) return getPhaseMs(c.phase || 'focus');
+  let elapsed = c.elapsedBeforePause || 0;
+  if(c.pausedAt === null){
+    elapsed += Date.now() - c.startedAt;
+  }
+  return Math.max(0, getPhaseMs(c.phase) - elapsed);
+}
+function getElapsedMs(){
+  const c = state.pomodoro.current;
+  if(!c.startedAt) return c.elapsedBeforePause || 0;
+  let elapsed = c.elapsedBeforePause || 0;
+  if(c.pausedAt === null) elapsed += Date.now() - c.startedAt;
+  return elapsed;
+}
+function getElapsedMin(){ return Math.floor(getElapsedMs() / 60000); }
+function getRemainingMin(){ return Math.ceil(getRemainingMs() / 60000); }
+
+function getPhaseLabel(phase){
+  switch(phase){
+    case 'focus': return '🍅 专注中';
+    case 'shortBreak': return '☕ 小休息';
+    case 'longBreak': return '🌴 大休息';
+    default: return '准备开始';
+  }
+}
+function getPhaseColor(phase){
+  switch(phase){
+    case 'focus': return 'focus';
+    case 'shortBreak': return 'shortBreak';
+    case 'longBreak': return 'longBreak';
+    default: return 'focus';
+  }
+}
+
+function startPhase(phase){
+  const c = state.pomodoro.current;
+  c.phase = phase;
+  c.startedAt = Date.now();
+  c.pausedAt = null;
+  c.elapsedBeforePause = 0;
+  saveState();
+  startTicking();
+  updateMiniTimer();
+}
+
+function pauseTimer(){
+  const c = state.pomodoro.current;
+  if(c.pausedAt !== null) return; // already paused
+  if(!c.startedAt) return;
+  c.elapsedBeforePause += Date.now() - c.startedAt;
+  c.pausedAt = Date.now();
+  saveState();
+  stopTicking();
+}
+
+function resumeTimer(){
+  const c = state.pomodoro.current;
+  if(c.pausedAt === null) return; // not paused
+  c.startedAt = Date.now();
+  c.pausedAt = null;
+  saveState();
+  startTicking();
+}
+
+function skipPhase(){
+  const c = state.pomodoro.current;
+  const prevPhase = c.phase;
+  stopTicking();
+  advancePhase(false);
+  renderPomodoro();
+  updateMiniTimer();
+}
+
+function advancePhase(giveReward){
+  const c = state.pomodoro.current;
+  const s = state.pomodoro.settings;
+
+  if(c.phase === 'focus'){
+    if(giveReward){
+      c.completedInCycle++;
+      // Award XP and gold
+      gainXp(REWARDS.pomodoro.xp, '完成番茄钟');
+      gainGold(REWARDS.pomodoro.gold, '完成番茄钟');
+      logActivity('pomodoro-complete', '完成番茄钟 '+(s.focus)+'分钟', REWARDS.pomodoro.xp, REWARDS.pomodoro.gold, 0);
+      // Handle linked todo
+      if(c.linkedTodoId){
+        const todo = state.todos.find(t => t.id === c.linkedTodoId && !t.completed);
+        if(todo){
+          const est = todo.estimatedMinutes||0;
+          if(est > 0){
+            // Accumulate focus minutes
+            todo.accumulatedFocusMinutes = (todo.accumulatedFocusMinutes||0) + s.focus;
+            const acc = todo.accumulatedFocusMinutes||0;
+            if(acc >= est){
+              // Auto-complete
+              todo.completed = true;
+              const diff = DIFFICULTY[todo.difficulty] || DIFFICULTY.normal;
+              gainXp(diff.xp, todo.name);
+              gainGold(diff.gold, todo.name);
+              logActivity('todo-complete', '完成待办: '+todo.name+' (番茄关联)', diff.xp, diff.gold, 0);
+              c.linkedTodoId = null;
+            }
+          }else{
+            // No estimated time → show confirm dialog
+            showTodoConfirm(todo);
+            c.linkedTodoId = null;
+          }
+        }else{
+          c.linkedTodoId = null;
+        }
+      }
+      if(c.linkedDailyId){
+        const daily = state.dailies.find(d => d.id === c.linkedDailyId);
+        if(daily){
+          // Accumulate focus minutes
+          daily.accumulatedFocusMinutes = (daily.accumulatedFocusMinutes||0) + s.focus;
+          const t = today();
+          if(!daily.completedDates) daily.completedDates = [];
+          const est = daily.estimatedMinutes||0;
+          const acc = daily.accumulatedFocusMinutes||0;
+          // Auto-complete if accumulated >= estimated
+          if(est>0 && acc>=est && !daily.completedDates.includes(t)){
+            daily.completedDates.push(t);
+            gainXp(REWARDS.daily.xp, daily.name);
+            gainGold(REWARDS.daily.gold, daily.name);
+            logActivity('daily-complete', '完成每日: '+daily.name+' (番茄关联)', REWARDS.daily.xp, REWARDS.daily.gold, 0);
+          }
+        }
+      }
+      // After focus complete → check linked daily/todo progress for break reminder
+      if(c.linkedDailyId){
+        const daily = state.dailies.find(d=>d.id===c.linkedDailyId);
+        if(daily && daily.estimatedMinutes){
+          const acc = daily.accumulatedFocusMinutes||0;
+          const est = daily.estimatedMinutes||0;
+          const t2 = today();
+          const done = daily.completedDates && daily.completedDates.includes(t2);
+          if(!done && est>0 && acc<est){
+            const need = est - acc;
+            setTimeout(()=>toast('☕ 休息中 · 「'+daily.name+'」还需约 '+need+' 分钟', 'warn'), 1500);
+          }
+        }
+      }
+      if(c.linkedTodoId){
+        const todo = state.todos.find(t=>t.id===c.linkedTodoId && !t.completed);
+        if(todo && todo.estimatedMinutes){
+          const acc = todo.accumulatedFocusMinutes||0;
+          const est = todo.estimatedMinutes||0;
+          if(acc<est){
+            const need = est - acc;
+            setTimeout(()=>toast('☕ 休息中 · 「'+todo.name+'」还需约 '+need+' 分钟', 'warn'), 1500);
+          }
+        }
+      }
+    }
+    // Reset temp focus after this focus session
+    c.tempFocusMinutes = 0;
+    // After focus → break
+    if(c.completedInCycle >= s.longInterval){
+      c.completedInCycle = 0;
+      startPhase('longBreak');
+    }else{
+      startPhase('shortBreak');
+    }
+  }else{
+    // After break → focus or idle
+    if(s.autoStart){
+      startPhase('focus');
+    }else{
+      c.phase = 'idle';
+      c.startedAt = null;
+      c.pausedAt = null;
+      c.elapsedBeforePause = 0;
+      stopTicking();
+    }
+  }
+  saveState();
+  updateMiniTimer();
+}
+
+function abandonPomodoro(){
+  const c = state.pomodoro.current;
+  if(c.phase === 'idle') return;
+
+  const elapsed = getElapsedMin();
+  const penalty = 3 + (c.completedInCycle * 3);
+
+  // Show confirmation
+  const overlay = document.getElementById('confirmOverlay');
+  document.getElementById('confirmBody').textContent = '已专注 '+elapsed+' 分钟 · 当前周期已完成 '+c.completedInCycle+' 个番茄';
+  document.getElementById('confirmPenalty').textContent = '将扣除 '+penalty+' HP';
+  overlay.classList.remove('hidden');
+
+  // Set up one-time handlers
+  const stay = document.getElementById('confirmStay');
+  const quit = document.getElementById('confirmQuit');
+  const cleanup = () => {
+    overlay.classList.add('hidden');
+    stay.removeEventListener('click', onStay);
+    quit.removeEventListener('click', onQuit);
+  };
+  const onStay = () => { cleanup(); };
+  const onQuit = () => {
+    cleanup();
+    const phase = c.phase;
+    stopTicking();
+    c.phase = 'idle';
+    c.startedAt = null;
+    c.pausedAt = null;
+    c.elapsedBeforePause = 0;
+    c.tempFocusMinutes = 0;
+    // Don't reset completedInCycle - keep it for progressive penalty
+    applyDamage(penalty, '放弃番茄钟');
+    logActivity('pomodoro-abandon', '放弃番茄钟 ('+elapsed+'分钟)', 0, 0, -penalty);
+    saveState();
+    renderPomodoro();
+    updateMiniTimer();
+  };
+  stay.addEventListener('click', onStay);
+  quit.addEventListener('click', onQuit);
+}
+
+let tickInterval = null;
+function startTicking(){
+  stopTicking();
+  tickInterval = setInterval(() => {
+    if(getRemainingMs() <= 0){
+      advancePhase(true);
+      renderPomodoro();
+      updateMiniTimer();
+    }
+    renderPomodoroTime();
+    updateMiniTimer();
+  }, 500);
+}
+function renderPomodoroTime(){
+  // Lightweight DOM update — only touches timer ring, no full re-render
+  const c = state.pomodoro.current;
+  const totalMs = getPhaseMs(c.phase || 'focus');
+  const remaining = getRemainingMs();
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const pct = c.phase === 'idle' ? 1 : remaining / totalMs;
+  const radius = 90;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - pct);
+
+  const ringFg = document.querySelector('.pomo-ring-fg');
+  if(ringFg) ringFg.setAttribute('stroke-dashoffset', offset);
+
+  const timeNum = document.querySelector('.pomo-time .time-num');
+  if(timeNum){
+    if(c.phase === 'idle'){
+      timeNum.textContent = pad(state.pomodoro.settings.focus)+':00';
+    }else{
+      timeNum.textContent = pad(mins)+':'+pad(secs);
+    }
+  }
+
+  const timeLabel = document.querySelector('.pomo-time .time-label');
+  if(timeLabel) timeLabel.textContent = getPhaseLabel(c.phase);
+
+  // Update linked task live progress
+  renderLinkedTask();
+}
+
+function showTodoConfirm(todo){
+  const overlay = document.getElementById('confirmOverlay');
+  const diff = DIFFICULTY[todo.difficulty] || DIFFICULTY.normal;
+  document.getElementById('confirmTitle').textContent = '待办完成了吗？';
+  document.getElementById('confirmBody').textContent = '刚才在做的「'+todo.name+'」完成了吗？';
+  document.getElementById('confirmPenalty').textContent = '完成可得 +'+diff.xp+' XP · +'+diff.gold+' 🪙';
+  document.getElementById('confirmStay').textContent = '✅ 完成了';
+  document.getElementById('confirmQuit').textContent = '还没';
+  overlay.classList.remove('hidden');
+
+  const stay = document.getElementById('confirmStay');
+  const quit = document.getElementById('confirmQuit');
+  const cleanup = () => {
+    overlay.classList.add('hidden');
+    stay.removeEventListener('click', onStay);
+    quit.removeEventListener('click', onQuit);
+    // Restore default overlay text for abandon pomodoro
+    document.getElementById('confirmTitle').textContent = '确定要放弃吗？';
+    document.getElementById('confirmStay').textContent = '💪 再坚持一下';
+    document.getElementById('confirmQuit').textContent = '确认放弃';
+  };
+  const onStay = () => {
+    cleanup();
+    todo.completed = true;
+    gainXp(diff.xp, todo.name);
+    gainGold(diff.gold, todo.name);
+    logActivity('todo-complete', '完成待办: '+todo.name+' (番茄关联)', diff.xp, diff.gold, 0);
+    saveState();
+    render();
+  };
+  const onQuit = () => {
+    cleanup();
+    toast('待办「'+todo.name+'」继续挂着', 'info');
+  };
+  stay.addEventListener('click', onStay);
+  quit.addEventListener('click', onQuit);
+}
+
+function showAdaptDuration(todo, remaining){
+  const overlay = document.getElementById('confirmOverlay');
+  document.getElementById('confirmTitle').textContent = '调整番茄时长？';
+  document.getElementById('confirmBody').textContent = '「'+todo.name+'」只剩 '+remaining+' 分钟就完成了，要把这个番茄设成 '+remaining+' 分钟吗？';
+  document.getElementById('confirmPenalty').textContent = '剩余 '+remaining+' 分钟 · 原默认 '+state.pomodoro.settings.focus+' 分钟';
+  document.getElementById('confirmStay').textContent = '✅ 确认调整';
+  document.getElementById('confirmQuit').textContent = '用默认时长';
+  overlay.classList.remove('hidden');
+
+  const stay = document.getElementById('confirmStay');
+  const quit = document.getElementById('confirmQuit');
+  const cleanup = () => {
+    overlay.classList.add('hidden');
+    stay.removeEventListener('click', onStay);
+    quit.removeEventListener('click', onQuit);
+    document.getElementById('confirmTitle').textContent = '确定要放弃吗？';
+    document.getElementById('confirmStay').textContent = '💪 再坚持一下';
+    document.getElementById('confirmQuit').textContent = '确认放弃';
+  };
+  const onStay = () => {
+    cleanup();
+    state.pomodoro.current.tempFocusMinutes = remaining;
+    startPhase('focus');
+    renderPomodoro();
+    updateMiniTimer();
+  };
+  const onQuit = () => {
+    cleanup();
+    state.pomodoro.current.tempFocusMinutes = 0;
+    startPhase('focus');
+    renderPomodoro();
+    updateMiniTimer();
+  };
+  stay.addEventListener('click', onStay);
+  quit.addEventListener('click', onQuit);
+}
+
+function renderLinkedTask(fullRebuild){
+  const el = document.getElementById('pomoLinked');
+  if(!el) return;
+  const c = state.pomodoro.current;
+
+  // Build the desired content structure key (to detect if rebuild is needed)
+  const key = (c.linkedDailyId||'')+'|'+(c.linkedTodoId||'');
+
+  // Full rebuild on first call or when linked task changes
+  if(fullRebuild || el.dataset.key !== key){
+    el.dataset.key = key;
+    let html = '';
+
+    if(c.linkedDailyId){
+      const daily = state.dailies.find(d=>d.id===c.linkedDailyId);
+      if(daily){
+        const est = daily.estimatedMinutes||0;
+        const t2 = today();
+        const done = daily.completedDates && daily.completedDates.includes(t2);
+        html += '<div class="linked-task-card'+(done?' done':'')+'" data-type="daily" data-id="'+daily.id+'">'+
+          '<div class="ltc-header"><span>📅 '+esc(daily.name)+'</span>'+(done?'<span style="color:var(--good);font-weight:700">✓</span>':'')+'</div>';
+        if(est>0 && !done){
+          html += '<div class="ltc-prog"><div class="ltc-fill"></div><span class="ltc-text"></span></div>';
+        }
+        html += '</div>';
+      }
+    }
+    if(c.linkedTodoId){
+      const todo = state.todos.find(t=>t.id===c.linkedTodoId && !t.completed);
+      if(todo){
+        const est = todo.estimatedMinutes||0;
+        const diffLabel = DIFFICULTY[todo.difficulty] ? DIFFICULTY[todo.difficulty].label : '';
+        html += '<div class="linked-task-card" data-type="todo" data-id="'+todo.id+'">'+
+          '<div class="ltc-header"><span>✅ '+esc(todo.name)+'</span><span style="font-size:11px;color:var(--text3)">'+diffLabel+'</span></div>';
+        if(est>0){
+          html += '<div class="ltc-prog"><div class="ltc-fill"></div><span class="ltc-text"></span></div>';
+        }
+        html += '</div>';
+      }
+    }
+    el.innerHTML = html;
+  }
+
+  // Tick update — directly manipulate existing DOM elements
+  // Update daily progress
+  if(c.linkedDailyId){
+    const daily = state.dailies.find(d=>d.id===c.linkedDailyId);
+    if(daily){
+      const est = daily.estimatedMinutes||0;
+      const acc = daily.accumulatedFocusMinutes||0;
+      const t2 = today();
+      const done = daily.completedDates && daily.completedDates.includes(t2);
+      const card = el.querySelector('.linked-task-card[data-type="daily"]');
+      if(card){
+        if(done) card.classList.add('done'); else card.classList.remove('done');
+        if(done){ const hdr = card.querySelector('.ltc-header'); if(hdr && !hdr.querySelector('span[style]')){ const s = document.createElement('span'); s.style.cssText='color:var(--good);font-weight:700'; s.textContent='✓'; hdr.appendChild(s); } }
+        if(est>0 && !done){
+          let liveAccFrac = acc;
+          if(c.phase==='focus' && c.pausedAt===null) liveAccFrac += getElapsedMs()/60000;
+          const pct = Math.min(100, liveAccFrac/est*100);
+          const fill = card.querySelector('.ltc-fill');
+          const text = card.querySelector('.ltc-text');
+          if(fill) fill.style.width = pct+'%';
+          if(text) text.textContent = Math.floor(liveAccFrac)+'/'+est+' 分钟';
+        }
+      }
+    }
+  }
+  // Update todo progress
+  if(c.linkedTodoId){
+    const todo = state.todos.find(t=>t.id===c.linkedTodoId && !t.completed);
+    if(todo){
+      const est = todo.estimatedMinutes||0;
+      const acc = todo.accumulatedFocusMinutes||0;
+      const card = el.querySelector('.linked-task-card[data-type="todo"]');
+      if(card && est>0){
+        let liveAccFrac = acc;
+        if(c.phase==='focus' && c.pausedAt===null) liveAccFrac += getElapsedMs()/60000;
+        const pct = Math.min(100, liveAccFrac/est*100);
+        const fill = card.querySelector('.ltc-fill');
+        const text = card.querySelector('.ltc-text');
+        if(fill) fill.style.width = pct+'%';
+        if(text) text.textContent = Math.floor(liveAccFrac)+'/'+est+' 分钟';
+      }
+    }
+  }
+}
+
+function stopTicking(){
+  if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
+}
+
+// Handle page visibility
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden){
+    stopTicking();
+  }else{
+    const c = state.pomodoro.current;
+    if(c.phase !== 'idle' && c.pausedAt === null){
+      // Recalculate: if timer should have finished while hidden
+      if(getRemainingMs() <= 0){
+        advancePhase(true);
+        renderPomodoro();
+        updateMiniTimer();
+      }
+      startTicking();
+      renderPomodoroTime();
+      updateMiniTimer();
+    }
+  }
+});
+
+// ========== Actions ==========
+function checkDailyReset(){
+  const t = today();
+  if(state.lastResetDate === t) return;
+  // First launch: no activity yet → skip penalty
+  if(!state.activityLog || state.activityLog.length === 0){
+    state.lastResetDate = t; saveState(); return;
+  }
+  const y = yesterday();
+  for(const d of state.dailies){
+    if(!d.completedDates) d.completedDates = [];
+    if(d.accumulatedFocusMinutes === undefined) d.accumulatedFocusMinutes = 0;
+    if(d.estimatedMinutes === undefined) d.estimatedMinutes = 0;
+    if(!d.completedDates.includes(y)){
+      applyDamage(Math.abs(REWARDS.dailyMiss.hp), REWARDS.dailyMiss.label);
+      logActivity('daily-miss', '漏掉每日: '+d.name, 0, 0, -Math.abs(REWARDS.dailyMiss.hp));
+    }
+    // Reset accumulated focus minutes on new day
+    d.accumulatedFocusMinutes = 0;
+  }
+  state.lastResetDate = t;
+  saveState();
+}
+
+function applyDamage(amount, reason){
+  state.stats.hp = Math.max(0, state.stats.hp - amount);
+  if(state.stats.hp <= 0) handleDeath();
+  saveState();
+  render();
+  toast(`-${amount} HP · ${reason}`, 'bad');
+}
+
+function handleDeath(){
+  const lost = Math.floor(state.stats.gold * REWARDS.death.goldLoss);
+  state.stats.gold = Math.max(0, state.stats.gold - lost);
+  state.stats.hp = Math.floor(maxHp() * REWARDS.death.hpRestore);
+  logActivity('death', '角色昏倒', 0, -lost, 0);
+  toast('💀 角色昏倒了！失去 '+lost+' 金币，恢复一半生命', 'bad');
+  const bar = document.getElementById('statsBar');
+  if(bar){ bar.classList.add('shake'); setTimeout(()=>bar.classList.remove('shake'),400); }
+}
+
+function gainXp(amount, reason){
+  state.stats.xp += amount;
+  let leveled = false;
+  while(state.stats.xp >= xpToNext()){
+    state.stats.xp -= xpToNext();
+    state.stats.level++;
+    state.stats.hp = maxHp();
+    leveled = true;
+  }
+  saveState();
+  render();
+  if(leveled){
+    logActivity('level-up', '升级到 Lv.'+state.stats.level, 0, 0, 0);
+    toast('🎉 升级到 Lv.'+state.stats.level+'！生命回满', 'info');
+    const badge = document.getElementById('levelBadge');
+    if(badge){ badge.classList.add('pulse'); setTimeout(()=>badge.classList.remove('pulse'),500); }
+  }
+  if(!leveled) toast('+'+amount+' XP · '+reason, 'info');
+}
+
+function gainGold(amount, reason){
+  state.stats.gold += amount;
+  saveState();
+  render();
+  toast('+'+amount+' 🪙 · '+reason, 'gold');
+}
+
+function triggerPositiveHabit(habit){
+  gainXp(REWARDS.positiveHabit.xp, habit.name);
+  gainGold(REWARDS.positiveHabit.gold, habit.name);
+  const t = today();
+  if(!habit.history) habit.history = {};
+  habit.history[t] = (habit.history[t]||0) + 1;
+  logActivity('habit-positive', habit.name+' ×'+(habit.history[t]), REWARDS.positiveHabit.xp, REWARDS.positiveHabit.gold, 0);
+  saveState();
+  render();
+  floatText(document.getElementById('statsBar'), '+'+REWARDS.positiveHabit.xp+' XP', 'var(--good)');
+}
+
+function triggerNegativeHabit(habit){
+  applyDamage(Math.abs(REWARDS.negativeHabit.hp), habit.name);
+  const t = today();
+  if(!habit.history) habit.history = {};
+  habit.history[t] = (habit.history[t]||0) + 1;
+  logActivity('habit-negative', habit.name+' ×'+(habit.history[t]), 0, 0, REWARDS.negativeHabit.hp);
+  saveState();
+  render();
+  floatText(document.getElementById('statsBar'), '-'+Math.abs(REWARDS.negativeHabit.hp)+' HP', 'var(--bad)');
+}
+
+function toggleDaily(daily){
+  const t = today();
+  if(!daily.completedDates) daily.completedDates = [];
+  const idx = daily.completedDates.indexOf(t);
+  if(idx >= 0){
+    daily.completedDates.splice(idx,1);
+    state.stats.xp = Math.max(0, state.stats.xp - REWARDS.daily.xp);
+    state.stats.gold = Math.max(0, state.stats.gold - REWARDS.daily.gold);
+    saveState();
+    render();
+    return;
+  }
+  daily.completedDates.push(t);
+  daily.accumulatedFocusMinutes = daily.estimatedMinutes||0; // mark as fully done
+  gainXp(REWARDS.daily.xp, daily.name);
+  gainGold(REWARDS.daily.gold, daily.name);
+  logActivity('daily-complete', '完成每日: '+daily.name, REWARDS.daily.xp, REWARDS.daily.gold, 0);
+  saveState();
+  render();
+  floatText(document.getElementById('statsBar'), '+'+REWARDS.daily.xp+' XP', 'var(--good)');
+}
+
+function completeTodo(todo){
+  todo.completed = true;
+  todo.accumulatedFocusMinutes = todo.estimatedMinutes||0;
+  const diff = DIFFICULTY[todo.difficulty] || DIFFICULTY.normal;
+  gainXp(diff.xp, todo.name);
+  gainGold(diff.gold, todo.name);
+  logActivity('todo-complete', '完成待办: '+todo.name, diff.xp, diff.gold, 0);
+  saveState();
+  render();
+  floatText(document.getElementById('statsBar'), '+'+diff.xp+' XP', 'var(--good)');
+}
+
+function buyReward(reward){
+  if(state.stats.gold < reward.price){
+    toast('💰 金币不够哦', 'bad');
+    return false;
+  }
+  state.stats.gold -= reward.price;
+  logActivity('reward-buy', '兑换奖励: '+reward.name, 0, -reward.price, 0);
+  saveState();
+  render();
+  toast('🎁 兑换了「'+reward.name+'」！-'+reward.price+' 🪙', 'gold');
+  return true;
+}
+
+function deleteItem(arr, id){
+  const idx = arr.findIndex(x => x.id === id);
+  if(idx >= 0) arr.splice(idx,1);
+  saveState();
+  render();
+}
+
+// ========== Toast ==========
+function toast(msg, type){
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast '+type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(()=>{ if(el.parentNode) el.remove(); }, 2200);
+}
+
+// ========== Float Text ==========
+function floatText(anchor, text, color){
+  if(!anchor) return;
+  const rect = anchor.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = text;
+  el.style.left = (rect.left + rect.width/2 - 30) + 'px';
+  el.style.top = (rect.top) + 'px';
+  el.style.color = color || 'var(--good)';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+
+// ========== Mini Timer Bar ==========
+function updateMiniTimer(){
+  const mini = document.getElementById('miniTimer');
+  const c = state.pomodoro.current;
+  if(c.phase === 'idle'){
+    mini.classList.remove('active');
+    return;
+  }
+  mini.classList.add('active');
+  const remaining = getRemainingMs();
+  const total = getPhaseMs(c.phase);
+  const pct = (remaining / total * 100);
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  document.getElementById('miniPhase').textContent = c.phase==='focus'?'🍅':c.phase==='shortBreak'?'☕':'🌴';
+  document.getElementById('miniTime').textContent = mins+':'+pad(secs);
+  const fill = document.getElementById('miniFill');
+  fill.style.width = pct+'%';
+  fill.className = 'mini-fill '+getPhaseColor(c.phase);
+  if(c.phase === 'focus' && remaining < 60000 && remaining > 0){
+    mini.classList.add('urgent');
+  }else{
+    mini.classList.remove('urgent');
+  }
+}
+
+// ========== Render ==========
+function render(){
+  const mh = maxHp();
+  const xt = xpToNext();
+  document.getElementById('hpText').textContent = state.stats.hp+'/'+mh;
+  document.getElementById('hpBar').style.width = (state.stats.hp/mh*100)+'%';
+  document.getElementById('xpText').textContent = state.stats.xp+'/'+xt;
+  document.getElementById('xpBar').style.width = (state.stats.xp/xt*100)+'%';
+  document.getElementById('goldText').textContent = state.stats.gold;
+  document.getElementById('levelNum').textContent = state.stats.level;
+  const streak = calcStreak();
+  document.getElementById('streakDays').textContent = streak;
+  const msgs = [[0,'开始今天'],[1,'起步了'],[3,'保持住'],[7,'一周啦'],[14,'你很稳'],[30,'习惯成自然']];
+  let msg = msgs[0][1];
+  for(const [min,text] of msgs){ if(streak >= min) msg = text; }
+  document.getElementById('streakMsg').textContent = msg;
+  document.getElementById('streakBadge').classList.toggle('dim', streak === 0);
+  document.getElementById('todayCount').textContent = calcTodayCount();
+
+  renderHabits();
+  renderDailies();
+  renderTodos();
+  renderRewards();
+  renderPomodoro();
+  renderSummary();
+  updateMiniTimer();
+  updateFab();
+}
+
+function renderHabits(){
+  const t = today();
+  const list = document.getElementById('habitsList');
+  const items = state.habits;
+  if(!items.length){
+    list.innerHTML = '<div class="empty"><span class="icon">🔄</span><p>还没有习惯，点击右下角 + 添加</p></div>';
+    return;
+  }
+  list.innerHTML = items.map(h=>{
+    const count = (h.history && h.history[t]) ? h.history[t] : 0;
+    const isPos = h.type === 'positive';
+    const cls = isPos ? 'good' : 'bad';
+    const countCls = isPos ? 'positive' : 'negative';
+    const icon = isPos ? '👍' : '👎';
+    return '<div class="card" data-id="'+h.id+'"><div class="card-name">'+esc(h.name)+'</div><span class="habit-count '+countCls+'">'+(count>0?'×'+count:'')+'</span><div class="card-actions"><button class="btn-icon '+cls+'" data-action="trigger-habit" data-id="'+h.id+'" title="'+(isPos?'做得好':'又犯了')+'">'+icon+'</button><button class="btn-icon danger" data-action="delete-habit" data-id="'+h.id+'" title="删除" style="font-size:14px;width:28px;height:28px;opacity:.5">✕</button></div></div>';
+  }).join('');
+}
+
+function renderDailies(){
+  const t = today();
+  const list = document.getElementById('dailiesList');
+  const items = state.dailies;
+  if(!items.length){
+    list.innerHTML = '<div class="empty"><span class="icon">📅</span><p>还没有每日任务，点击右下角 + 添加</p></div>';
+    return;
+  }
+  list.innerHTML = items.map(d=>{
+    const done = d.completedDates && d.completedDates.includes(t);
+    const streak = getDailyStreak(d);
+    const est = d.estimatedMinutes||0;
+    const acc = d.accumulatedFocusMinutes||0;
+    let progressBar = '';
+    if(est>0 && !done){
+      const pct = Math.min(100, Math.round(acc/est*100));
+      progressBar = '<div class="daily-prog"><div class="daily-prog-fill" style="width:'+pct+'%"></div><span class="daily-prog-text">'+acc+'/'+est+' 分钟</span></div>';
+    }
+    const timeBadge = est>0 ? '<span style="font-size:11px;color:var(--text3);flex-shrink:0">⏱ '+est+'分</span>' : '';
+    return '<div class="card'+(done?' completed':'')+'" data-id="'+d.id+'" style="flex-wrap:wrap;padding-bottom:12px"><div class="card-name">'+esc(d.name)+'</div>'+timeBadge+(streak>=2?'<span class="streak">🔥'+streak+'</span>':'')+'<div class="card-actions"><button class="btn btn-done" data-action="toggle-daily" data-id="'+d.id+'">'+(done?'✓ 已完成':'点击完成')+'</button><button class="btn-icon danger" data-action="delete-daily" data-id="'+d.id+'" title="删除" style="font-size:14px;width:28px;height:28px;opacity:.5">✕</button></div>'+progressBar+'</div>';
+  }).join('');
+}
+
+function renderTodos(){
+  const list = document.getElementById('todosList');
+  const items = state.todos.filter(t=>!t.completed);
+  const completedItems = state.todos.filter(t=>t.completed);
+  if(!items.length && !completedItems.length){
+    list.innerHTML = '<div class="empty"><span class="icon">✅</span><p>还没有待办事项，点击右下角 + 添加</p></div>';
+    return;
+  }
+  let html = items.map(t=>{
+    const diffLabel = DIFFICULTY[t.difficulty] ? DIFFICULTY[t.difficulty].label : '';
+    const est = t.estimatedMinutes||0;
+    const acc = t.accumulatedFocusMinutes||0;
+    let progBar = '';
+    if(est>0){
+      const pct = Math.min(100, Math.round(acc/est*100));
+      progBar = '<div class="daily-prog"><div class="daily-prog-fill" style="width:'+pct+'%"></div><span class="daily-prog-text">'+acc+'/'+est+' 分钟</span></div>';
+    }
+    const diffTag = diffLabel ? '<span style="font-size:10px;color:var(--text3);background:var(--bg);padding:2px 6px;border-radius:8px;flex-shrink:0">'+diffLabel+'</span>' : '';
+    return '<div class="card" data-id="'+t.id+'" style="flex-wrap:wrap;padding-bottom:'+(est>0?'12px':'16px')+'"><div class="card-name">'+esc(t.name)+'</div>'+diffTag+'<div class="card-actions"><button class="btn btn-done" data-action="complete-todo" data-id="'+t.id+'">完成</button><button class="btn-icon danger" data-action="delete-todo" data-id="'+t.id+'" title="删除" style="font-size:14px;width:28px;height:28px;opacity:.5">✕</button></div>'+progBar+'</div>';
+  }).join('');
+  if(completedItems.length){
+    html += '<div style="margin-top:12px;padding:8px 12px;border-radius:8px;background:var(--card);box-shadow:var(--shadow);"><div style="font-size:12px;color:var(--text3);font-weight:600;margin-bottom:6px;">已完成 ('+completedItems.length+')</div>';
+    html += completedItems.map(t=>'<div class="card completed" style="padding:8px 12px;margin-bottom:4px;box-shadow:none;background:transparent;" data-id="'+t.id+'"><div class="card-name" style="font-size:13px">'+esc(t.name)+'</div><button class="btn-icon danger" data-action="delete-todo" data-id="'+t.id+'" title="删除" style="font-size:12px;width:24px;height:24px;opacity:.3">✕</button></div>').join('');
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function renderRewards(){
+  const list = document.getElementById('rewardsList');
+  const items = state.rewards;
+  if(!items.length){
+    list.innerHTML = '<div class="empty"><span class="icon">🎁</span><p>还没有奖励，点击右下角 + 添加</p></div>';
+    return;
+  }
+  list.innerHTML = items.map(r=>{
+    const canAfford = state.stats.gold >= r.price;
+    return '<div class="card" data-id="'+r.id+'"><div class="card-name">'+esc(r.name)+'</div><span class="reward-price">🪙'+r.price+'</span><div class="card-actions"><button class="btn btn-buy" data-action="buy-reward" data-id="'+r.id+'"'+(canAfford?'':' disabled')+' style="'+(canAfford?'':'opacity:.4;cursor:not-allowed')+'">兑换</button><button class="btn-icon danger" data-action="delete-reward" data-id="'+r.id+'" title="删除" style="font-size:14px;width:28px;height:28px;opacity:.5">✕</button></div></div>';
+  }).join('');
+}
+
+// ========== Render Pomodoro ==========
+function renderPomodoro(){
+  const container = document.getElementById('pomodoroContainer');
+  const c = state.pomodoro.current;
+  const s = state.pomodoro.settings;
+  const totalMs = getPhaseMs(c.phase || 'focus');
+  const remaining = getRemainingMs();
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const pct = c.phase === 'idle' ? 1 : remaining / totalMs;
+  const radius = 90;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - pct);
+  const color = getPhaseColor(c.phase);
+  const isRunning = c.phase !== 'idle' && c.pausedAt === null;
+
+  // Count today's completed pomodoros
+  const todayStr = today();
+  const todayPomos = (state.activityLog || []).filter(e =>
+    e.type === 'pomodoro-complete' && tsDay(e.ts) === todayStr
+  ).length;
+  const todayFocusMin = todayPomos * s.focus;
+
+  container.innerHTML =
+    // Top: stats left, controls right
+    '<div class="pomo-top">'+
+      '<div class="pomo-stats">'+
+        '<span>🍅 '+todayPomos+' 个</span><span>⏱ '+todayFocusMin+' 分钟</span>'+
+      '</div>'+
+      '<div class="pomo-actions">'+
+        (c.phase==='idle' || c.pausedAt!==null
+          ? '<button class="pomo-btn-start" data-action="pomo-start">'+(c.pausedAt!==null?'▶ 继续':'▶ 开始')+'</button>'
+          : '<button class="pomo-btn-pause" data-action="pomo-pause">⏸ 暂停</button>')+
+        (c.phase!=='idle'
+          ? '<button class="pomo-btn-skip" data-action="pomo-skip">↺ 跳过</button><button class="pomo-btn-quit" data-action="pomo-abandon">⏹ 放弃</button>'
+          : '')+
+      '</div>'+
+    '</div>'+
+    // Middle: timer ring left + info
+    '<div class="pomo-middle">'+
+      '<div class="pomo-ring-wrap">'+
+        '<svg width="200" height="200" viewBox="0 0 220 220">'+
+          '<circle class="pomo-ring-bg" cx="110" cy="110" r="'+radius+'"/>'+
+          '<circle class="pomo-ring-fg '+color+'" cx="110" cy="110" r="'+radius+'" stroke-dasharray="'+circumference+'" stroke-dashoffset="'+offset+'"/>'+
+        '</svg>'+
+        '<div class="pomo-time">'+
+          '<div class="time-num">'+(c.phase==='idle'?pad(s.focus)+':00':pad(mins)+':'+pad(secs))+'</div>'+
+          '<div class="time-label">'+getPhaseLabel(c.phase)+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    // Linked task live card
+    '<div class="pomo-linked" id="pomoLinked"></div>'+
+    // Link row
+    '<div class="link-row">'+
+      '<div class="link-todo-wrap">'+
+        '<div class="link-label">🔗 关联待办</div>'+
+        '<select id="linkTodoSelect">'+
+          '<option value="">不关联</option>'+
+          state.todos.filter(t=>!t.completed).map(t=>
+            '<option value="'+t.id+'"'+(c.linkedTodoId===t.id?' selected':'')+'>'+esc(t.name)+'</option>'
+          ).join('')+
+        '</select>'+
+      '</div>'+
+      '<div class="link-todo-wrap">'+
+        '<div class="link-label">📅 关联每日</div>'+
+        '<select id="linkDailySelect">'+
+          '<option value="">不关联</option>'+
+          state.dailies.map(d=>{
+            const doneToday = d.completedDates && d.completedDates.includes(today());
+            const sel = c.linkedDailyId===d.id?' selected':'';
+            const dis = doneToday?' disabled':'';
+            const label = esc(d.name)+(doneToday?' (已完成)':'');
+            return '<option value="'+d.id+'"'+sel+dis+'>'+label+'</option>';
+          }).join('')+
+        '</select>'+
+      '</div>'+
+    '</div>'+
+    // Settings toggle button + panel
+    '<button class="pomo-settings-btn" id="toggleSettings">⚙️ 番茄设置</button>'+
+    '<div class="settings-grid" id="settingsPanel" style="display:none">'+
+      '<div class="setting-item"><label>专注时长 (分)</label><input type="number" id="setFocus" value="'+s.focus+'" min="1" max="120"></div>'+
+      '<div class="setting-item"><label>小休息 (分)</label><input type="number" id="setShort" value="'+s.shortBreak+'" min="1" max="30"></div>'+
+      '<div class="setting-item"><label>大休息 (分)</label><input type="number" id="setLong" value="'+s.longBreak+'" min="1" max="60"></div>'+
+      '<div class="setting-item"><label>大休息间隔</label><input type="number" id="setInterval" value="'+s.longInterval+'" min="1" max="10"></div>'+
+      '<div class="setting-row" style="grid-column:1/-1">'+
+        '<input type="checkbox" id="setAutoStart"'+(s.autoStart?' checked':'')+'>'+
+        '<label for="setAutoStart">自动开始下一阶段</label>'+
+      '</div>'+
+    '</div>';
+  renderLinkedTask(true);
+}
+
+function renderSummary(){
+  const container = document.getElementById('summaryContainer');
+  if(!container) return;
+
+  const year = summaryYear;
+  const month = summaryMonth;
+  const monthStr = year+'-'+pad(month);
+  const nextM = month===12?1:month+1;
+  const nextY = month===12?year+1:year;
+  const prevM = month===1?12:month-1;
+  const prevY = month===1?year-1:year;
+
+  // Filter log entries for this month
+  const monthEntries = (state.activityLog || []).filter(e => {
+    const day = tsDay(e.ts);
+    return day >= monthStr+'-01' && day < nextY+'-'+pad(nextM)+'-01';
+  });
+
+  // Aggregate stats
+  let totalXp=0,totalGoldEarned=0,totalGoldSpent=0,totalHpLost=0,pomoCount=0;
+  for(const e of monthEntries){
+    if(e.xp>0) totalXp+=e.xp;
+    if(e.gold>0) totalGoldEarned+=e.gold;
+    if(e.gold<0) totalGoldSpent+=Math.abs(e.gold);
+    if(e.hp<0) totalHpLost+=Math.abs(e.hp);
+    if(e.type==='pomodoro-complete') pomoCount++;
+  }
+
+  // Group entries by day
+  const dayMap = {};
+  for(const e of monthEntries){
+    const day=tsDay(e.ts);
+    if(!dayMap[day]) dayMap[day]=[];
+    dayMap[day].push(e);
+  }
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  const isCurrentMonth = (year===new Date().getFullYear() && month===new Date().getMonth()+1);
+
+  container.innerHTML =
+    '<div class="summary-header">'+
+      '<button data-action="summary-prev">◀</button>'+
+      '<div class="month-title">📊 '+year+'年'+month+'月</div>'+
+      '<button data-action="summary-next"'+(isCurrentMonth?' disabled style="opacity:.3"':'')+'>▶</button>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:center;margin-bottom:14px">'+
+      '<div class="view-toggle">'+
+        '<button class="'+(summaryView==='list'?'active':'')+'" data-action="summary-view-list">📋 列表</button>'+
+        '<button class="'+(summaryView==='calendar'?'active':'')+'" data-action="summary-view-cal">📅 日历</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="summary-cards">'+
+      '<div class="summary-card"><div class="sc-val green">+'+totalXp+'</div><div class="sc-label">经验</div></div>'+
+      '<div class="summary-card"><div class="sc-val amber">+'+totalGoldEarned+'</div><div class="sc-label">金币收入</div></div>'+
+      '<div class="summary-card"><div class="sc-val red">-'+totalHpLost+'</div><div class="sc-label">HP 损失</div></div>'+
+      '<div class="summary-card"><div class="sc-val">'+pomoCount+'</div><div class="sc-label">番茄数</div></div>'+
+    '</div>';
+
+  if(summaryView==='list'){
+    renderSummaryList(container, year, month, daysInMonth, dayMap);
+  }else{
+    renderSummaryCalendar(container, year, month, daysInMonth, dayMap);
+  }
+}
+
+function renderSummaryList(container, year, month, daysInMonth, dayMap){
+  const allDays=[];
+  for(let d=1;d<=daysInMonth;d++) allDays.push(year+'-'+pad(month)+'-'+pad(d));
+
+  const html = '<div class="day-list">'+
+    allDays.map(dayStr=>{
+      const entries=dayMap[dayStr]||[];
+      const d=new Date(dayStr+'T00:00:00');
+      const weekNames=['周日','周一','周二','周三','周四','周五','周六'];
+      const weekDay=weekNames[d.getDay()];
+      const lunar=formatLunarShort(d)||'';
+
+      let dayXp=0,dayGold=0,dayHp=0;
+      for(const e of entries){dayXp+=e.xp;dayGold+=e.gold;dayHp+=e.hp;}
+      let summaryTags=[];
+      if(dayXp>0) summaryTags.push('<span class="stag stag-xp">⭐ +'+dayXp+'</span>');
+      if(dayGold>0) summaryTags.push('<span class="stag stag-gold">🪙 +'+dayGold+'</span>');
+      if(dayGold<0) summaryTags.push('<span class="stag stag-gold">🪙 '+dayGold+'</span>');
+      if(dayHp<0) summaryTags.push('<span class="stag stag-hp">❤️ '+dayHp+'</span>');
+
+      let timelineHtml='';
+      if(entries.length===0){
+        timelineHtml='<div class="day-empty">这天没有记录</div>';
+      }else{
+        timelineHtml='<div class="day-timeline">'+
+          entries.map(e=>{
+            const effParts=[];
+            if(e.xp!==0) effParts.push((e.xp>0?'+':'')+e.xp+' XP');
+            if(e.gold!==0) effParts.push((e.gold>0?'+':'')+e.gold+' 🪙');
+            if(e.hp!==0) effParts.push((e.hp>0?'+':'')+e.hp+' HP');
+            const effClass=(e.xp>0||e.gold>0)?'gain':(e.hp<0||e.gold<0)?'loss':'neutral';
+            return '<div class="timeline-entry">'+
+              '<span class="tl-time">'+fmtTime(e.ts)+'</span>'+
+              '<span class="tl-icon">'+(EVENT_ICONS[e.type]||'•')+'</span>'+
+              '<span class="tl-detail">'+esc(e.detail)+'</span>'+
+              '<span class="tl-effect '+effClass+'">'+effParts.join(' ')+'</span>'+
+            '</div>';
+          }).join('')+
+        '</div>';
+      }
+
+      return '<details class="day-item"'+(entries.length>0?'':'')+'>'+
+        '<summary>'+
+          '<span class="day-date">'+pad(d.getDate())+'日</span>'+
+          '<span class="day-week">'+weekDay+'</span>'+
+          '<span class="day-summary">'+summaryTags.join(' ')+'</span>'+
+          '<span class="day-arrow">▼</span>'+
+        '</summary>'+timelineHtml+
+      '</details>';
+    }).join('')+
+  '</div>';
+
+  const existing = container.querySelector('.day-list');
+  if(existing) existing.remove();
+  const cal = container.querySelector('.cal-wrap');
+  if(cal) cal.remove();
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function renderSummaryCalendar(container, year, month, daysInMonth, dayMap){
+  const todayStr = today();
+  // Get first day of month (0=Sun, 1=Mon, ...)
+  const firstDay = new Date(year, month-1, 1).getDay();
+  // Monday = 1, Sunday = 7 (0→7)
+  const startOffset = firstDay===0?6:firstDay-1; // days from Monday
+
+  // Build cells array
+  const cells = [];
+  // Previous month days
+  const prevMonth = month===1?12:month-1;
+  const prevYear = month===1?year-1:year;
+  const prevDays = new Date(prevYear, prevMonth, 0).getDate();
+  for(let i=startOffset-1;i>=0;i--){
+    cells.push({day:prevDays-i, month:prevMonth, year:prevYear, other:true, dateStr:prevYear+'-'+pad(prevMonth)+'-'+pad(prevDays-i)});
+  }
+  // Current month
+  for(let d=1;d<=daysInMonth;d++){
+    cells.push({day:d, month:month, year:year, other:false, dateStr:year+'-'+pad(month)+'-'+pad(d)});
+  }
+  // Fill to complete last week
+  const remaining = 7 - (cells.length % 7);
+  if(remaining<7){
+    const nextMonth = month===12?1:month+1;
+    const nextYear = month===12?year+1:year;
+    for(let d=1;d<=remaining;d++){
+      cells.push({day:d, month:nextMonth, year:nextYear, other:true, dateStr:nextYear+'-'+pad(nextMonth)+'-'+pad(d)});
+    }
+  }
+
+  const weekLabels = ['一','二','三','四','五','六','日'];
+
+  let html = '<div class="cal-wrap">';
+  // Weekday headers
+  html += '<div class="cal-grid">';
+  html += weekLabels.map(w=>'<div class="cal-weekday">'+w+'</div>').join('');
+  // Cells
+  html += cells.map(c=>{
+    const entries = dayMap[c.dateStr]||[];
+    let dotClass='';
+    if(entries.length>0){
+      const hasGood = entries.some(e=>e.xp>0||e.gold>0);
+      const hasBad = entries.some(e=>e.hp<0);
+      dotClass = hasBad&&!hasGood?'bad':(hasGood&&hasBad?'mix':'good');
+    }
+    const isToday = c.dateStr===todayStr;
+    const cls = ['cal-cell',c.other?'other-month':'',isToday?'today':''].filter(Boolean).join(' ');
+
+    return '<div class="'+cls+'" data-action="cal-day" data-date="'+c.dateStr+'" title="'+(entries.length>0?entries.length+'条记录':'')+'">'+
+      '<span>'+c.day+'</span>'+
+      (dotClass?'<div class="cal-dots"><span class="cal-dot '+dotClass+'"></span>'+(entries.length>1?'<span class="cal-dot '+dotClass+'"></span>':'')+(entries.length>2?'<span class="cal-dot '+dotClass+'"></span>':'')+'</div>':'')+
+    '</div>';
+  }).join('');
+  html += '</div>';
+
+  // Day detail panel (hidden, shown when clicking a day)
+  html += '<div class="day-list" id="calDayDetail" style="display:none"></div>';
+  html += '</div>';
+
+  const exList = container.querySelector('.day-list');
+  if(exList) exList.remove();
+  const exCal = container.querySelector('.cal-wrap');
+  if(exCal) exCal.remove();
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function esc(s){
+  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+  return s.replace(/[&<>"']/g,c=>map[c]);
+}
+
+// ========== Stats helpers ==========
+function calcStreak(){
+  let streak = 0;
+  const d = new Date();
+  while(true){
+    const ds = localDay(d);
+    const anyDone = state.dailies.some(daily =>
+      daily.completedDates && daily.completedDates.includes(ds)
+    );
+    if(!anyDone) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+function calcTodayCount(){
+  const t = today();
+  let count = 0;
+  for(const h of state.habits){
+    if(h.history && h.history[t]) count += h.history[t];
+  }
+  for(const d of state.dailies){
+    if(d.completedDates && d.completedDates.includes(t)) count++;
+  }
+  for(const td of state.todos){
+    if(td.completed && td.createdAt === t) count++;
+  }
+  // Also count pomodoros completed today
+  const pomos = (state.activityLog||[]).filter(e =>
+    e.type==='pomodoro-complete' && tsDay(e.ts)===t
+  ).length;
+  return count + pomos;
+}
+
+// ========== FAB Visibility ==========
+function updateFab(){
+  const fab = document.getElementById('fab');
+  const activeTab = document.querySelector('.tab-btn.active');
+  const tab = activeTab ? activeTab.dataset.tab : 'habits';
+  if(tab === 'pomodoro' || tab === 'summary'){
+    fab.classList.add('hidden');
+  }else{
+    fab.classList.remove('hidden');
+  }
+}
+
+// ========== Summary State ==========
+let summaryYear = new Date().getFullYear();
+let summaryMonth = new Date().getMonth() + 1;
+let summaryView = 'list'; // 'list' | 'calendar'
+
+// ========== Add Forms ==========
+let currentAddTab = null;
+let habitType = 'positive';
+
+function showAddForm(tab){
+  currentAddTab = tab;
+  habitType = 'positive';
+  const fab = document.getElementById('fab');
+  fab.classList.add('spin');
+
+  const areas = {
+    habits: 'habitsAddArea', dailies: 'dailiesAddArea',
+    todos: 'todosAddArea', rewards: 'rewardsAddArea',
+    pomodoro: null, summary: null
+  };
+  if(!areas[tab]) return;
+  const area = document.getElementById(areas[tab]);
+
+  if(tab === 'habits'){
+    area.innerHTML = '<div class="add-form"><input type="text" id="addInput" placeholder="习惯名称..." maxlength="40"><div class="type-toggle"><button class="type-opt active" data-type="positive">👍 好</button><button class="type-opt" data-type="negative">👎 坏</button></div><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div>';
+  }else if(tab === 'dailies'){
+    area.innerHTML = '<div class="add-form"><input type="text" id="addInput" placeholder="任务名称..." maxlength="40"><input type="number" id="addTime" placeholder="分钟" min="0" max="480" style="max-width:64px;flex:0"><span style="font-size:11px;color:var(--text3)">分</span><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div>';
+  }else if(tab === 'todos'){
+    area.innerHTML = '<div class="add-form"><input type="text" id="addInput" placeholder="待办名称..." maxlength="40"><input type="number" id="addTime" placeholder="分钟" min="0" max="480" style="max-width:56px;flex:0"><span style="font-size:11px;color:var(--text3)">分</span><select id="addDifficulty" style="max-width:70px;flex:0;padding:9px 6px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);background:var(--bg)"><option value="normal">普通</option><option value="easy">简单</option><option value="hard">困难</option><option value="epic">史诗</option></select><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div>';
+  }else if(tab === 'rewards'){
+    area.innerHTML = '<div class="add-form"><input type="text" id="addInput" placeholder="奖励名称..." maxlength="40" style="flex:2"><input type="number" id="addPrice" placeholder="价格" min="1" max="9999" style="max-width:80px;flex:0"><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div>';
+  }
+
+  setTimeout(()=>{
+    const inp = document.getElementById('addInput');
+    if(inp) inp.focus();
+  },100);
+}
+
+function hideAddForm(){
+  currentAddTab = null;
+  document.getElementById('fab').classList.remove('spin');
+  ['habits','dailies','todos','rewards'].forEach(t=>{
+    const el = document.getElementById(t+'AddArea');
+    if(el) el.innerHTML = '';
+  });
+}
+
+function confirmAdd(){
+  if(!currentAddTab) return;
+  const input = document.getElementById('addInput');
+  const name = input ? input.value.trim() : '';
+  if(!name) return;
+
+  if(currentAddTab === 'habits'){
+    state.habits.push({ id: uid(), name, type: habitType, history: {} });
+  }else if(currentAddTab === 'dailies'){
+    const timeInput = document.getElementById('addTime');
+    const estMin = timeInput ? Math.max(0, parseInt(timeInput.value)||0) : 0;
+    state.dailies.push({ id: uid(), name, completedDates: [], estimatedMinutes: estMin, accumulatedFocusMinutes: 0 });
+  }else if(currentAddTab === 'todos'){
+    const timeInput = document.getElementById('addTime');
+    const diffInput = document.getElementById('addDifficulty');
+    const estMin = timeInput ? Math.max(0, parseInt(timeInput.value)||0) : 0;
+    const diff = diffInput ? diffInput.value : 'normal';
+    state.todos.push({ id: uid(), name, completed: false, createdAt: today(), difficulty: diff, estimatedMinutes: estMin, accumulatedFocusMinutes: 0 });
+  }else if(currentAddTab === 'rewards'){
+    const priceInput = document.getElementById('addPrice');
+    const price = priceInput ? Math.max(1, parseInt(priceInput.value)||10) : 10;
+    state.rewards.push({ id: uid(), name, price });
+  }
+  saveState();
+  hideAddForm();
+  render();
+}
+
+// ========== Event Delegation ==========
+document.getElementById('app').addEventListener('click', function(e){
+  const btn = e.target.closest('[data-action]');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+
+  switch(action){
+    case 'trigger-habit':{
+      const h = state.habits.find(x=>x.id===id);
+      if(!h) return;
+      if(h.type==='positive') triggerPositiveHabit(h);
+      else triggerNegativeHabit(h);
+      break;
+    }
+    case 'delete-habit':{
+      if(confirm('确定删除这个习惯吗？')) deleteItem(state.habits, id);
+      break;
+    }
+    case 'toggle-daily':{
+      const d = state.dailies.find(x=>x.id===id);
+      if(d) toggleDaily(d);
+      break;
+    }
+    case 'delete-daily':{
+      if(confirm('确定删除这个每日任务吗？')) deleteItem(state.dailies, id);
+      break;
+    }
+    case 'complete-todo':{
+      const t = state.todos.find(x=>x.id===id);
+      if(t) completeTodo(t);
+      break;
+    }
+    case 'delete-todo':{
+      deleteItem(state.todos, id);
+      break;
+    }
+    case 'buy-reward':{
+      const r = state.rewards.find(x=>x.id===id);
+      if(r) buyReward(r);
+      break;
+    }
+    case 'delete-reward':{
+      if(confirm('确定删除这个奖励吗？')) deleteItem(state.rewards, id);
+      break;
+    }
+    // Pomodoro actions
+    case 'pomo-start':{
+      const c = state.pomodoro.current;
+      if(c.phase === 'idle'){
+        // Pre-start: check if linked todo has remaining time < focus time → offer adaptation
+        let adapted = false;
+        if(c.linkedTodoId){
+          const todo = state.todos.find(t=>t.id===c.linkedTodoId && !t.completed);
+          if(todo && todo.estimatedMinutes){
+            const remaining = todo.estimatedMinutes - (todo.accumulatedFocusMinutes||0);
+            if(remaining > 0 && remaining < state.pomodoro.settings.focus){
+              showAdaptDuration(todo, remaining);
+              adapted = true;
+            }
+          }
+        }
+        // Also warn for linked daily
+        if(!adapted && c.linkedDailyId){
+          const daily = state.dailies.find(d=>d.id===c.linkedDailyId);
+          if(daily && daily.estimatedMinutes){
+            const remaining = (daily.estimatedMinutes||0) - (daily.accumulatedFocusMinutes||0);
+            if(remaining>0 && state.pomodoro.settings.focus >= remaining+5){
+              toast('⚠️ 一个番茄('+state.pomodoro.settings.focus+'分)即可完成「'+daily.name+'」，建议专注到底', 'warn');
+            }
+          }
+        }
+        if(!adapted) startPhase('focus');
+      }else if(c.pausedAt !== null){
+        resumeTimer();
+      }
+      renderPomodoro();
+      updateMiniTimer();
+      break;
+    }
+    case 'pomo-pause':{
+      pauseTimer();
+      renderPomodoro();
+      updateMiniTimer();
+      break;
+    }
+    case 'pomo-skip':{
+      skipPhase();
+      break;
+    }
+    case 'pomo-abandon':{
+      abandonPomodoro();
+      break;
+    }
+    case 'go-pomodoro':{
+      switchTab('pomodoro');
+      break;
+    }
+    // Summary actions
+    case 'summary-prev':{
+      if(summaryMonth===1){summaryMonth=12;summaryYear--;}
+      else summaryMonth--;
+      renderSummary();
+      break;
+    }
+    case 'summary-next':{
+      const now=new Date();
+      const isCur=(summaryYear===now.getFullYear()&&summaryMonth===now.getMonth()+1);
+      if(!isCur){
+        if(summaryMonth===12){summaryMonth=1;summaryYear++;}
+        else summaryMonth++;
+        renderSummary();
+      }
+      break;
+    }
+    case 'summary-view-list':{
+      summaryView='list';renderSummary();break;
+    }
+    case 'summary-view-cal':{
+      summaryView='calendar';renderSummary();break;
+    }
+    case 'cal-day':{
+      const dateStr = btn.dataset.date;
+      const entries = (state.activityLog||[]).filter(e=>tsDay(e.ts)===dateStr);
+      const detail = document.getElementById('calDayDetail');
+      if(!detail) break;
+      if(detail.style.display==='block' && detail.dataset.date===dateStr){
+        detail.style.display='none';break;
+      }
+      detail.dataset.date=dateStr;
+      detail.style.display='block';
+      const d=new Date(dateStr+'T00:00:00');
+      const weekNames=['周日','周一','周二','周三','周四','周五','周六'];
+      const title=dateStr+' '+weekNames[d.getDay()];
+      if(entries.length===0){
+        detail.innerHTML='<div style="padding:10px 14px;font-weight:700;font-size:14px">'+title+'</div><div class="day-empty">这天没有记录</div>';
+      }else{
+        // Compute summary stats
+        const pomoEntries=entries.filter(e=>e.type==='pomodoro-complete');
+        const pomoCount=pomoEntries.length;
+        const studyMin=pomoCount*state.pomodoro.settings.focus;
+        const doneCount=entries.filter(e=>['habit-positive','daily-complete','todo-complete'].includes(e.type)).length;
+        let dayXp=0,dayGold=0,dayHp=0;
+        for(const e of entries){dayXp+=e.xp;dayGold+=e.gold;dayHp+=e.hp;}
+        const stripHtml=
+          '<div class="day-summary-strip">'+
+            '<div class="dss-item"><span class="dss-val">🍅 '+pomoCount+'</span><span class="dss-sub">'+studyMin+'分钟</span></div>'+
+            '<div class="dss-item"><span class="dss-val">✅ '+doneCount+'</span><span class="dss-sub">完成项目</span></div>'+
+            '<div class="dss-item"><span class="dss-val green">'+(dayXp>0?'+':'')+dayXp+'</span><span class="dss-sub">经验</span></div>'+
+            '<div class="dss-item">'+
+              '<span class="dss-val '+(dayGold>=0?'amber':'red')+'">'+(dayGold>0?'+':'')+dayGold+' 🪙</span>'+
+              '<span class="dss-sub '+(dayHp<0?'red':'')+'">'+(dayHp!==0?(dayHp>0?'+':'')+dayHp+' ❤️':'血量不变')+'</span>'+
+            '</div>'+
+          '</div>';
+        let tHtml='<div style="padding:10px 14px;font-weight:700;font-size:14px">'+title+' ('+entries.length+'条)</div>'+stripHtml+'<div class="day-timeline">';
+        tHtml+=entries.map(e=>{
+          const effParts=[];
+          if(e.xp!==0) effParts.push((e.xp>0?'+':'')+e.xp+' XP');
+          if(e.gold!==0) effParts.push((e.gold>0?'+':'')+e.gold+' 🪙');
+          if(e.hp!==0) effParts.push((e.hp>0?'+':'')+e.hp+' HP');
+          const effClass=(e.xp>0||e.gold>0)?'gain':(e.hp<0||e.gold<0)?'loss':'neutral';
+          return '<div class="timeline-entry">'+
+            '<span class="tl-time">'+fmtTime(e.ts)+'</span>'+
+            '<span class="tl-icon">'+(EVENT_ICONS[e.type]||'•')+'</span>'+
+            '<span class="tl-detail">'+esc(e.detail)+'</span>'+
+            '<span class="tl-effect '+effClass+'">'+effParts.join(' ')+'</span>'+
+          '</div>';
+        }).join('')+'</div>';
+        detail.innerHTML=tHtml;
+      }
+      break;
+    }
+  }
+});
+
+// Change event for select
+document.getElementById('app').addEventListener('change', function(e){
+  if(e.target.id === 'linkTodoSelect'){
+    state.pomodoro.current.linkedTodoId = e.target.value || null;
+    saveState();
+    renderLinkedTask();
+    return;
+  }
+  if(e.target.id === 'linkDailySelect'){
+    state.pomodoro.current.linkedDailyId = e.target.value || null;
+    saveState();
+    renderLinkedTask();
+    return;
+  }
+  // Settings changes
+  const s = state.pomodoro.settings;
+  if(e.target.id === 'setFocus'){ s.focus = Math.max(1, parseInt(e.target.value)||25); saveState(); renderPomodoro(); }
+  if(e.target.id === 'setShort'){ s.shortBreak = Math.max(1, parseInt(e.target.value)||5); saveState(); }
+  if(e.target.id === 'setLong'){ s.longBreak = Math.max(1, parseInt(e.target.value)||15); saveState(); }
+  if(e.target.id === 'setInterval'){ s.longInterval = Math.max(1, parseInt(e.target.value)||4); saveState(); }
+  if(e.target.id === 'setAutoStart'){ s.autoStart = e.target.checked; saveState(); }
+});
+
+// Type toggle in add form
+document.getElementById('app').addEventListener('click', function(e){
+  const opt = e.target.closest('.type-opt');
+  if(!opt) return;
+  habitType = opt.dataset.type;
+  const form = opt.closest('.add-form');
+  if(form){
+    form.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+  }
+});
+
+// Confirm & Cancel add
+document.getElementById('app').addEventListener('click', function(e){
+  if(e.target.closest('#confirmAdd')) confirmAdd();
+  if(e.target.closest('#cancelAdd')) hideAddForm();
+  // Settings toggle
+  if(e.target.closest('#toggleSettings')){
+    const panel = document.getElementById('settingsPanel');
+    if(panel) panel.style.display = panel.style.display==='none'?'grid':'none';
+  }
+});
+
+// Enter key in add input
+document.getElementById('app').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && (e.target.id === 'addInput' || e.target.id === 'addPrice')) confirmAdd();
+  if(e.key === 'Escape' && (e.target.id === 'addInput' || e.target.id === 'addPrice')) hideAddForm();
+});
+
+// ========== Tabs ==========
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const targetBtn = document.querySelector('.tab-btn[data-tab="'+tab+'"]');
+  if(targetBtn) targetBtn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  const targetContent = document.getElementById('tab-'+tab);
+  if(targetContent) targetContent.classList.add('active');
+  hideAddForm();
+  updateFab();
+  render();
+}
+
+document.getElementById('tabBar').addEventListener('click', function(e){
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  switchTab(btn.dataset.tab);
+});
+
+// ========== FAB ==========
+document.getElementById('fab').addEventListener('click', function(){
+  const activeTab = document.querySelector('.tab-btn.active');
+  const tab = activeTab ? activeTab.dataset.tab : 'habits';
+  if(currentAddTab === tab){
+    hideAddForm();
+  }else{
+    showAddForm(tab);
+  }
+});
+
+// ========== Init ==========
+function init(){
+  state = loadState();
+  checkDailyReset();
+
+  // Restore pomodoro state: if was running, recalculate
+  const c = state.pomodoro.current;
+  if(c.phase !== 'idle' && c.pausedAt === null && c.startedAt){
+    // Was running when page was closed
+    if(getRemainingMs() <= 0){
+      advancePhase(true);
+    }else{
+      startTicking();
+    }
+  }
+
+  saveState();
+  render();
+}
+
+init();
+})();
+</script>
+
+</body>
+</html>

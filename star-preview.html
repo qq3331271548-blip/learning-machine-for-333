@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三角星徽章预览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC',sans-serif;
+  background:#f8f7f4;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;
+  padding:40px;
+}
+h2{font-size:18px;color:#1e1e2e;margin-bottom:8px}
+.desc{font-size:13px;color:#9ca3af;margin-bottom:20px}
+/* ---- 预览区 ---- */
+.preview-row{display:flex;gap:40px;align-items:flex-end}
+.badge-set{display:flex;flex-direction:column;align-items:center;gap:10px}
+.badge-label{font-size:12px;color:#6b7280;font-weight:600}
+/* ---- 三角星徽章容器 ---- */
+.star-badge{
+  width:44px;height:44px;
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  flex-shrink:0;
+}
+/* ---- SVG 星星三角 ---- */
+.star-badge svg{width:36px;height:36px;display:block}
+/* ---- 放在卡片里的效果 ---- */
+.card-demo{
+  background:#fff;border-radius:14px;padding:16px 18px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  display:flex;align-items:center;gap:12px;
+  width:420px;max-width:100%;
+}
+.card-name{flex:1;font-size:15px;font-weight:500;color:#1e1e2e}
+.card-count{font-size:13px;font-weight:700;color:#10b981}
+.card-reward{font-size:11px;font-weight:600;color:#3b82f6}
+.card-btn{
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:#d1fae5;color:#10b981;font-size:18px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+</style>
+</head>
+<body>
+
+<h2>三角星徽章 — 难度视觉方案</h2>
+<div class="desc">用实心/空心 + 三角排列区分三档难度</div>
+
+<!-- 方案 A：纯三角 -->
+<div class="preview-row">
+  <div class="badge-set">
+    <div class="star-badge">
+      <svg viewBox="0 0 36 36">
+        <!-- easy: top star filled, bottom two empty -->
+        <polygon points="18,3 20.5,12 30,12 22,17.5 25,27 18,21.5 11,27 14,17.5 6,12 15.5,12" fill="#d97706"/>
+        <polygon points="18,14 20.5,23 30,23 22,28.5 25,33 18,30 11,33 14,28.5 6,23 15.5,23" fill="none" stroke="#d1d5db" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <span class="badge-label">简单 easy</span>
+  </div>
+  <div class="badge-set">
+    <div class="star-badge">
+      <svg viewBox="0 0 36 36">
+        <!-- medium: top two filled, bottom one empty -->
+        <polygon points="18,3 20.5,12 30,12 22,17.5 25,27 18,21.5 11,27 14,17.5 6,12 15.5,12" fill="#d97706"/>
+        <polygon points="18,14 20.5,23 30,23 22,28.5 25,33 18,30 11,33 14,28.5 6,23 15.5,23" fill="#d97706"/>
+        <polygon points="18,25 20.5,34 30,34 22,39.5 25,44 18,41 11,44 14,39.5 6,34 15.5,34" fill="none" stroke="#d1d5db" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <span class="badge-label">中等 medium</span>
+  </div>
+  <div class="badge-set">
+    <div class="star-badge">
+      <svg viewBox="0 0 36 36">
+        <!-- hard: all three filled -->
+        <polygon points="18,3 20.5,12 30,12 22,17.5 25,27 18,21.5 11,27 14,17.5 6,12 15.5,12" fill="#d97706"/>
+        <polygon points="18,14 20.5,23 30,23 22,28.5 25,33 18,30 11,33 14,28.5 6,23 15.5,23" fill="#d97706"/>
+        <polygon points="18,25 20.5,34 30,34 22,39.5 25,44 18,41 11,44 14,39.5 6,34 15.5,34" fill="#d97706"/>
+      </svg>
+    </div>
+    <span class="badge-label">困难 hard</span>
+  </div>
+</div>
+
+<!-- 方案 B：在卡片中的效果 -->
+<h2 style="margin-top:20px">卡片内效果</h2>
+<div class="desc">徽章固定在卡片最左侧，不影响文字排版</div>
+
+<div class="card-demo">
+  <div class="star-badge" style="box-shadow:none;background:#fafaf9;border-radius:10px">
+    <svg viewBox="0 0 36 36" width="30" height="30">
+      <polygon points="18,3 20.5,12 30,12 22,17.5 25,27 18,21.5 11,27 14,17.5 6,12 15.5,12" fill="#d97706"/>
+      <polygon points="18,14 20.5,23 30,23 22,28.5 25,33 18,30 11,33 14,28.5 6,23 15.5,23" fill="#d97706"/>
+      <polygon points="18,25 20.5,34 30,34 22,39.5 25,44 18,41 11,44 14,39.5 6,34 15.5,34" fill="none" stroke="#d1d5db" stroke-width="1.2"/>
+    </svg>
+  </div>
+  <div class="card-name">晨跑30分钟</div>
+  <span class="card-count">×3</span>
+  <span class="card-reward">+22经验 +12🪙</span>
+  <button class="card-btn">👍</button>
+</div>
+
+</body>
+</html>
