@@ -1137,7 +1137,7 @@ body{
             <span class="hd-circle h"></span>
             <div>
               <div class="hd-cn">复习数学</div>
-              <div class="hd-cs"><span style="color:#d97706">📅 6月11日</span><span style="color:#4338ca"># 数学</span><span style="color:var(--xp)">+35 XP</span></div>
+              <div class="hd-cs"><span style="color:#d97706">📅 6月11日</span><span style="color:#4338ca"># 数学</span><span style="color:var(--xp)">+500 XP</span></div>
             </div>
           </div>
         </div>
@@ -1147,12 +1147,12 @@ body{
       <div class="help-section">
         <div class="help-h">③ 点圆圈完成 · 按难度发奖励</div>
         <div class="hd-diffs">
-          <div><span class="hd-circle e"></span><b>简单</b>+10</div>
-          <div><span class="hd-circle m"></span><b>普通</b>+20</div>
-          <div><span class="hd-circle h"></span><b>困难</b>+35</div>
-          <div><span class="hd-circle x"></span><b>史诗</b>+60</div>
+          <div><span class="hd-circle e"></span><b>简单</b>+120</div>
+          <div><span class="hd-circle m"></span><b>普通</b>+250</div>
+          <div><span class="hd-circle h"></span><b>困难</b>+500</div>
+          <div><span class="hd-circle x"></span><b>史诗</b>+500</div>
         </div>
-        <p class="help-sub">数字为 XP，金币按比例同发（+4 / +8 / +14 / +24 🪙）。</p>
+        <p class="help-sub">数字为 XP，金币按比例同发（+60 / +120 / +250 🪙）。</p>
       </div>
 
       <div class="help-section">
@@ -1199,22 +1199,22 @@ body{
 const STORAGE_KEY = 'habit-tracker-v1'; // v2 state structure, backward-compat key
 const HP_BASE = 50;
 const HP_PER_LVL = 5;
-const XP_BASE = 100;
-const XP_PER_LVL = 50;
+const XP_BASE = 1000;
+const XP_PER_LVL = 500;
 
 const REWARDS = {
-  pomodoro:       { xp: 25, gold: 10,    label: '完成番茄' },
+  pomodoro:       { xp: 250, gold: 100,    label: '完成番茄' },
   levelUp:        { hpRestore: true,     label: '升级！' },
   death:          { hpRestore: 0.5, goldLoss: 0.2, label: '角色昏倒了' },
 };
 
 // 统一难度×奖励表（第一步核心）
 const DIFF_REWARDS = {
-  positiveHabit: { easy:{xp:3,gold:1}, medium:{xp:6,gold:3}, hard:{xp:12,gold:6} },
+  positiveHabit: { easy:{xp:30,gold:10}, medium:{xp:60,gold:30}, hard:{xp:120,gold:60} },
   negativeHabit: { easy:{hp:-3},       medium:{hp:-6},       hard:{hp:-12}       },
-  daily:         { easy:{xp:8,gold:4}, medium:{xp:15,gold:8},hard:{xp:30,gold:15}},
+  daily:         { easy:{xp:80,gold:40}, medium:{xp:150,gold:80},hard:{xp:300,gold:150}},
   dailyMiss:     { easy:{hp:-3},       medium:{hp:-5},       hard:{hp:-10}       },
-  todo:          { easy:{xp:12,gold:6},medium:{xp:25,gold:12},hard:{xp:50,gold:25}},
+  todo:          { easy:{xp:120,gold:60},medium:{xp:250,gold:120},hard:{xp:500,gold:250}},
 };
 const DIFF_LABEL = { easy:'⭐', medium:'⭐⭐', hard:'⭐⭐⭐' };
 const DIFF_NAME  = { easy:'简单', medium:'中等', hard:'困难' };
@@ -1258,11 +1258,11 @@ function getStreakMultiplier(){
   return 1.00;
 }
 const STREAK_MILESTONES = [
-  { day: 7,   gold: 50,   icon:'🌱', title: '一周战士 🌱',   msg: '坚持一周，你已经超越了大多数人！' },
-  { day: 21,  gold: 200,  icon:'🌿', title: '穿越迷雾 🌿',  msg: '三周习惯已初见成效，继续前行！' },
-  { day: 30,  gold: 500,  icon:'🌳', title: '三十而立 🌳',  msg: '一个月风雨无阻，你太强了！' },
-  { day: 66,  gold: 2000, icon:'⭐', title: '习惯成自然 ⭐', msg: '六十六天锻造了真正的习惯！' },
-  { day: 100, gold: 5000, icon:'👑', title: '百日筑基 👑',  msg: '百天筑基，未来可期！你是传奇！' },
+  { day: 7,   gold: 500,   icon:'🌱', title: '一周战士 🌱',   msg: '坚持一周，你已经超越了大多数人！' },
+  { day: 21,  gold: 2000,  icon:'🌿', title: '穿越迷雾 🌿',  msg: '三周习惯已初见成效，继续前行！' },
+  { day: 30,  gold: 5000,  icon:'🌳', title: '三十而立 🌳',  msg: '一个月风雨无阻，你太强了！' },
+  { day: 66,  gold: 20000, icon:'⭐', title: '习惯成自然 ⭐', msg: '六十六天锻造了真正的习惯！' },
+  { day: 100, gold: 50000, icon:'👑', title: '百日筑基 👑',  msg: '百天筑基，未来可期！你是传奇！' },
 ];
 
 // 待办优先级 → 排序权重 + 左侧色条
@@ -1459,7 +1459,7 @@ function fmtDuration(min){ const h=Math.floor(min/60),m=min%60; return h>0?h+'h'
 // ========== State ==========
 function defaultState(){
   return {
-    stats: { hp: 50, xp: 0, level: 1, gold: 15 },
+    stats: { hp: 50, xp: 0, level: 1, gold: 150 },
     habits: [
       { id: uid(), name: '喝一杯水', type: 'positive', difficulty: 'medium', history: {} },
       { id: uid(), name: '久坐超过1小时', type: 'negative', difficulty: 'medium', history: {} },
@@ -1472,9 +1472,9 @@ function defaultState(){
       { id: uid(), name: '👋 点我完成 · 也可以左边点开设置难度和日期', completed: false, createdAt: today(), difficulty: 'medium', dueDate: today(), priority: 'medium', tag: null, subtasks: [], completedAt: null, estimatedMinutes: 0, accumulatedFocusMinutes: 0, reminderTime: null, reminded: false },
     ],
     rewards: [
-      { id: uid(), name: '看一集喜欢的剧', price: 20 },
-      { id: uid(), name: '吃一块巧克力', price: 15 },
-      { id: uid(), name: '买一个小玩意', price: 50 },
+      { id: uid(), name: '看一集喜欢的剧', price: 200 },
+      { id: uid(), name: '吃一块巧克力', price: 150 },
+      { id: uid(), name: '买一个小玩意', price: 500 },
     ],
     lastResetDate: today(),
     streakMilestones: [],
@@ -1536,6 +1536,26 @@ function loadState(){
         for(const d of s.dailies){
           if(d.difficulty === undefined) d.difficulty = 'medium';
           if(d.customReward === undefined) d.customReward = null;
+        }
+      }
+      // 迁移 v2 → v3：全局数值 ×10（存量一次性公平过渡）
+      if(!s.schemaVersion || s.schemaVersion < 3){
+        s.schemaVersion = 3;
+        s.stats.gold = Math.round((s.stats.gold || 0) * 10);
+        s.stats.xp = Math.round((s.stats.xp || 0) * 10);
+        // 奖励商店价格
+        if(Array.isArray(s.rewards)){
+          for(const r of s.rewards){ r.price = Math.round((r.price || 10) * 10); }
+        }
+        // 自定义奖励
+        for(const arr of [s.habits, s.dailies, s.todos]){
+          if(!Array.isArray(arr)) continue;
+          for(const item of arr){
+            if(item && item.customReward){
+              if(item.customReward.xp != null) item.customReward.xp = Math.round(item.customReward.xp * 10);
+              if(item.customReward.gold != null) item.customReward.gold = Math.round(item.customReward.gold * 10);
+            }
+          }
         }
       }
       return s;
@@ -2274,7 +2294,7 @@ function gainGold(amount, reason){
   flashGold();
   // 金币里程碑检测（整百整千 — 报告跨越的最高档）
   const newGold = state.stats.gold;
-  const milestones = [100,200,300,400,500,600,700,800,900,1000,2000,3000,4000,5000,10000];
+  const milestones = [1000,2000,3000,4000,5000,6000,7000,8000,9000,10000,20000,30000,40000,50000,100000];
   let best = 0;
   for(const m of milestones){
     if(prevGold < m && newGold >= m) best = m;
@@ -3393,7 +3413,7 @@ function showAddForm(tab){
           '<button class="diff-opt m active" data-diff="medium">⭐⭐</button>'+
           '<button class="diff-opt h" data-diff="hard">⭐⭐⭐</button>'+
         '</div>'+
-        '<div class="add-hint" id="addHint">→ 完成得 <b style="color:var(--xp)">+25 XP</b> · +12 🪙</div>'+
+        '<div class="add-hint" id="addHint">→ 完成得 <b style="color:var(--xp)">+250 XP</b> · +120 🪙</div>'+
         '<div style="display:flex;gap:8px;width:100%;margin-top:2px">'+
           '<button class="btn-confirm" id="confirmAdd" style="flex:1">添加</button>'+
           '<button class="btn-cancel" id="cancelAdd">取消</button>'+
@@ -3457,7 +3477,7 @@ function confirmAdd(){
     });
   }else if(currentAddTab === 'rewards'){
     const priceInput = document.getElementById('addPrice');
-    const price = priceInput ? Math.max(1, parseInt(priceInput.value)||10) : 10;
+    const price = priceInput ? Math.max(1, parseInt(priceInput.value)||100) : 100;
     state.rewards.push({ id: uid(), name, price });
   }
   saveState();

@@ -1,6 +1,9 @@
 # 本地 Claude Code 设置（每台机器各自的，不进仓库）
 .claude/settings.local.json
 
+# 自动审查 hook 的状态文件（记录“上次审过的代码状态”，每台机器各自的）
+.claude/.last-review
+
 # 系统垃圾文件
 Thumbs.db
 Desktop.ini
