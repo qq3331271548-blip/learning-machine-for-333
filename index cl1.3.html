@@ -220,8 +220,18 @@ body{
 .header-icons button:active{transform:scale(.93)}
 
 /* ===== Tab Content ===== */
-.tab-content{display:none}
-.tab-content.active{display:block}
+.tab-stage{position:relative;overflow:hidden;min-height:300px}
+.tab-content{
+  position:absolute;width:100%;top:0;left:0;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .25s ease;
+}
+.tab-content.active{position:relative;transform:translateX(0);opacity:1}
+.tab-content:not(.active){
+  pointer-events:none;opacity:0;
+}
+/* slide directions */
+.tab-content.slide-left{transform:translateX(-30px)}
+.tab-content.slide-right{transform:translateX(30px)}
 
 /* ===== Cards ===== (分隔线式列表) */
 .card-list{display:flex;flex-direction:column;gap:0}
@@ -1131,6 +1141,7 @@ body{
   </div>
 
   <!-- Tab Contents -->
+  <div class="tab-stage">
   <div class="tab-content active" id="tab-habits">
     <div class="card-list" id="habitsList"></div>
     <div id="habitsAddArea"></div>
@@ -1157,6 +1168,7 @@ body{
   <div class="tab-content" id="tab-summary">
     <div id="summaryContainer"></div>
   </div>
+  </div><!-- .tab-stage -->
 </div>
 
 <!-- FAB -->
@@ -3952,13 +3964,35 @@ document.getElementById('app').addEventListener('keydown', function(e){
 });
 
 // ========== Tabs ==========
+const TAB_ORDER = ['habits','dailies','todos','rewards','study','summary'];
+
 function switchTab(tab){
+  const oldActive = document.querySelector('.tab-content.active');
+  const oldIdx = oldActive ? TAB_ORDER.indexOf(oldActive.id.replace('tab-','')) : -1;
+  const newIdx = TAB_ORDER.indexOf(tab);
+
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   const targetBtn = document.querySelector('.tab-btn[data-tab="'+tab+'"]');
   if(targetBtn) targetBtn.classList.add('active');
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+
   const targetContent = document.getElementById('tab-'+tab);
-  if(targetContent) targetContent.classList.add('active');
+  if(!targetContent){ hideAddForm(); updateFab(); render(); return; }
+  if(targetContent.classList.contains('active')) return;
+
+  // direction: to right (newIdx > oldIdx) → incoming slides from right
+  const dir = newIdx > oldIdx ? 'slide-right' : 'slide-left';
+  targetContent.classList.add(dir);
+  void targetContent.offsetWidth; // render initial offset
+
+  if(oldActive) oldActive.classList.remove('active');
+  targetContent.classList.add('active');
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      targetContent.classList.remove(dir);
+    });
+  });
+
   hideAddForm();
   updateFab();
   render();
