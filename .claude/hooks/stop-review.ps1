@@ -32,10 +32,11 @@ try {
     # ---- precise web-code detection ----
     # Collect all file paths that changed (staged, unstaged, untracked)
     $changed = @()
-    $changed += (git diff --name-only HEAD) 2>$null
-    $changed += (git diff --name-only --cached) 2>$null
-    $changed += (git ls-files --others --exclude-standard) 2>$null
-    $changed = ($changed | Where-Object { $_ -and (Test-Path -LiteralPath (Join-Path $proj $_)) })
+    # -c core.quotePath=false prevents octal-escaping of Chinese filenames on Windows
+    $changed += (git -c core.quotePath=false diff --name-only HEAD) 2>$null
+    $changed += (git -c core.quotePath=false diff --name-only --cached) 2>$null
+    $changed += (git -c core.quotePath=false ls-files --others --exclude-standard) 2>$null
+    $changed = $changed | Where-Object { $_ -and (Test-Path -LiteralPath (Join-Path $proj $_)) }
 
     # Only .html / .css / .js files count as web-code
     $webFiles = $changed | Where-Object { $_ -match '\.(html|css|js)$' }
