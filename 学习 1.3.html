@@ -245,9 +245,10 @@ body{
 }
 .card:last-child{border-bottom:none}
 .card:active{opacity:.7}
+.card-habit{flex-wrap:nowrap}
 .card.completed{opacity:.45}
 .card.completed .card-name{text-decoration:line-through}
-.card-name{flex:1;font-size:15px;font-weight:500;word-break:break-word}
+.card-name{flex:1;font-size:15px;font-weight:500;max-width:180px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 .card-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .card-meta{font-size:12px;color:var(--text3);white-space:nowrap}
 
@@ -276,8 +277,9 @@ body{
 .habit-count.positive{color:var(--good)}
 .habit-count.negative{color:var(--bad)}
 .habit-reward{
-  font-size:11px;font-weight:600;
-  display:inline-flex;align-items:center;gap:3px;color:var(--text2);
+  font-size:13px;font-weight:700;
+  display:inline-flex;align-items:center;gap:6px;
+  white-space:nowrap;flex-shrink:0;
 }
 
 /* ===== Add Form ===== */
@@ -350,6 +352,41 @@ body{
   animation:flyUp .9s ease-out forwards;
   text-shadow:0 1px 4px rgba(255,255,255,.9);
 }
+/* ── 困难任务飞字（第一档）── */
+.fly-text-hard{
+  position:fixed;pointer-events:none;z-index:60;
+  font-weight:800;font-size:23px;white-space:nowrap;
+  animation:flyUpHard 1.2s ease-out forwards;
+}
+.fly-text-hard.xp{color:var(--xp)}
+.fly-text-hard.gold{color:#92400e}
+@keyframes flyUpHard{
+  0%{opacity:1;transform:translateY(0) scale(1.4);filter:drop-shadow(0 0 4px rgba(245,158,11,.6))}
+  30%{transform:translateY(-20px) scale(1);filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}
+  100%{opacity:0;transform:translateY(-80px) scale(.9);filter:drop-shadow(0 0 0px rgba(245,158,11,0))}
+}
+/* ── 升级飞字（第三档，局部）── */
+.fly-text-lvl{
+  position:fixed;pointer-events:none;z-index:90;
+  font-weight:900;font-size:26px;white-space:nowrap;
+  color:#6366f1;
+  animation:flyUpLvl 1.4s ease-out forwards;
+}
+@keyframes flyUpLvl{
+  0%{opacity:0;transform:translateY(10px) scale(.8)}
+  15%{opacity:1;transform:translateY(0) scale(1.15)}
+  30%{transform:translateY(-15px) scale(1)}
+  100%{opacity:0;transform:translateY(-90px) scale(.85)}
+}
+/* ── 卡片金边闪（困难任务）── */
+.card-glow{box-shadow:0 0 0 2px #f59e0b !important;transition:box-shadow .6s ease-out}
+.card-glow.fade{box-shadow:0 0 0 0px #f59e0b !important}
+/* ── 等级徽章光晕扩散 ── */
+.level-burst{box-shadow:0 0 20px rgba(99,102,241,.5) !important;filter:brightness(1.3);transition:all .6s ease-out}
+.level-burst.done{box-shadow:0 0 0px rgba(99,102,241,0) !important;filter:brightness(1)}
+/* ── HP 条绿闪 ── */
+.hp-flash{animation:hpFlash .4s ease}
+@keyframes hpFlash{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
 /* ===== Celebration Effects ===== */
 .screen-flash{
   position:fixed;inset:0;z-index:500;pointer-events:none;
@@ -730,8 +767,8 @@ body{
   .stat-mini-sub{font-size:10px}
   .stag{font-size:10px;padding:2px 6px}
   .tab-btn{font-size:12px;padding:8px 4px}
-  .card{padding:12px 2px}
-  .card-name{font-size:14px}
+  .card{gap:8px;padding:12px 2px}
+  .card-name{font-size:14px;max-width:100px}
   .companion-timer{font-size:52px}
   .companion-fox-wrap{width:100px;height:100px}
   .cal-grid{gap:2px}
@@ -789,9 +826,9 @@ body{
 
 /* Card 3-line structure: reward line */
 .card-reward{
-  display:flex;align-items:center;justify-content:center;gap:5px;
-  font-size:12px;font-weight:600;
-  margin-top:6px;flex-wrap:wrap;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;font-weight:700;
+  margin-top:6px;white-space:nowrap;
   flex-basis:100%;
 }
 .stars{
@@ -811,12 +848,15 @@ body{
 .card-reward .stars.easy{color:var(--diff-easy)}
 .card-reward .stars.medium{color:var(--diff-medium)}
 .card-reward .stars.hard{color:var(--diff-hard)}
+.val-xp{color:var(--xp);display:inline-flex;align-items:center;gap:2px}
 .card-reward .val-xp{color:var(--xp)}
-.card-reward .val-gold{color:#92400e}
+.ixp{flex-shrink:0;vertical-align:middle}
+.val-gold{color:#92400e;display:inline-flex;align-items:center;gap:2px}
 .card-reward .val-hp{color:var(--bad)}
-.card-reward .mult-tag{
+.mult-tag{
   font-size:9px;font-weight:500;color:var(--text3);
   background:var(--bg);padding:1px 5px;border-radius:4px;
+  flex-shrink:0;
 }
 /* Card 3-line structure: auxiliary line */
 .card-aux{
@@ -997,7 +1037,7 @@ body{
   background:var(--card);
   border-radius:18px;padding:32px 28px 24px;margin:20px;
   max-width:340px;width:100%;text-align:center;
-  box-shadow:0 12px 48px rgba(0,0,0,.15),0 0 0 2px var(--focus);
+  box-shadow:0 12px 48px rgba(0,0,0,.15),0 0 0 2px var(--focus),0 0 80px rgba(245,158,11,.2);
   animation:achiPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
 }
 .achievement-card .achi-icon{font-size:48px;margin-bottom:12px}
@@ -1034,6 +1074,11 @@ body{
 </style>
 </head>
 <body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-xp" viewBox="0 0 24 24">
+    <path d="M12,1 L15.5,8.5 L23,12 L15.5,15.5 L12,23 L8.5,15.5 L1,12 L8.5,8.5 Z" fill="currentColor"/>
+  </symbol>
+</svg>
 
 <div class="app" id="app">
   <!-- Remediation: 可折叠条 -->
@@ -2412,11 +2457,34 @@ function gainXp(amount, reason){
     logActivity('level-up', '升级到 Lv.'+state.stats.level+(levelCount>1?'（连升'+levelCount+'级）':''), 0, 0, 0);
     const label = levelCount>1 ? '🎉 连升'+levelCount+'级到 Lv.'+state.stats.level+'！生命回满' : '🎉 升级到 Lv.'+state.stats.level+'！生命回满';
     toast(label, 'info');
+    // 降级为局部特效：去掉全屏白闪
     for(let i=0; i<levelCount; i++){
-      setTimeout(()=>{ screenFlash(); triggerHop(); checkFoxStage(state.stats.level); }, i*180);
+      const isLast = (i === levelCount - 1);
+      setTimeout(()=>{
+        triggerHop();
+        checkFoxStage(state.stats.level);
+        if(isLast){
+        // 等级徽章光晕扩散
+        const badge = document.getElementById('levelBadge');
+        if(badge){ badge.classList.add('level-burst'); setTimeout(()=>{ badge.classList.add('done'); setTimeout(()=>badge.classList.remove('level-burst','done'),600); },400); }
+        // HP 条绿闪
+        const hpBar = document.getElementById('hpBar');
+        if(hpBar){ hpBar.classList.add('hp-flash'); setTimeout(()=>hpBar.classList.remove('hp-flash'),400); }
+        // 中央飞字
+        const flv = document.createElement('div');
+        flv.className = 'fly-text-lvl';
+        flv.textContent = '🎉 Lv.'+state.stats.level+'！';
+        const badgeRect = badge ? badge.getBoundingClientRect() : {left:window.innerWidth/2-60,top:window.innerHeight/2-40};
+        flv.style.left = (badgeRect.left + badgeRect.width/2 - 70) + 'px';
+        flv.style.top = Math.max(10, badgeRect.top - 10) + 'px';
+        document.body.appendChild(flv);
+        setTimeout(()=>flv.remove(), 1500);
+        }
+      }, i*180);
     }
-    const badge = document.getElementById('levelBadge');
-    if(badge){ badge.classList.add('pulse'); setTimeout(()=>badge.classList.remove('pulse'),500+levelCount*180); }
+    // 保留原有 pulse
+    const badgePulse = document.getElementById('levelBadge');
+    if(badgePulse){ badgePulse.classList.add('pulse'); setTimeout(()=>badgePulse.classList.remove('pulse'),500+levelCount*180); }
   }
   if(levelCount === 0) toast('+'+amount+' XP · '+reason, 'info');
 }
@@ -2443,6 +2511,7 @@ function gainGold(amount, reason){
 
 function triggerPositiveHabit(habit){
   const r = applyMult(getEffectiveReward('positiveHabit', habit));
+  const isHard = (habit.difficulty || 'medium') === 'hard';
   gainXp(r.xp, habit.name);
   gainGold(r.gold, habit.name);
   const t = today();
@@ -2451,8 +2520,13 @@ function triggerPositiveHabit(habit){
   logActivity('habit-positive', habit.name+' ×'+(habit.history[t]), r.xp, r.gold, 0);
   saveState();
   render();
+  // 困难任务：卡片金边闪
+  if(isHard){
+    const card = document.querySelector('.card[data-id="'+habit.id+'"]');
+    if(card){ card.classList.add('card-glow'); setTimeout(()=>{ card.classList.add('fade'); setTimeout(()=>{ card.classList.remove('card-glow','fade'); },600); },100); }
+  }
   const bar = document.getElementById('statsBar');
-  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)'},{text:'+'+r.gold+' 🪙',color:'#92400e'}]);
+  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)',cls:'xp'},{text:'+'+r.gold+' 🪙',color:'#92400e',cls:'gold'}], {hard:isHard});
 }
 
 function triggerNegativeHabit(habit){
@@ -2483,13 +2557,18 @@ function toggleDaily(daily){
   daily.completedDates.push(t);
   daily.accumulatedFocusMinutes = daily.estimatedMinutes||0;
   const r = applyMult(getEffectiveReward('daily', daily));
+  const isHard = (daily.difficulty || 'medium') === 'hard';
   gainXp(r.xp, daily.name);
   gainGold(r.gold, daily.name);
   logActivity('daily-complete', '完成每日: '+daily.name, r.xp, r.gold, 0);
   saveState();
   render();
+  if(isHard){
+    const card = document.querySelector('.card[data-id="'+daily.id+'"]');
+    if(card){ card.classList.add('card-glow'); setTimeout(()=>{ card.classList.add('fade'); setTimeout(()=>{ card.classList.remove('card-glow','fade'); },600); },100); }
+  }
   const bar = document.getElementById('statsBar');
-  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)'},{text:'+'+r.gold+' 🪙',color:'#92400e'}]);
+  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)',cls:'xp'},{text:'+'+r.gold+' 🪙',color:'#92400e',cls:'gold'}], {hard:isHard});
 }
 
 function completeTodo(todo, clickX, clickY){
@@ -2507,13 +2586,18 @@ function completeTodo(todo, clickX, clickY){
   todo.completed = true;
   todo.completedAt = today();
   const r = applyMult(getEffectiveReward('todo', todo));
+  const isHard = (todo.difficulty || 'medium') === 'hard';
   gainXp(r.xp, todo.name);
   gainGold(r.gold, todo.name);
   logActivity('todo-complete', '完成待办: '+todo.name+'（'+DIFF_NAME[todo.difficulty||'medium']+'）', r.xp, r.gold, 0);
   saveState();
   render();
+  if(isHard){
+    const card = document.querySelector('.todo-card[data-id="'+todo.id+'"]');
+    if(card){ card.classList.add('card-glow'); setTimeout(()=>{ card.classList.add('fade'); setTimeout(()=>{ card.classList.remove('card-glow','fade'); },600); },100); }
+  }
   const bar = document.getElementById('statsBar');
-  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)'},{text:'+'+r.gold+' 🪙',color:'#92400e'}]);
+  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)',cls:'xp'},{text:'+'+r.gold+' 🪙',color:'#92400e',cls:'gold'}], {hard:isHard});
   // 【第二重】粒子飞行，飞抵后自动触发第三重
   if(clickX !== undefined && clickY !== undefined){
     spawnParticles(clickX, clickY);
@@ -2625,21 +2709,22 @@ function toast(msg, type){
 }
 
 // ========== Float Text ==========
-function flyReward(anchor, parts){
+function flyReward(anchor, parts, opts){
   if(!anchor || !parts || !parts.length) return;
+  const isHard = !!(opts && opts.hard);
   const rect = anchor.getBoundingClientRect();
   const baseX = rect.left + rect.width/2;
   const baseY = rect.top;
   parts.forEach((p,i)=>{
     const el = document.createElement('div');
-    el.className = 'fly-text';
+    el.className = isHard ? ('fly-text-hard '+(p.cls||'')) : 'fly-text';
     el.textContent = p.text;
-    el.style.left = (baseX - 25 + i * 55) + 'px';
+    el.style.left = (baseX - (isHard?35:25) + i * (isHard?70:55)) + 'px';
     el.style.top = baseY + 'px';
-    el.style.color = p.color;
-    el.style.animationDelay = (i * 0.08) + 's';
+    if(!isHard) el.style.color = p.color;
+    el.style.animationDelay = (i * 0.06) + 's';
     document.body.appendChild(el);
-    setTimeout(()=>el.remove(), 1000);
+    setTimeout(()=>el.remove(), isHard?1300:1000);
   });
 }
 
@@ -2730,14 +2815,14 @@ function renderHabits(){
     if(isPos){
       const base = getEffectiveReward('positiveHabit', h);
       const r = applyMult(base);
-      inlineReward = '<span class="val-xp">+'+r.xp+'经验</span> <span class="val-gold">+'+r.gold+'🪙</span>';
+      inlineReward = '<span class="val-xp"><svg class="ixp" width="15" height="15"><use href="#icon-xp"/></svg>+'+r.xp+'</span> <span class="val-gold">🪙+'+r.gold+'</span>';
       if(r.mult > 1.00) inlineReward += ' <span class="mult-tag">·x'+r.mult.toFixed(2)+'</span>';
     }else{
       const r = getEffectiveReward('negativeHabit', h);
       inlineReward = '<span class="val-hp">'+r.hp+'HP</span>';
     }
     const customClass = hasCustom ? ' has-custom' : '';
-    return '<div class="card'+customClass+'" data-id="'+h.id+'">'+renderStarBadge(diff)+'<div class="card-name">'+esc(h.name)+'</div><span class="habit-count '+countCls+'">'+(count>0?'×'+count:'')+'</span><span class="habit-reward">'+inlineReward+'</span><div class="card-actions"><button class="btn-icon '+cls+'" data-action="trigger-habit" data-id="'+h.id+'" title="'+(isPos?'做得好':'又犯了')+'">'+icon+'</button><button class="btn-icon danger" data-action="delete-habit" data-id="'+h.id+'" title="删除" style="font-size:14px;width:28px;height:28px;opacity:.5">✕</button></div></div>';
+    return '<div class="card card-habit'+customClass+'" data-id="'+h.id+'">'+renderStarBadge(diff)+'<div class="card-name">'+esc(h.name)+'</div><span class="habit-count '+countCls+'">'+(count>0?'×'+count:'')+'</span><span class="habit-reward">'+inlineReward+'</span><div class="card-actions"><button class="btn-icon '+cls+'" data-action="trigger-habit" data-id="'+h.id+'" title="'+(isPos?'做得好':'又犯了')+'">'+icon+'</button><button class="btn-icon danger" data-action="delete-habit" data-id="'+h.id+'" title="删除" style="font-size:14px;width:28px;height:28px;opacity:.5">✕</button></div></div>';
   }).join('');
 }
 
@@ -2773,7 +2858,7 @@ function renderDailies(){
       progressBar = '<div class="daily-prog"><div class="daily-prog-fill" style="width:'+pct+'%"></div><span class="daily-prog-text">'+acc+'/'+est+' 分钟</span></div>';
     }
     // 奖励行
-    let rewardHTML = '<span class="val-xp">+'+r.xp+'经验</span> <span class="val-gold">+'+r.gold+'🪙</span>';
+    let rewardHTML = '<span class="val-xp"><svg class="ixp" width="15" height="15"><use href="#icon-xp"/></svg>+'+r.xp+'</span> <span class="val-gold">🪙+'+r.gold+'</span>';
     if(r.mult > 1.00) rewardHTML += ' <span class="mult-tag">·x'+r.mult.toFixed(2)+'</span>';
     // 补做边框
     const cardStyle = isMakeup ? 'border:2px solid #f97316;border-radius:var(--radius-sm)' : '';
@@ -2885,7 +2970,7 @@ function renderTodoCard(t){
   if(estMin>0) auxParts.push('<span class="mini-sub" data-live-sub="'+t.id+'">⏱ '+accMin+'/'+estMin+'分</span>');
 
   // 奖励行：彩色星星 + 经验 + 金币 + 倍率
-  let rewardHTML = '<span class="val-xp">+'+rd.xp+'经验</span> <span class="val-gold">+'+rd.gold+'🪙</span>';
+  let rewardHTML = '<span class="val-xp"><svg class="ixp" width="15" height="15"><use href="#icon-xp"/></svg>+'+rd.xp+'</span> <span class="val-gold">🪙+'+rd.gold+'</span>';
   if(rd.mult > 1.00) rewardHTML += ' <span class="mult-tag">·x'+rd.mult.toFixed(2)+'</span>';
 
   // 时长进度条
@@ -3304,18 +3389,29 @@ function checkStreakMilestones(streak){
     }
   }
 }
+let achiTimer = null;
 function showAchievement(ms){
   const ov = document.getElementById('achievementOverlay');
-  document.getElementById('goldText').textContent = state.stats.gold; // 即时刷新金币
+  document.getElementById('goldText').textContent = state.stats.gold;
   document.getElementById('achiIcon').textContent = ms.icon;
   document.getElementById('achiTitle').textContent = ms.title;
   document.getElementById('achiBody').textContent = '连续 '+ms.day+' 天打卡！\n'+ms.msg;
-  document.getElementById('achiGold').textContent = '+'+ms.gold+' 🪙';
+  // 金币数滚动增长
+  const goldEl = document.getElementById('achiGold');
+  const target = ms.gold;
+  let cur = 0;
+  const step = Math.max(1, Math.floor(target / 30)); // 约 600ms 滚完
+  achiTimer = setInterval(()=>{
+    cur = Math.min(target, cur + step);
+    goldEl.textContent = '+'+cur+' 🪙';
+    if(cur >= target){ clearInterval(achiTimer); achiTimer = null; goldEl.textContent = '+'+target+' 🪙'; }
+  }, 20);
   ov.classList.remove('hidden');
   screenFlash();
   triggerHop();
 }
 document.getElementById('achiClose').addEventListener('click', function(){
+  if(achiTimer){ clearInterval(achiTimer); achiTimer = null; }
   document.getElementById('achievementOverlay').classList.add('hidden');
   render();
 });
