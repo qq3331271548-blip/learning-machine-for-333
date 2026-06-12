@@ -2,18 +2,18 @@
 # If this turn left UNREVIEWED web-code changes, it blocks the stop and forces a
 # fresh-eyes self-review + verify pass first. Otherwise it allows the stop.
 #
-# Loop-safe via stop_hook_active. A small state file remembers the last-reviewed
+# Loop-safe via stop_hook_active. A state file remembers the last-reviewed
 # code state, so turns that did not touch code do not re-trigger a review.
 # ANY error => fail open (allow the stop). We never trap the user in a loop.
 #
-# This file is intentionally ASCII-only to avoid Windows PowerShell 5.1 encoding
-# issues. The injected instruction tells Claude to report back in Chinese.
+# v2: Uses `git diff --name-only` for precise file-level detection instead of
+#     regex-matching the full status output. Avoids false positives from
+#     non-web-code untracked files (jsonl, md, etc.).
 
 try {
     $ErrorActionPreference = 'SilentlyContinue'
 
-    # Project root: prefer the env var Claude Code provides; otherwise derive it
-    # from this script's own location (...\.claude\hooks\stop-review.ps1).
+    # Project root
     $proj = $env:CLAUDE_PROJECT_DIR
     if ([string]::IsNullOrWhiteSpace($proj)) {
         $proj = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -29,30 +29,42 @@ try {
 
     $stateFile = Join-Path $proj '.claude\.last-review'
 
-    # Fingerprint the current working-tree code state.
-    $status = (git status --porcelain) -join "`n"
-    $diff   = (git diff HEAD) -join "`n"
-    $sig    = "$status`n==DIFF==`n$diff"
+    # ---- precise web-code detection ----
+    # Collect all file paths that changed (staged, unstaged, untracked)
+    $changed = @()
+    $changed += (git diff --name-only HEAD) 2>$null
+    $changed += (git diff --name-only --cached) 2>$null
+    $changed += (git ls-files --others --exclude-standard) 2>$null
+    $changed = ($changed | Where-Object { $_ -and (Test-Path -LiteralPath (Join-Path $proj $_)) })
+
+    # Only .html / .css / .js files count as web-code
+    $webFiles = $changed | Where-Object { $_ -match '\.(html|css|js)$' }
+
+    # Fingerprint the current state from web-code files only
+    $sig = ''
+    foreach ($f in ($webFiles | Sort-Object)) {
+        $content = ''
+        try { $content = (Get-Content -LiteralPath (Join-Path $proj $f) -Raw -Encoding UTF8) } catch {}
+        $sig += "$f`n$content`n===END==="
+    }
     $sha    = [Security.Cryptography.SHA1]::Create()
     $hash   = [BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($sig))).Replace('-','')
 
-    # This is the SECOND stop, right after a review pass -> record state, allow.
-    # (This is what breaks any potential infinite loop.)
+    # SECOND stop after review pass -> record state, allow
     if ($active) {
         Set-Content -LiteralPath $stateFile -Value $hash -Encoding ASCII
         exit 0
     }
 
-    # No web-code changes at all -> allow the stop.
-    $touchesCode = $status -match '\.(html|css|js)'
-    if ([string]::IsNullOrWhiteSpace($status) -or -not $touchesCode) { exit 0 }
+    # No web-code files changed -> allow
+    if (-not $webFiles) { exit 0 }
 
-    # Identical to the last-reviewed state -> allow (no redundant review).
+    # Identical to last-reviewed state -> allow
     $last = ''
     if (Test-Path -LiteralPath $stateFile) { $last = (Get-Content -LiteralPath $stateFile -Raw).Trim() }
     if ($hash -eq $last) { exit 0 }
 
-    # Unreviewed web-code changes -> BLOCK and require a fresh-eyes review.
+    # Unreviewed web-code changes -> BLOCK
     $reason = @'
 There are unreviewed web-code changes in this turn. Before finishing, run a self-review the way a SEPARATE reviewer would. Do NOT just re-read your own code from memory: that carries your authoring intent and hides the exact bugs you missed while writing.
 
