@@ -192,24 +192,6 @@ body{
 .gold-display .coin{font-size:16px}
 .gold-display #goldText{font-weight:800;font-size:18px;color:var(--text)}
 
-/* ===== Mini Timer Bar ===== */
-.mini-timer{
-  display:none;grid-column:1/-1;
-  align-items:center;gap:10px;padding-top:8px;
-  border-top:1px solid var(--border);cursor:pointer;
-  transition:opacity .2s;
-}
-.mini-timer.active{display:flex}
-.mini-timer .mini-phase{font-size:16px;flex-shrink:0}
-.mini-timer .mini-time{font-size:13px;font-weight:700;color:var(--text);min-width:42px;text-align:right;flex-shrink:0}
-.mini-timer .mini-track{flex:1;height:6px;border-radius:3px;overflow:hidden;background:var(--border)}
-.mini-timer .mini-fill{height:100%;border-radius:3px;transition:width .5s linear}
-.mini-timer .mini-fill.focus{background:var(--focus)}
-.mini-timer .mini-fill.shortBreak{background:var(--short-b)}
-.mini-timer .mini-fill.longBreak{background:var(--long-b)}
-.mini-timer.urgent .mini-time{animation:urgentPulse .6s ease infinite}
-@keyframes urgentPulse{0%,100%{opacity:1}50%{opacity:.3}}
-
 /* ===== Tabs ===== */
 .tabs{
   display:flex;gap:2px;margin-bottom:16px;
@@ -218,7 +200,7 @@ body{
 }
 .tabs::-webkit-scrollbar{display:none}
 .tab-btn{
-  flex-shrink:0;padding:10px 14px;border:none;
+  flex:1;text-align:center;padding:10px 6px;border:none;
   background:transparent;
   color:var(--text3);font-size:13px;font-weight:600;
   cursor:pointer;transition:all .2s;font-family:var(--font);white-space:nowrap;
@@ -393,93 +375,185 @@ body{
   font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;
 }
 
-/* ===== Pomodoro ===== */
-.pomodoro-container{
-  display:flex;flex-direction:column;gap:16px;padding:4px 0;
+/* ===== Study / Companion Mode ===== */
+.study-container{
+  display:flex;flex-direction:column;gap:20px;padding:4px 0;
+  align-items:center;text-align:center;
 }
-/* Top row: stats left, action buttons right */
-.pomo-top{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+.study-title{
+  font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;
 }
-.pomo-stats{
-  display:flex;gap:10px;font-size:13px;color:var(--text2);font-weight:600;
+.study-duration-options{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
 }
-.pomo-stats span{background:var(--bg);padding:6px 12px;border-radius:16px}
-.pomo-actions{display:flex;gap:6px;flex-wrap:wrap}
-.pomo-btn-start,.pomo-btn-pause,.pomo-btn-skip,.pomo-btn-quit{
-  padding:8px 14px;border-radius:20px;border:none;cursor:pointer;
-  font-size:13px;font-weight:600;font-family:var(--font);
-  transition:all .15s;white-space:nowrap;
-}
-.pomo-btn-start{background:var(--focus);color:#fff}
-.pomo-btn-pause{background:var(--text3);color:#fff}
-.pomo-btn-skip{background:var(--border);color:var(--text2)}
-.pomo-btn-quit{background:var(--bad-bg);color:var(--bad)}
-.pomo-btn-start:active,.pomo-btn-pause:active,.pomo-btn-skip:active,.pomo-btn-quit:active{transform:scale(.95)}
-/* Middle: timer ring */
-.pomo-middle{display:flex;justify-content:center}
-.pomo-ring-wrap{position:relative;width:200px;height:200px}
-.pomo-ring-wrap svg{transform:rotate(-90deg)}
-.pomo-ring-bg{fill:none;stroke:var(--border);stroke-width:8}
-.pomo-ring-fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
-.pomo-ring-fg.focus{stroke:var(--focus)}
-.pomo-ring-fg.shortBreak{stroke:var(--short-b)}
-.pomo-ring-fg.longBreak{stroke:var(--long-b)}
-.pomo-time{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-.pomo-time .time-num{font-size:38px;font-weight:700;letter-spacing:2px;font-variant-numeric:tabular-nums}
-.pomo-time .time-label{font-size:13px;font-weight:600;color:var(--text2);margin-top:2px}
-/* Settings button */
-.pomo-settings-btn{
-  width:100%;padding:10px;border:2px solid var(--border);border-radius:20px;
-  background:var(--card);color:var(--text2);font-size:13px;font-weight:600;
+.study-dur-btn{
+  padding:14px 22px;border:2px solid var(--border);border-radius:14px;
+  background:var(--card);color:var(--text);font-size:16px;font-weight:700;
   cursor:pointer;font-family:var(--font);transition:all .15s;
+  min-width:90px;
 }
-.pomo-settings-btn:hover{background:var(--bg);border-color:var(--tab)}
-.settings-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:8px;
-  background:var(--card);border-radius:var(--radius);padding:14px 16px;
-  box-shadow:var(--shadow);
+.study-dur-btn:hover{background:var(--tab-bg);border-color:var(--tab)}
+.study-dur-btn.active{background:var(--tab-bg);border-color:var(--tab);color:var(--tab);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.study-dur-btn:active{transform:scale(.95)}
+.study-custom-toggle{
+  font-size:13px;color:var(--tab);cursor:pointer;font-weight:600;
+  padding:6px 12px;border-radius:8px;transition:all .15s;
+  display:inline-block;margin-top:4px;
 }
-.setting-item{display:flex;flex-direction:column;gap:3px}
-.setting-item label{font-size:12px;font-weight:600;color:var(--text2)}
-.setting-item input,.setting-item select{
-  padding:7px 10px;border:2px solid var(--border);border-radius:6px;
-  font-size:13px;font-family:var(--font);background:var(--bg);outline:none;
+.study-custom-toggle:hover{background:var(--tab-bg)}
+.study-custom-row{
+  display:flex;align-items:center;gap:8px;justify-content:center;margin-top:8px;
+  animation:slideDown .2s ease;
 }
-.setting-item input:focus,.setting-item select:focus{border-color:var(--tab)}
-.setting-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
-.setting-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--tab)}
+.study-custom-row input{
+  width:80px;padding:8px 12px;border:2px solid var(--border);border-radius:10px;
+  font-size:15px;font-family:var(--font);text-align:center;outline:none;
+  background:var(--card);
+}
+.study-custom-row input:focus{border-color:var(--tab)}
+.study-custom-row span{font-size:14px;color:var(--text2);font-weight:600}
+.study-custom-err{font-size:12px;color:var(--bad);margin-top:4px}
+.study-start-btn{
+  width:100%;max-width:360px;padding:16px;margin-top:10px;
+  border:none;border-radius:14px;background:var(--focus);color:#fff;
+  font-size:17px;font-weight:700;cursor:pointer;font-family:var(--font);
+  transition:all .15s;box-shadow:0 4px 16px rgba(249,115,22,.3);
+}
+.study-start-btn:active{transform:scale(.96)}
+.study-today-info{
+  font-size:13px;color:var(--text3);margin-top:6px;
+}
 
-/* ===== Link Todo Select ===== */
-.link-todo-wrap{width:100%}
-.link-todo-wrap select{
-  width:100%;padding:8px 12px;border:2px solid var(--border);border-radius:8px;
-  font-size:13px;font-family:var(--font);background:var(--bg);color:var(--text);outline:none;
+/* ===== Companion Mode Fullscreen Overlay ===== */
+.companion-overlay{
+  position:fixed;inset:0;z-index:510;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .3s ease;
 }
-.link-todo-wrap select:focus{border-color:var(--tab)}
-.link-todo-wrap .link-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px}
-/* Linked task live card */
-.pomo-linked{display:flex;flex-direction:column;gap:6px;width:100%}
-.linked-task-card{
-  background:var(--bg);border-radius:10px;padding:10px 14px;
+.companion-overlay.hidden{display:none}
+.companion-bg{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
 }
-.linked-task-card.done{opacity:.6}
-.ltc-header{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600}
-.ltc-prog{
-  position:relative;height:14px;border-radius:7px;overflow:hidden;
-  background:var(--border);margin-top:6px;
+.companion-abandon-btn{
+  position:absolute;top:20px;left:20px;
+  background:transparent;border:none;color:var(--text3);
+  font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font);
+  padding:6px 10px;border-radius:8px;transition:all .15s;
+  z-index:10;
 }
-.ltc-fill{
-  height:100%;border-radius:7px;
-  background:var(--good);
-  transition:width .5s linear;
+.companion-abandon-btn:hover{color:var(--bad);background:var(--bad-bg)}
+.companion-center{
+  display:flex;flex-direction:column;align-items:center;gap:20px;
 }
-.ltc-text{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;
+.companion-timer{
+  font-size:72px;font-weight:800;color:var(--text);
+  letter-spacing:4px;font-variant-numeric:tabular-nums;
+  line-height:1;
 }
-.link-row{display:flex;gap:10px;width:100%}
-.link-row .link-todo-wrap{flex:1;min-width:0}
+.companion-fox-wrap{
+  width:120px;height:120px;
+  display:flex;align-items:center;justify-content:center;
+  /* Base:趴伏 transform */
+  transform:scaleY(0.95) translateY(4px);
+  transition:transform .5s ease;
+}
+.companion-fox-wrap.breathing{
+  animation:foxBreathe 5s ease-in-out infinite;
+}
+.companion-fox-wrap.tilt{
+  animation:foxMicroTilt 1.2s ease-out;
+}
+.companion-fox-wrap.look-up{
+  animation:foxMicroLookUp 1.2s ease-out;
+}
+.companion-fox-wrap.sink{
+  animation:foxSink 2s ease-out forwards;
+}
+.companion-fox-wrap.stand-up{
+  transform:scaleY(1) translateY(0);
+}
+.companion-fox-wrap.hop{
+  animation:foxJump 0.5s ease-out;
+}
+.companion-fox-img{
+  width:100%;height:100%;object-fit:contain;display:block;
+}
+.companion-subtitle{
+  font-size:15px;color:var(--text3);font-weight:500;
+}
+/* Hearts burst from fox */
+.companion-heart{
+  position:absolute;pointer-events:none;z-index:520;
+  font-size:24px;
+  animation:heartFloat 2s ease-out forwards;
+}
+@keyframes foxBreathe{
+  0%,100%{transform:scaleY(0.95) translateY(4px) scale(1)}
+  50%{transform:scaleY(0.95) translateY(4px) scale(1.015)}
+}
+@keyframes foxMicroTilt{
+  0%{transform:scaleY(0.95) translateY(4px) rotate(0)}
+  30%{transform:scaleY(0.95) translateY(4px) rotate(-2deg)}
+  100%{transform:scaleY(0.95) translateY(4px) rotate(0)}
+}
+@keyframes foxMicroLookUp{
+  0%{transform:scaleY(0.95) translateY(4px)}
+  30%{transform:scaleY(0.95) translateY(0)}
+  100%{transform:scaleY(0.95) translateY(4px)}
+}
+@keyframes foxSink{
+  0%{transform:scaleY(0.95) translateY(4px);opacity:1}
+  100%{transform:scaleY(0.95) translateY(10px);opacity:0.7}
+}
+@keyframes foxJump{
+  0%{transform:scaleY(1) translateY(0)}
+  50%{transform:scaleY(0.98) translateY(-12px) scale(1.06)}
+  100%{transform:scaleY(1) translateY(0) scale(1)}
+}
+@keyframes heartFloat{
+  0%{opacity:1;transform:translateY(0) scale(0.6)}
+  30%{opacity:1;transform:translateY(-40px) scale(1.2)}
+  100%{opacity:0;transform:translateY(-100px) scale(0.8)}
+}
+
+/* ===== Companion Settlement Panel ===== */
+.companion-settle-overlay{
+  position:fixed;inset:0;z-index:560;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .2s ease;
+}
+.companion-settle-overlay.hidden{display:none}
+.companion-settle-card{
+  background:var(--card);border-radius:18px;
+  padding:32px 28px;margin:20px;
+  max-width:380px;width:100%;text-align:center;
+  box-shadow:0 12px 48px rgba(0,0,0,.15);
+  animation:slideUp .3s ease;
+}
+.companion-settle-card .cs-icon{font-size:48px;margin-bottom:10px}
+.companion-settle-card .cs-title{font-size:20px;font-weight:800;margin-bottom:16px}
+.companion-settle-card .cs-stat{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border);
+  font-size:14px;color:var(--text2);
+}
+.companion-settle-card .cs-stat:last-child{border-bottom:none}
+.companion-settle-card .cs-stat .cs-val{font-weight:700;color:var(--text)}
+.companion-settle-card .cs-stat .cs-val.xp{color:var(--xp)}
+.companion-settle-card .cs-stat .cs-val.gold{color:var(--gold)}
+.companion-settle-card .cs-stat .cs-val.intimacy{color:var(--tab)}
+.companion-settle-card .cs-btn{
+  width:100%;padding:14px;margin-top:16px;
+  border:none;border-radius:12px;
+  background:var(--focus);color:#fff;
+  font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font);
+  transition:all .15s;
+}
+.companion-settle-card .cs-btn:active{transform:scale(.95)}
 
 /* ===== Confirm Overlay ===== */
 .confirm-overlay{
@@ -488,6 +562,8 @@ body{
   animation:fadeIn .2s ease;
 }
 .confirm-overlay.hidden{display:none}
+/* Companion abandon confirm must sit above companion overlay (z-index:510) */
+#companionConfirmOverlay.confirm-overlay{z-index:520}
 .confirm-dialog{
   background:var(--card);border-radius:var(--radius);
   padding:24px;margin:20px;max-width:340px;width:100%;
@@ -639,12 +715,11 @@ body{
   .stat-mini-main span{font-size:15px}
   .stat-mini-sub{font-size:10px}
   .stag{font-size:10px;padding:2px 6px}
-  .tab-btn{font-size:11px;padding:7px 8px}
+  .tab-btn{font-size:12px;padding:8px 4px}
   .card{padding:12px 2px}
   .card-name{font-size:14px}
-  .pomo-ring-wrap{width:170px;height:170px}
-  .pomo-time .time-num{font-size:30px}
-  .pomo-btn-start,.pomo-btn-pause,.pomo-btn-skip,.pomo-btn-quit{font-size:12px;padding:7px 10px}
+  .companion-timer{font-size:52px}
+  .companion-fox-wrap{width:100px;height:100px}
   .cal-grid{gap:2px}
   .cal-cell{font-size:11px;border-radius:5px}
   .cal-weekday{font-size:9px;padding:4px 0}
@@ -663,7 +738,7 @@ body{
   .day-item summary .day-summary{font-size:11px}
   .daily-prog{height:12px;border-radius:6px}
   .daily-prog-text{font-size:9px}
-  .settings-grid{grid-template-columns:1fr}
+  .companion-settle-card{padding:24px 20px}
 }
 /* ===== Todos: groups / difficulty / priority / subtasks ===== */
 .todo-group{margin-bottom:14px}
@@ -899,7 +974,7 @@ body{
 
 /* ===== Achievement Card ===== */
 .achievement-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;
+  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:580;
   display:flex;align-items:center;justify-content:center;
   animation:fadeIn .3s ease;
 }
@@ -960,6 +1035,7 @@ body{
     <div class="stats-main">
       <div class="stats-left">
         <div class="fox-float" id="foxFloat"><img src="狐狸  (1).png" alt="小狐狸"></div>
+        <div class="companion-summary" id="companionSummary" style="font-size:10px;color:var(--text3);text-align:center;margin-top:2px;line-height:1.3"></div>
       </div>
       <div class="stats-right">
     <!-- Top row: level badge + header icons -->
@@ -971,7 +1047,7 @@ body{
         </div>
       </div>
       <div class="header-icons">
-        <button data-action="go-pomodoro" title="番茄钟">🍅</button>
+        <button data-action="go-study" title="自习陪伴">📖</button>
         <button data-action="go-summary" title="月度">📊</button>
       </div>
     </div>
@@ -1005,12 +1081,6 @@ body{
         <span id="goldText">0</span>
       </div>
     </div>
-    <!-- Mini Timer Bar -->
-    <div class="mini-timer" id="miniTimer" data-action="go-pomodoro">
-      <span class="mini-phase" id="miniPhase">🍅</span>
-      <div class="mini-track"><div class="mini-fill focus" id="miniFill" style="width:100%"></div></div>
-      <span class="mini-time" id="miniTime">25:00</span>
-    </div>
   </div>
 
   <!-- Tabs -->
@@ -1042,8 +1112,8 @@ body{
     <div class="card-list" id="rewardsList"></div>
     <div id="rewardsAddArea"></div>
   </div>
-  <div class="tab-content" id="tab-pomodoro">
-    <div class="pomodoro-container" id="pomodoroContainer"></div>
+  <div class="tab-content" id="tab-study">
+    <div class="study-container" id="studyContainer"></div>
   </div>
   <div class="tab-content" id="tab-summary">
     <div id="summaryContainer"></div>
@@ -1052,8 +1122,6 @@ body{
 
 <!-- FAB -->
 <button class="fab" id="fab" title="添加">+</button>
-<button id="testLevelUp" title="测试升级" style="position:fixed;bottom:86px;right:16px;width:36px;height:36px;border-radius:50%;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:11px;font-weight:800;cursor:pointer;z-index:10;box-shadow:0 2px 8px rgba(99,102,241,.3);transition:all .15s">Lv</button>
-<div id="testToast" style="position:fixed;bottom:130px;right:16px;pointer-events:none;z-index:60;font-size:11px;color:var(--text2);opacity:0;transition:opacity .3s"></div>
 
 <!-- Achievement Overlay -->
 <div class="achievement-overlay hidden" id="achievementOverlay">
@@ -1087,6 +1155,38 @@ body{
 
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- Companion Mode Fullscreen Overlay -->
+<div class="companion-overlay hidden" id="companionOverlay">
+  <div class="companion-bg">
+    <button class="companion-abandon-btn" id="companionAbandon" title="放弃">放弃</button>
+    <div class="companion-center">
+      <div class="companion-timer" id="companionTimer">25:00</div>
+      <div class="companion-fox-wrap" id="companionFoxWrap">
+        <img src="fox-stage1.png" alt="小狐狸" class="companion-fox-img" id="companionFoxImg">
+      </div>
+      <div class="companion-subtitle">小狐狸正陪着你</div>
+    </div>
+  </div>
+</div>
+
+<!-- Companion Abandon Confirm Dialog -->
+<div class="confirm-overlay hidden" id="companionConfirmOverlay">
+  <div class="confirm-dialog">
+    <div class="confirm-icon">🦊</div>
+    <div class="confirm-title" id="companionConfirmTitle">小狐狸还在等你…确定要离开吗？</div>
+    <div class="confirm-body" id="companionConfirmBody"></div>
+    <div class="confirm-btns">
+      <button class="btn-stay" id="companionConfirmStay">💪 再坚持一下</button>
+      <button class="btn-quit" id="companionConfirmQuit">确认离开</button>
+    </div>
+  </div>
+</div>
+
+<!-- Companion Settlement Panel -->
+<div class="companion-settle-overlay hidden" id="companionSettleOverlay">
+  <div class="companion-settle-card" id="companionSettleCard"></div>
+</div>
 
 <!-- Help / Tutorial Overlay -->
 <div class="help-overlay hidden" id="helpOverlay">
@@ -1156,13 +1256,13 @@ body{
       </div>
 
       <div class="help-section">
-        <div class="help-h">④ 用番茄钟「磨」大任务 🆕</div>
-        <p>给待办填了<b>预估时长</b>后，去番茄页关联它，每个番茄累加专注时间，<b>攒够才算完成</b>：</p>
+        <div class="help-h">④ 自习陪伴 📖 🆕</div>
+        <p>去<b>自习</b>tab，选时长开始专注。小狐狸全程陪着，<b>按分钟结算</b>经验和金币：</p>
         <div class="help-demo">
-          <div class="hd-pomo">🍅 🍅 <span style="opacity:.25">🍅 🍅</span></div>
+          <div class="hd-pomo">📖 📖 <span style="opacity:.45">📖</span></div>
           <div class="hd-prog"><div class="hd-prog-fill" style="width:50%"></div><span>25 / 50 分钟</span></div>
         </div>
-        <p class="help-sub">进度<b>跨天保留、不清零</b>，卡片上能看到进度条。没填时长就是「一个番茄直接完成」。</p>
+        <p class="help-sub">完成后自动结算 XP 和金币（受连胜倍率加成）。中途放弃按实际时长的 50% 结算。</p>
       </div>
 
       <div class="help-section">
@@ -1184,7 +1284,7 @@ body{
         <p class="help-sub">子任务只显示进度（如 1/3），完成整个任务才结算全额 XP。</p>
       </div>
 
-      <div class="help-tip">💡 <b>难度</b>=值多少奖励，<b>优先级</b>=有多急，两者独立。大任务设成困难/史诗、填上时长、拆成子任务，用番茄一点点磨完最有成就感。</div>
+      <div class="help-tip">💡 <b>难度</b>=值多少奖励，<b>优先级</b>=有多急，两者独立。大任务设成困难/史诗、填上时长、拆成子任务，去自习页面专注完成最有成就感。</div>
 
     </div>
     <button class="help-got-it" id="helpGotIt">明白了 👍</button>
@@ -1203,7 +1303,9 @@ const XP_BASE = 1000;
 const XP_PER_LVL = 500;
 
 const REWARDS = {
-  pomodoro:       { xp: 250, gold: 100,    label: '完成番茄' },
+  companionXPPerMin: 10,  // 每分钟基础 XP
+  companionGoldPerMin: 5, // 每分钟基础金币
+  companionIntimacyPerMin: 0.5, // 每分钟亲密度
   levelUp:        { hpRestore: true,     label: '升级！' },
   death:          { hpRestore: 0.5, goldLoss: 0.2, label: '角色昏倒了' },
 };
@@ -1277,8 +1379,8 @@ const EVENT_ICONS = {
   'habit-positive': '👍', 'habit-negative': '👎',
   'daily-complete': '✅', 'daily-miss': '⚠️',
   'daily-claim': '🟠',
-  'todo-complete': '🏁', 'pomodoro-complete': '🍅',
-  'pomodoro-abandon': '💨', 'reward-buy': '🎁',
+  'todo-complete': '🏁', 'focus-complete': '📖',
+  'focus-abandon': '💨', 'reward-buy': '🎁',
   'level-up': '🎉', 'death': '💀'
 };
 
@@ -1480,13 +1582,10 @@ function defaultState(){
     streakMilestones: [],
     pendingMisses: [],
     activityLog: [],
-    pomodoro: {
-      settings: { focus: 25, shortBreak: 5, longBreak: 15, longInterval: 4, autoStart: true },
-      current: {
-        phase: 'idle', startedAt: null, pausedAt: null,
-        elapsedBeforePause: 0, completedInCycle: 0, linkedTodoId: null, linkedDailyId: null
-      }
-    }
+    focusSessions: [],
+    intimacy: 0,
+    totalCompanionMinutes: 0,
+    pomodoro: null // 保留键但不再使用（旧数据迁移用）
   };
 }
 
@@ -1501,9 +1600,12 @@ function loadState(){
         if(!(k in s)) s[k] = def[k];
       }
       s.stats = Object.assign({}, def.stats, s.stats);
-      if(!s.pomodoro) s.pomodoro = def.pomodoro;
-      if(!s.pomodoro.settings) s.pomodoro.settings = def.pomodoro.settings;
-      if(!s.pomodoro.current) s.pomodoro.current = def.pomodoro.current;
+      // 新字段迁移
+      if(!Array.isArray(s.focusSessions)) s.focusSessions = [];
+      if(s.intimacy == null) s.intimacy = 0;
+      if(s.totalCompanionMinutes == null) s.totalCompanionMinutes = 0;
+      // 旧 pomodoro 数据保留但不使用
+      if(!s.pomodoro) s.pomodoro = null;
       if(!s.activityLog) s.activityLog = [];
       if(!Array.isArray(s.activityLog)) s.activityLog = [];
       if(!Array.isArray(s.streakMilestones)) s.streakMilestones = [];
@@ -1598,361 +1700,373 @@ function getDailyStreak(daily){
   return streak;
 }
 
-// ========== Pomodoro Logic ==========
-function getPhaseMs(phase){
-  const s = state.pomodoro.settings;
-  switch(phase){
-    case 'focus': return s.focus * 60 * 1000;
-    case 'shortBreak': return s.shortBreak * 60 * 1000;
-    case 'longBreak': return s.longBreak * 60 * 1000;
-    default: return s.focus * 60 * 1000;
-  }
-}
-function getRemainingMs(){
-  const c = state.pomodoro.current;
-  if(c.phase === 'idle' || !c.startedAt) return getPhaseMs(c.phase || 'focus');
-  let elapsed = c.elapsedBeforePause || 0;
-  if(c.pausedAt === null){
-    elapsed += Date.now() - c.startedAt;
-  }
-  return Math.max(0, getPhaseMs(c.phase) - elapsed);
-}
-function getElapsedMs(){
-  const c = state.pomodoro.current;
-  if(!c.startedAt) return c.elapsedBeforePause || 0;
-  let elapsed = c.elapsedBeforePause || 0;
-  if(c.pausedAt === null) elapsed += Date.now() - c.startedAt;
-  return elapsed;
-}
-function getElapsedMin(){ return Math.floor(getElapsedMs() / 60000); }
-function getRemainingMin(){ return Math.ceil(getRemainingMs() / 60000); }
+// ========== Companion Mode Logic ==========
+let companionSession = null; // { durationMin, startedAt, timerId, microTimerId }
+let companionPausedAnimations = false;
 
-function getPhaseLabel(phase){
-  switch(phase){
-    case 'focus': return '🍅 专注中';
-    case 'shortBreak': return '☕ 小休息';
-    case 'longBreak': return '🌴 大休息';
-    default: return '准备开始';
-  }
-}
-function getPhaseColor(phase){
-  switch(phase){
-    case 'focus': return 'focus';
-    case 'shortBreak': return 'shortBreak';
-    case 'longBreak': return 'longBreak';
-    default: return 'focus';
-  }
+function getCompanionRemainingMs(){
+  if(!companionSession) return 0;
+  const elapsed = Date.now() - companionSession.startedAt;
+  return Math.max(0, companionSession.durationMin * 60 * 1000 - elapsed);
 }
 
-function startPhase(phase){
-  const c = state.pomodoro.current;
-  c.phase = phase;
-  c.startedAt = Date.now();
-  c.pausedAt = null;
-  c.elapsedBeforePause = 0;
+function getCompanionElapsedMin(){
+  if(!companionSession) return 0;
+  const elapsed = Date.now() - companionSession.startedAt;
+  return Math.floor(elapsed / 60000);
+}
+
+function startCompanionSession(durationMin){
+  // Prevent double sessions
+  if(companionSession){
+    return;
+  }
+
+  companionSession = {
+    durationMin: durationMin,
+    startedAt: Date.now(),
+    timerId: null,
+    microTimerId: null
+  };
+
+  // Persist active session for page refresh recovery
+  state._activeCompanion = {
+    durationMin: durationMin,
+    startedAt: companionSession.startedAt
+  };
   saveState();
-  startTicking();
-  updateMiniTimer();
-}
 
-function pauseTimer(){
-  const c = state.pomodoro.current;
-  if(c.pausedAt !== null) return; // already paused
-  if(!c.startedAt) return;
-  c.elapsedBeforePause += Date.now() - c.startedAt;
-  c.pausedAt = Date.now();
-  saveState();
-  stopTicking();
-}
-
-function resumeTimer(){
-  const c = state.pomodoro.current;
-  if(c.pausedAt === null) return; // not paused
-  c.startedAt = Date.now();
-  c.pausedAt = null;
-  saveState();
-  startTicking();
-}
-
-function skipPhase(){
-  const c = state.pomodoro.current;
-  const prevPhase = c.phase;
-  stopTicking();
-  advancePhase(false);
-  renderPomodoro();
-  updateMiniTimer();
-}
-
-function advancePhase(giveReward){
-  const c = state.pomodoro.current;
-  const s = state.pomodoro.settings;
-
-  if(c.phase === 'focus'){
-    if(giveReward){
-      c.completedInCycle++;
-      // Award XP and gold (with streak multiplier)
-      const pr = applyMult({xp: REWARDS.pomodoro.xp, gold: REWARDS.pomodoro.gold});
-      gainXp(pr.xp, '完成番茄钟');
-      gainGold(pr.gold, '完成番茄钟');
-      logActivity('pomodoro-complete', '完成番茄钟 '+(s.focus)+'分钟', pr.xp, pr.gold, 0);
-      // 关联待办：有预估时长则按番茄累积（攒够才完成、跨天不清零），否则一个番茄直接完成
-      if(c.linkedTodoId){
-        const todo = state.todos.find(t => t.id === c.linkedTodoId && !t.completed);
-        if(todo){
-          const est = todo.estimatedMinutes || 0;
-          if(est > 0){
-            // 累积模式
-            todo.accumulatedFocusMinutes = (todo.accumulatedFocusMinutes||0) + s.focus;
-            if(todo.accumulatedFocusMinutes >= est){
-              todo.completed = true;
-              todo.completedAt = today();
-              const r = applyMult(getEffectiveReward('todo', todo));
-              gainXp(r.xp, todo.name);
-              gainGold(r.gold, todo.name);
-              logActivity('todo-complete', '完成待办: '+todo.name+'（'+DIFF_NAME[todo.difficulty||'medium']+'，番茄累积）', r.xp, r.gold, 0);
-              c.linkedTodoId = null;
-            }else{
-              const need = est - todo.accumulatedFocusMinutes;
-              setTimeout(()=>toast('☕ 休息中 · 「'+todo.name+'」还需约 '+need+' 分钟', 'warn'), 1500);
-              // 保持关联，下个番茄继续累积
-            }
-          }else{
-            // 无预估时长：一个番茄直接完成（旧行为）
-            todo.completed = true;
-            todo.completedAt = today();
-            const r = applyMult(getEffectiveReward('todo', todo));
-            gainXp(r.xp, todo.name);
-            gainGold(r.gold, todo.name);
-            logActivity('todo-complete', '完成待办: '+todo.name+'（'+DIFF_NAME[todo.difficulty||'medium']+'，番茄关联）', r.xp, r.gold, 0);
-            c.linkedTodoId = null;
-          }
-        }else{
-          c.linkedTodoId = null;
-        }
-      }
-      if(c.linkedDailyId){
-        const daily = state.dailies.find(d => d.id === c.linkedDailyId);
-        if(daily){
-          // Accumulate focus minutes
-          daily.accumulatedFocusMinutes = (daily.accumulatedFocusMinutes||0) + s.focus;
-          const t = today();
-          if(!daily.completedDates) daily.completedDates = [];
-          const est = daily.estimatedMinutes||0;
-          const acc = daily.accumulatedFocusMinutes||0;
-          // Auto-complete if accumulated >= estimated
-          if(est>0 && acc>=est && !daily.completedDates.includes(t)){
-            daily.completedDates.push(t);
-            const dr = applyMult(getEffectiveReward('daily', daily));
-            gainXp(dr.xp, daily.name);
-            gainGold(dr.gold, daily.name);
-            logActivity('daily-complete', '完成每日: '+daily.name+' (番茄关联)', dr.xp, dr.gold, 0);
-          }
-        }
-      }
-      // After focus complete → check linked daily progress for break reminder
-      if(c.linkedDailyId){
-        const daily = state.dailies.find(d=>d.id===c.linkedDailyId);
-        if(daily && daily.estimatedMinutes){
-          const acc = daily.accumulatedFocusMinutes||0;
-          const est = daily.estimatedMinutes||0;
-          const t2 = today();
-          const done = daily.completedDates && daily.completedDates.includes(t2);
-          if(!done && est>0 && acc<est){
-            const need = est - acc;
-            setTimeout(()=>toast('☕ 休息中 · 「'+daily.name+'」还需约 '+need+' 分钟', 'warn'), 1500);
-          }
-        }
-      }
-    }
-    // After focus → break
-    if(c.completedInCycle >= s.longInterval){
-      c.completedInCycle = 0;
-      startPhase('longBreak');
-    }else{
-      startPhase('shortBreak');
-    }
-  }else{
-    // After break → focus or idle
-    if(s.autoStart){
-      startPhase('focus');
-    }else{
-      c.phase = 'idle';
-      c.startedAt = null;
-      c.pausedAt = null;
-      c.elapsedBeforePause = 0;
-      stopTicking();
-    }
-  }
-  saveState();
-  updateMiniTimer();
-}
-
-function abandonPomodoro(){
-  const c = state.pomodoro.current;
-  if(c.phase === 'idle') return;
-
-  const elapsed = getElapsedMin();
-  const penalty = 3 + (c.completedInCycle * 3);
-
-  // Show confirmation
-  const overlay = document.getElementById('confirmOverlay');
-  document.getElementById('confirmBody').textContent = '已专注 '+elapsed+' 分钟 · 当前周期已完成 '+c.completedInCycle+' 个番茄';
-  document.getElementById('confirmPenalty').textContent = '将扣除 '+penalty+' HP';
+  const overlay = document.getElementById('companionOverlay');
   overlay.classList.remove('hidden');
 
-  // Set up one-time handlers
-  const stay = document.getElementById('confirmStay');
-  const quit = document.getElementById('confirmQuit');
+  // Set initial timer
+  updateCompanionTimerDisplay();
+
+  // Start fox breathing animation
+  const foxWrap = document.getElementById('companionFoxWrap');
+  foxWrap.classList.add('breathing');
+  foxWrap.classList.remove('stand-up','hop','sink','tilt','look-up');
+
+  // Start ticking
+  companionSession.timerId = setInterval(companionTick, 500);
+
+  // Schedule first micro-movement
+  scheduleCompanionMicro();
+
+  // Update document title
+  updateCompanionTitle();
+}
+
+function companionTick(){
+  if(!companionSession || companionAbandoning) return;
+  const remaining = getCompanionRemainingMs();
+  if(remaining <= 0){
+    completeCompanion();
+    return;
+  }
+  updateCompanionTimerDisplay();
+  updateCompanionTitle();
+}
+
+function updateCompanionTimerDisplay(){
+  const remaining = getCompanionRemainingMs();
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  const el = document.getElementById('companionTimer');
+  if(el) el.textContent = pad(mins)+':'+pad(secs);
+}
+
+function updateCompanionTitle(){
+  const remaining = getCompanionRemainingMs();
+  const mins = Math.floor(remaining / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  document.title = pad(mins)+':'+pad(secs)+' · 自习中';
+}
+
+function scheduleCompanionMicro(){
+  if(!companionSession) return;
+  if(companionSession.microTimerId) clearTimeout(companionSession.microTimerId);
+
+  const delay = 60000 + Math.random() * 60000; // 60-120s
+  companionSession.microTimerId = setTimeout(() => {
+    if(!companionSession || document.hidden) {
+      scheduleCompanionMicro();
+      return;
+    }
+    triggerCompanionMicro();
+    scheduleCompanionMicro();
+  }, delay);
+}
+
+function triggerCompanionMicro(){
+  const foxWrap = document.getElementById('companionFoxWrap');
+  if(!foxWrap) return;
+
+  // Remove breathing temporarily, apply micro, then restore
+  foxWrap.classList.remove('breathing');
+
+  // Pick random micro action
+  const r = Math.random();
+  if(r < 0.5){
+    // Slight tilt
+    foxWrap.classList.remove('tilt');
+    void foxWrap.offsetWidth;
+    foxWrap.classList.add('tilt');
+  } else {
+    // Slight look up
+    foxWrap.classList.remove('look-up');
+    void foxWrap.offsetWidth;
+    foxWrap.classList.add('look-up');
+  }
+
+  // After micro animation ends (~1.2s), restore breathing
+  setTimeout(() => {
+    foxWrap.classList.remove('tilt','look-up');
+    foxWrap.classList.add('breathing');
+  }, 1200);
+}
+
+function pauseCompanionAnimations(){
+  if(companionPausedAnimations) return;
+  companionPausedAnimations = true;
+  const foxWrap = document.getElementById('companionFoxWrap');
+  if(foxWrap){
+    foxWrap.style.animationPlayState = 'paused';
+  }
+}
+
+function resumeCompanionAnimations(){
+  if(!companionPausedAnimations) return;
+  companionPausedAnimations = false;
+  const foxWrap = document.getElementById('companionFoxWrap');
+  if(foxWrap){
+    foxWrap.style.animationPlayState = '';
+  }
+}
+
+function stopCompanionTimer(){
+  if(companionSession){
+    if(companionSession.timerId) clearInterval(companionSession.timerId);
+    if(companionSession.microTimerId) clearTimeout(companionSession.microTimerId);
+  }
+}
+
+let companionAbandoning = false;
+
+function abandonCompanion(){
+  if(!companionSession || companionAbandoning) return;
+
+  const elapsedMin = getCompanionElapsedMin();
+  companionAbandoning = true;
+  const overlay = document.getElementById('companionConfirmOverlay');
+  const title = document.getElementById('companionConfirmTitle');
+  const body = document.getElementById('companionConfirmBody');
+
+  if(elapsedMin < 2){
+    title.textContent = '刚开始呢，确定要离开吗？';
+    body.textContent = '不足2分钟不结算任何奖励哦';
+  } else {
+    title.textContent = '小狐狸还在等你…确定要离开吗？';
+    body.textContent = '已专注 '+elapsedMin+' 分钟 · 将按50%结算（'+Math.floor(elapsedMin*0.5)+' 分钟）';
+  }
+
+  overlay.classList.remove('hidden');
+
+  const stay = document.getElementById('companionConfirmStay');
+  const quit = document.getElementById('companionConfirmQuit');
   const cleanup = () => {
     overlay.classList.add('hidden');
     stay.removeEventListener('click', onStay);
     quit.removeEventListener('click', onQuit);
   };
-  const onStay = () => { cleanup(); };
+  const onStay = () => { companionAbandoning = false; cleanup(); };
   const onQuit = () => {
+    companionAbandoning = false;
     cleanup();
-    const phase = c.phase;
-    stopTicking();
-    c.phase = 'idle';
-    c.startedAt = null;
-    c.pausedAt = null;
-    c.elapsedBeforePause = 0;
-    // Don't reset completedInCycle - keep it for progressive penalty
-    applyDamage(penalty, '放弃番茄钟');
-    logActivity('pomodoro-abandon', '放弃番茄钟 ('+elapsed+'分钟)', 0, 0, -penalty);
-    saveState();
-    renderPomodoro();
-    updateMiniTimer();
+    executeAbandon();
   };
   stay.addEventListener('click', onStay);
   quit.addEventListener('click', onQuit);
 }
 
-let tickInterval = null;
-function startTicking(){
-  stopTicking();
-  tickInterval = setInterval(() => {
-    if(getRemainingMs() <= 0){
-      advancePhase(true);
-      renderPomodoro();
-      updateMiniTimer();
-    }
-    renderPomodoroTime();
-    updateMiniTimer();
-    updateLiveTodoProgress();
-  }, 500);
-}
+function executeAbandon(){
+  if(!companionSession) return;
 
-// 番茄运行时，把当前关联待办的进度条/分钟文本就地刷新（只动 DOM、不改 state、不重绘列表）
-function updateLiveTodoProgress(){
-  const pc = state.pomodoro && state.pomodoro.current;
-  if(!pc || !pc.linkedTodoId) return;
-  const todo = state.todos.find(t => t.id === pc.linkedTodoId && !t.completed);
-  if(!todo) return;
-  const est = todo.estimatedMinutes||0;
-  if(est<=0) return;
-  const acc = todo.accumulatedFocusMinutes||0;
-  const live = (pc.phase==='focus' && pc.pausedAt===null)
-    ? Math.min(est, acc + getElapsedMin())
-    : acc;
-  const pct = Math.min(100, Math.round(live/est*100));
-  const bar = document.querySelector('[data-live-bar="'+todo.id+'"]');
-  if(bar){
-    const fill = bar.querySelector('.daily-prog-fill');
-    const txt = bar.querySelector('.daily-prog-text');
-    if(fill) fill.style.width = pct+'%';
-    if(txt) txt.textContent = live+'/'+est+' 分钟';
-  }
-  const sub = document.querySelector('[data-live-sub="'+todo.id+'"]');
-  if(sub) sub.textContent = '⏱ '+live+'/'+est+'分';
-}
-function renderPomodoroTime(){
-  // Lightweight DOM update — only touches timer ring, no full re-render
-  const c = state.pomodoro.current;
-  const totalMs = getPhaseMs(c.phase || 'focus');
-  const remaining = getRemainingMs();
-  const mins = Math.floor(remaining / 60000);
-  const secs = Math.floor((remaining % 60000) / 1000);
-  const pct = c.phase === 'idle' ? 1 : remaining / totalMs;
-  const radius = 90;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - pct);
+  const elapsedMin = getCompanionElapsedMin();
+  stopCompanionTimer();
 
-  const ringFg = document.querySelector('.pomo-ring-fg');
-  if(ringFg) ringFg.setAttribute('stroke-dashoffset', offset);
+  // Fox sink animation
+  const foxWrap = document.getElementById('companionFoxWrap');
+  foxWrap.classList.remove('breathing','tilt','look-up');
+  foxWrap.classList.add('sink');
 
-  const timeNum = document.querySelector('.pomo-time .time-num');
-  if(timeNum){
-    if(c.phase === 'idle'){
-      timeNum.textContent = pad(state.pomodoro.settings.focus)+':00';
-    }else{
-      timeNum.textContent = pad(mins)+':'+pad(secs);
-    }
+  const overlay = document.getElementById('companionOverlay');
+
+  if(elapsedMin < 2){
+    // No reward at all
+    recordFocusSession(false);
+    companionSession = null;
+    delete state._activeCompanion;
+    document.title = '习惯养成';
+    overlay.classList.add('hidden');
+    foxWrap.classList.remove('sink');
+    saveState();
+    render();
+    return;
   }
 
-  const timeLabel = document.querySelector('.pomo-time .time-label');
-  if(timeLabel) timeLabel.textContent = getPhaseLabel(c.phase);
+  // Settle at 50%
+  const settleMin = Math.floor(elapsedMin * 0.5);
 
-  // Update linked task live progress
-  renderLinkedTask();
+  // Delay then show settlement
+  setTimeout(() => {
+    overlay.classList.add('hidden');
+    foxWrap.classList.remove('sink');
+
+    // Calculate rewards
+    const m = getStreakMultiplier();
+    const xp = Math.round(settleMin * REWARDS.companionXPPerMin * m);
+    const gold = Math.round(settleMin * REWARDS.companionGoldPerMin * m);
+    const intimacy = Math.round(settleMin * REWARDS.companionIntimacyPerMin * 10) / 10;
+
+    gainXp(xp, '自习（提前结束）');
+    gainGold(gold, '自习（提前结束）');
+    state.intimacy = (state.intimacy || 0) + intimacy;
+    state.totalCompanionMinutes = (state.totalCompanionMinutes || 0) + settleMin;
+
+    recordFocusSession(false);
+    logActivity('focus-abandon', '自习提前结束 ('+elapsedMin+'分钟 → 按'+settleMin+'分钟结算)', xp, gold, 0);
+
+    companionSession = null;
+    delete state._activeCompanion;
+    document.title = '习惯养成';
+    saveState();
+    render();
+
+    showSettlementPanel(settleMin, xp, gold, intimacy, false);
+  }, 2000);
 }
 
-function renderLinkedTask(){
-  const el = document.getElementById('pomoLinked');
-  if(!el) return;
-  const c = state.pomodoro.current;
-  let html = '';
+function completeCompanion(){
+  if(!companionSession) return;
 
-  // Linked daily
-  if(c.linkedDailyId){
-    const daily = state.dailies.find(d=>d.id===c.linkedDailyId);
-    if(daily){
-      const est = daily.estimatedMinutes||0;
-      const acc = daily.accumulatedFocusMinutes||0;
-      const t2 = today();
-      const done = daily.completedDates && daily.completedDates.includes(t2);
-      // Current progress = accumulated + current elapsed (if focus phase running)
-      let liveAcc = acc;
-      if(c.phase==='focus' && c.pausedAt===null && !done){
-        liveAcc += getElapsedMin();
-      }
-      const pct = est>0 ? Math.min(100, Math.round(liveAcc/est*100)) : 0;
-      html += '<div class="linked-task-card'+(done?' done':'')+'">'+
-        '<div class="ltc-header"><span>📅 '+esc(daily.name)+'</span>'+(done?'<span style="color:var(--good);font-weight:700">✓</span>':'')+'</div>';
-      if(est>0 && !done){
-        html += '<div class="ltc-prog"><div class="ltc-fill" style="width:'+pct+'%"></div><span class="ltc-text">'+liveAcc+'/'+est+' 分钟</span></div>';
-      }
-      html += '</div>';
-    }
+  const durationMin = companionSession.durationMin;
+  stopCompanionTimer();
+
+  // Fox stand up + jump
+  const foxWrap = document.getElementById('companionFoxWrap');
+  foxWrap.classList.remove('breathing','tilt','look-up','sink');
+  foxWrap.classList.add('stand-up');
+
+  // Trigger jump after brief pause
+  setTimeout(() => {
+    foxWrap.classList.remove('stand-up');
+    foxWrap.classList.add('hop');
+    spawnCompanionHearts();
+  }, 300);
+
+  // Calculate rewards
+  const m = getStreakMultiplier();
+  const xp = Math.round(durationMin * REWARDS.companionXPPerMin * m);
+  const gold = Math.round(durationMin * REWARDS.companionGoldPerMin * m);
+  const intimacy = Math.round(durationMin * REWARDS.companionIntimacyPerMin * 10) / 10;
+
+  gainXp(xp, '专注自习完成');
+  gainGold(gold, '专注自习完成');
+  state.intimacy = (state.intimacy || 0) + intimacy;
+  state.totalCompanionMinutes = (state.totalCompanionMinutes || 0) + durationMin;
+
+  recordFocusSession(true);
+  logActivity('focus-complete', '专注自习完成 ('+durationMin+'分钟)', xp, gold, 0);
+
+  companionSession = null;
+  delete state._activeCompanion;
+  document.title = '习惯养成';
+  saveState();
+  render();
+
+  // Show settlement panel after jump animation
+  setTimeout(() => {
+    document.getElementById('companionOverlay').classList.add('hidden');
+    foxWrap.classList.remove('hop','stand-up');
+    showSettlementPanel(durationMin, xp, gold, intimacy, true);
+  }, 800);
+}
+
+function spawnCompanionHearts(){
+  const foxWrap = document.getElementById('companionFoxWrap');
+  if(!foxWrap) return;
+  const rect = foxWrap.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top;
+  const overlay = document.getElementById('companionOverlay');
+
+  const heartCount = 3 + Math.floor(Math.random() * 3); // 3-5
+  const hearts = ['❤️','💕','💖','💗','💝'];
+
+  for(let i = 0; i < heartCount; i++){
+    const heart = document.createElement('span');
+    heart.className = 'companion-heart';
+    heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+    heart.style.left = (cx + (Math.random() - 0.5) * 80) + 'px';
+    heart.style.top = cy + 'px';
+    heart.style.animationDelay = (i * 0.15) + 's';
+    heart.style.fontSize = (20 + Math.random() * 16) + 'px';
+    overlay.appendChild(heart);
+
+    // Remove after animation
+    setTimeout(() => {
+      if(heart.parentNode) heart.parentNode.removeChild(heart);
+    }, 2000 + i * 150);
   }
-  // Linked todo
-  if(c.linkedTodoId){
-    const todo = state.todos.find(t=>t.id===c.linkedTodoId && !t.completed);
-    if(todo){
-      const est = todo.estimatedMinutes||0;
-      const acc = todo.accumulatedFocusMinutes||0;
-      // 实时进度 = 已累积 + 本番茄已专注（仅专注进行中）
-      let liveAcc = acc;
-      if(c.phase==='focus' && c.pausedAt===null){
-        liveAcc += getElapsedMin();
-      }
-      const pct = est>0 ? Math.min(100, Math.round(liveAcc/est*100)) : 0;
-      html += '<div class="linked-task-card">'+
-        '<div class="ltc-header"><span>✅ '+esc(todo.name)+'</span><span style="font-size:11px;color:var(--text3)">待办'+(est>0?'·累积':'')+'</span></div>';
-      if(est>0){
-        html += '<div class="ltc-prog"><div class="ltc-fill" style="width:'+pct+'%"></div><span class="ltc-text">'+liveAcc+'/'+est+' 分钟</span></div>';
-      }
-      html += '</div>';
-    }
+}
+
+function recordFocusSession(completed){
+  if(!state.focusSessions) state.focusSessions = [];
+  const elapsedMin = getCompanionElapsedMin();
+  const settleMin = completed ? companionSession.durationMin : Math.floor(elapsedMin * 0.5);
+  state.focusSessions.push({
+    id: uid(),
+    date: today(),
+    startedAt: new Date(companionSession.startedAt).toISOString(),
+    durationMin: companionSession.durationMin,
+    actualMin: Math.min(elapsedMin, companionSession.durationMin),
+    settledMin: settleMin,
+    completed: completed,
+    streakMult: getStreakMultiplier()
+  });
+  // Keep last 365 sessions max
+  if(state.focusSessions.length > 365){
+    state.focusSessions = state.focusSessions.slice(-365);
   }
-  el.innerHTML = html;
 }
 
-function stopTicking(){
-  if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
+function showSettlementPanel(minutes, xp, gold, intimacy, completed){
+  const overlay = document.getElementById('companionSettleOverlay');
+  const card = document.getElementById('companionSettleCard');
+
+  const m = getStreakMultiplier();
+  let multLine = '';
+  if(m > 1) multLine = '<div class="cs-stat"><span>连胜加成</span><span class="cs-val">×'+m.toFixed(2)+'</span></div>';
+
+  card.innerHTML =
+    '<div class="cs-icon">'+(completed ? '🎉' : '🦊')+'</div>'+
+    '<div class="cs-title">'+(completed ? '专注完成！' : '提前结束')+'</div>'+
+    '<div class="cs-stat"><span>专注时长</span><span class="cs-val">'+minutes+' 分钟</span></div>'+
+    '<div class="cs-stat"><span>获得经验</span><span class="cs-val xp">+'+xp+' XP</span></div>'+
+    '<div class="cs-stat"><span>获得金币</span><span class="cs-val gold">+'+gold+' 🪙</span></div>'+
+    '<div class="cs-stat"><span>亲密度</span><span class="cs-val intimacy">+'+intimacy+'</span></div>'+
+    multLine+
+    '<button class="cs-btn" id="companionSettleClose">'+(completed ? '✅ 太棒了！' : '知道了')+'</button>';
+
+  overlay.classList.remove('hidden');
+
+  document.getElementById('companionSettleClose').addEventListener('click', function(){
+    overlay.classList.add('hidden');
+  });
 }
 
-// ========== Fox hop scheduler ==========
+// ========== Fox hop scheduler (Stats Bar) ==========
 let hopTimer = null;
 function triggerHop(){
   const fox = document.getElementById('foxFloat');
@@ -2142,22 +2256,27 @@ document.addEventListener('visibilitychange', () => {
   if(document.hidden){
     if(fox) fox.classList.add('paused');
     if(hopTimer) clearTimeout(hopTimer);
-    stopTicking();
+    pauseCompanionAnimations();
   }else{
     if(fox) fox.classList.remove('paused');
     scheduleHop();
-    const c = state.pomodoro.current;
-    if(c.phase !== 'idle' && c.pausedAt === null){
-      // Recalculate: if timer should have finished while hidden
-      if(getRemainingMs() <= 0){
-        advancePhase(true);
-        renderPomodoro();
-        updateMiniTimer();
+    resumeCompanionAnimations();
+    // If companion session was running, check if it should have finished
+    if(companionSession && !companionAbandoning){
+      if(getCompanionRemainingMs() <= 0){
+        completeCompanion();
+      } else {
+        updateCompanionTimerDisplay();
+        updateCompanionTitle();
       }
-      startTicking();
-      renderPomodoroTime();
-      updateMiniTimer();
     }
+  }
+});
+
+// Companion abandon button (outside #app, needs document-level listener)
+document.addEventListener('click', function(e){
+  if(e.target.closest('#companionAbandon')){
+    abandonCompanion();
   }
 });
 
@@ -2518,31 +2637,6 @@ function screenFlash(){
 }
 
 // ========== Mini Timer Bar ==========
-function updateMiniTimer(){
-  const mini = document.getElementById('miniTimer');
-  const c = state.pomodoro.current;
-  if(c.phase === 'idle'){
-    mini.classList.remove('active');
-    return;
-  }
-  mini.classList.add('active');
-  const remaining = getRemainingMs();
-  const total = getPhaseMs(c.phase);
-  const pct = (remaining / total * 100);
-  const mins = Math.floor(remaining / 60000);
-  const secs = Math.floor((remaining % 60000) / 1000);
-  document.getElementById('miniPhase').textContent = c.phase==='focus'?'🍅':c.phase==='shortBreak'?'☕':'🌴';
-  document.getElementById('miniTime').textContent = mins+':'+pad(secs);
-  const fill = document.getElementById('miniFill');
-  fill.style.width = pct+'%';
-  fill.className = 'mini-fill '+getPhaseColor(c.phase);
-  if(c.phase === 'focus' && remaining < 60000 && remaining > 0){
-    mini.classList.add('urgent');
-  }else{
-    mini.classList.remove('urgent');
-  }
-}
-
 // ========== Render ==========
 function render(){
   const mh = maxHp();
@@ -2572,14 +2666,24 @@ function render(){
   // 里程碑检测
   checkStreakMilestones(streak);
   document.getElementById('todayCount').textContent = calcTodayCount();
+  // Companion stats in stats bar
+  const totalMin = state.totalCompanionMinutes || 0;
+  const csEl = document.getElementById('companionSummary');
+  if(csEl && totalMin > 0){
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    csEl.textContent = '已陪你 '+h+'h'+m+'m';
+    csEl.style.display = '';
+  } else if(csEl){
+    csEl.style.display = 'none';
+  }
 
   renderHabits();
   renderDailies();
   renderTodos();
   renderRewards();
-  renderPomodoro();
+  renderStudy();
   renderSummary();
-  updateMiniTimer();
   renderRemedAll();
   updateFab();
 }
@@ -2756,10 +2860,7 @@ function renderTodoCard(t){
   }
   const estMin = t.estimatedMinutes||0;
   const accMin = t.accumulatedFocusMinutes||0;
-  const pc = state.pomodoro && state.pomodoro.current;
-  const isLive = pc && pc.linkedTodoId===t.id && pc.phase==='focus' && pc.pausedAt===null;
-  const liveMin = isLive ? Math.min(estMin||999, accMin + getElapsedMin()) : accMin;
-  if(estMin>0) auxParts.push('<span class="mini-sub" data-live-sub="'+t.id+'">⏱ '+liveMin+'/'+estMin+'分</span>');
+  if(estMin>0) auxParts.push('<span class="mini-sub" data-live-sub="'+t.id+'">⏱ '+accMin+'/'+estMin+'分</span>');
 
   // 奖励行：彩色星星 + 经验 + 金币 + 倍率
   let rewardHTML = '<span class="val-xp">+'+rd.xp+'经验</span> <span class="val-gold">+'+rd.gold+'🪙</span>';
@@ -2768,8 +2869,8 @@ function renderTodoCard(t){
   // 时长进度条
   let timeBar = '';
   if(estMin>0){
-    const tp = Math.min(100, Math.round(liveMin/estMin*100));
-    timeBar = '<div class="daily-prog" style="margin-top:6px" data-live-bar="'+t.id+'"><div class="daily-prog-fill" style="width:'+tp+'%"></div><span class="daily-prog-text">'+liveMin+'/'+estMin+' 分钟</span></div>';
+    const tp = Math.min(100, Math.round(accMin/estMin*100));
+    timeBar = '<div class="daily-prog" style="margin-top:6px" data-live-bar="'+t.id+'"><div class="daily-prog-fill" style="width:'+tp+'%"></div><span class="daily-prog-text">'+accMin+'/'+estMin+' 分钟</span></div>';
   }
 
   // 子任务清单
@@ -2849,97 +2950,54 @@ function renderRewards(){
   }).join('');
 }
 
-// ========== Render Pomodoro ==========
-function renderPomodoro(){
-  const container = document.getElementById('pomodoroContainer');
-  const c = state.pomodoro.current;
-  const s = state.pomodoro.settings;
-  const totalMs = getPhaseMs(c.phase || 'focus');
-  const remaining = getRemainingMs();
-  const mins = Math.floor(remaining / 60000);
-  const secs = Math.floor((remaining % 60000) / 1000);
-  const pct = c.phase === 'idle' ? 1 : remaining / totalMs;
-  const radius = 90;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - pct);
-  const color = getPhaseColor(c.phase);
-  const isRunning = c.phase !== 'idle' && c.pausedAt === null;
+// ========== Render Study Tab ==========
+let selectedStudyDuration = 25;
+let studyCustomOpen = false;
 
-  // Count today's completed pomodoros
+function renderStudy(){
+  const container = document.getElementById('studyContainer');
+  if(!container) return;
+
+  // Calculate today's total focus minutes
   const todayStr = today();
-  const todayPomos = (state.activityLog || []).filter(e =>
-    e.type === 'pomodoro-complete' && tsDay(e.ts) === todayStr
-  ).length;
-  const todayFocusMin = todayPomos * s.focus;
+  const todaySessions = (state.focusSessions || []).filter(s => s.date === todayStr && s.completed);
+  const todayMin = todaySessions.reduce((sum, s) => sum + (s.settledMin || 0), 0);
+
+  // Total companion hours/minutes
+  const totalMin = state.totalCompanionMinutes || 0;
+  const totalH = Math.floor(totalMin / 60);
+  const totalM = totalMin % 60;
+
+  const durOptions = [
+    { label: '25 分钟', val: 25 },
+    { label: '45 分钟', val: 45 },
+    { label: '60 分钟', val: 60 }
+  ];
 
   container.innerHTML =
-    // Top: stats left, controls right
-    '<div class="pomo-top">'+
-      '<div class="pomo-stats">'+
-        '<span>🍅 '+todayPomos+' 个</span><span>⏱ '+todayFocusMin+' 分钟</span>'+
-      '</div>'+
-      '<div class="pomo-actions">'+
-        (c.phase==='idle' || c.pausedAt!==null
-          ? '<button class="pomo-btn-start" data-action="pomo-start">'+(c.pausedAt!==null?'▶ 继续':'▶ 开始')+'</button>'
-          : '<button class="pomo-btn-pause" data-action="pomo-pause">⏸ 暂停</button>')+
-        (c.phase!=='idle'
-          ? '<button class="pomo-btn-skip" data-action="pomo-skip">↺ 跳过</button><button class="pomo-btn-quit" data-action="pomo-abandon">⏹ 放弃</button>'
-          : '')+
-      '</div>'+
+    '<div class="study-title">📖 开始一段陪伴自习</div>'+
+    '<div class="study-duration-options" id="studyDurOptions">'+
+      durOptions.map(d =>
+        '<button class="study-dur-btn'+(selectedStudyDuration===d.val?' active':'')+'" data-action="study-set-dur" data-dur="'+d.val+'">'+d.label+'</button>'
+      ).join('')+
     '</div>'+
-    // Middle: timer ring left + info
-    '<div class="pomo-middle">'+
-      '<div class="pomo-ring-wrap">'+
-        '<svg width="200" height="200" viewBox="0 0 220 220">'+
-          '<circle class="pomo-ring-bg" cx="110" cy="110" r="'+radius+'"/>'+
-          '<circle class="pomo-ring-fg '+color+'" cx="110" cy="110" r="'+radius+'" stroke-dasharray="'+circumference+'" stroke-dashoffset="'+offset+'"/>'+
-        '</svg>'+
-        '<div class="pomo-time">'+
-          '<div class="time-num">'+(c.phase==='idle'?pad(s.focus)+':00':pad(mins)+':'+pad(secs))+'</div>'+
-          '<div class="time-label">'+getPhaseLabel(c.phase)+'</div>'+
+    '<span class="study-custom-toggle" id="studyCustomToggle">⚙️ 自定义</span>'+
+    (studyCustomOpen
+      ? '<div class="study-custom-row" id="studyCustomRow">'+
+          '<input type="number" id="studyCustomInput" value="'+selectedStudyDuration+'" min="5" max="180" placeholder="分钟">'+
+          '<span>分钟</span>'+
         '</div>'+
-      '</div>'+
+        '<div class="study-custom-err hidden" id="studyCustomErr"></div>'
+      : '')+
+    '<button class="study-start-btn" data-action="study-start">🦊 开始陪伴</button>'+
+    '<div class="study-today-info">'+
+      (todayMin > 0
+        ? '今日已专注 <b>'+todayMin+'</b> 分钟'
+        : '今天还没开始，来一段吧')+
     '</div>'+
-    // Linked task live card
-    '<div class="pomo-linked" id="pomoLinked"></div>'+
-    // Link row
-    '<div class="link-row">'+
-      '<div class="link-todo-wrap">'+
-        '<div class="link-label">🔗 关联待办</div>'+
-        '<select id="linkTodoSelect">'+
-          '<option value="">不关联</option>'+
-          state.todos.filter(t=>!t.completed).map(t=>
-            '<option value="'+t.id+'"'+(c.linkedTodoId===t.id?' selected':'')+'>'+esc(t.name)+'</option>'
-          ).join('')+
-        '</select>'+
-      '</div>'+
-      '<div class="link-todo-wrap">'+
-        '<div class="link-label">📅 关联每日</div>'+
-        '<select id="linkDailySelect">'+
-          '<option value="">不关联</option>'+
-          state.dailies.map(d=>{
-            const doneToday = d.completedDates && d.completedDates.includes(today());
-            const sel = c.linkedDailyId===d.id?' selected':'';
-            const dis = doneToday?' disabled':'';
-            const label = esc(d.name)+(doneToday?' (已完成)':'');
-            return '<option value="'+d.id+'"'+sel+dis+'>'+label+'</option>';
-          }).join('')+
-        '</select>'+
-      '</div>'+
-    '</div>'+
-    // Settings toggle button + panel
-    '<button class="pomo-settings-btn" id="toggleSettings">⚙️ 番茄设置</button>'+
-    '<div class="settings-grid" id="settingsPanel" style="display:none">'+
-      '<div class="setting-item"><label>专注时长 (分)</label><input type="number" id="setFocus" value="'+s.focus+'" min="1" max="120"></div>'+
-      '<div class="setting-item"><label>小休息 (分)</label><input type="number" id="setShort" value="'+s.shortBreak+'" min="1" max="30"></div>'+
-      '<div class="setting-item"><label>大休息 (分)</label><input type="number" id="setLong" value="'+s.longBreak+'" min="1" max="60"></div>'+
-      '<div class="setting-item"><label>大休息间隔</label><input type="number" id="setInterval" value="'+s.longInterval+'" min="1" max="10"></div>'+
-      '<div class="setting-row" style="grid-column:1/-1">'+
-        '<input type="checkbox" id="setAutoStart"'+(s.autoStart?' checked':'')+'>'+
-        '<label for="setAutoStart">自动开始下一阶段</label>'+
-      '</div>'+
-    '</div>';
-  renderLinkedTask();
+    (totalMin > 0
+      ? '<div class="study-today-info" style="margin-top:2px;font-size:12px">已陪伴你 <b>'+totalH+'</b> 小时 <b>'+totalM+'</b> 分钟</div>'
+      : '');
 }
 
 function renderSummary(){
@@ -2967,7 +3025,7 @@ function renderSummary(){
     if(e.gold>0) totalGoldEarned+=e.gold;
     if(e.gold<0) totalGoldSpent+=Math.abs(e.gold);
     if(e.hp<0) totalHpLost+=Math.abs(e.hp);
-    if(e.type==='pomodoro-complete') pomoCount++;
+    if(e.type==='pomodoro-complete'||e.type==='focus-complete') pomoCount++;
   }
 
   // Group entries by day
@@ -3244,9 +3302,9 @@ function calcTodayCount(){
   for(const td of state.todos){
     if(td.completed && td.createdAt === t) count++;
   }
-  // Also count pomodoros completed today
+  // Also count focus sessions completed today
   const pomos = (state.activityLog||[]).filter(e =>
-    e.type==='pomodoro-complete' && tsDay(e.ts)===t
+    (e.type==='pomodoro-complete'||e.type==='focus-complete') && tsDay(e.ts)===t
   ).length;
   return count + pomos;
 }
@@ -3254,9 +3312,15 @@ function calcTodayCount(){
 // ========== FAB Visibility ==========
 function updateFab(){
   const fab = document.getElementById('fab');
-  const activeTab = document.querySelector('.tab-btn.active');
-  const tab = activeTab ? activeTab.dataset.tab : 'habits';
-  if(tab === 'pomodoro' || tab === 'summary'){
+  const activeBtn = document.querySelector('.tab-btn.active');
+  let tab = activeBtn ? activeBtn.dataset.tab : null;
+  // Fallback: check which tab-content is visible (summary has no tab button)
+  if(!tab){
+    const activeContent = document.querySelector('.tab-content.active');
+    if(activeContent){ tab = activeContent.id.replace('tab-',''); }
+  }
+  tab = tab || 'habits';
+  if(tab === 'study' || tab === 'summary'){
     fab.classList.add('hidden');
   }else{
     fab.classList.remove('hidden');
@@ -3366,8 +3430,7 @@ function syncTodoForm(){
     const tagStr = parsed.tag ? ' #'+parsed.tag : '';
     const emEl = document.getElementById('addEstMin');
     const estShow = (emEl && emEl.value) ? (parseInt(emEl.value)||0) : (parsed.estimatedMinutes||0);
-    const focusLen = (state.pomodoro.settings.focus)||25;
-    const estStr = estShow>0 ? ' · ⏱ '+estShow+'分（约'+Math.ceil(estShow/focusLen)+'个番茄）' : '';
+    const estStr = estShow>0 ? ' · ⏱ '+estShow+'分' : '';
     hint.innerHTML = '→ <b>'+esc(cleanName)+'</b>'+esc(tagStr)+estStr+' · 完成得 <b style="color:var(--xp)">+'+d.xp+' XP</b> · +'+d.gold+' 🪙';
   }
 }
@@ -3381,7 +3444,7 @@ function showAddForm(tab){
   const areas = {
     habits: 'habitsAddArea', dailies: 'dailiesAddArea',
     todos: 'todosAddArea', rewards: 'rewardsAddArea',
-    pomodoro: null, summary: null
+    study: null, summary: null
   };
   if(!areas[tab]) return;
   const area = document.getElementById(areas[tab]);
@@ -3608,53 +3671,26 @@ document.getElementById('app').addEventListener('click', function(e){
       if(confirm('确定删除这个奖励吗？')) deleteItem(state.rewards, id);
       break;
     }
-    // Pomodoro actions
-    case 'pomo-start':{
-      const c = state.pomodoro.current;
-      if(c.phase === 'idle'){
-        // Pre-start check: warn if one pomodoro exceeds daily task time
-        if(c.linkedDailyId){
-          const daily = state.dailies.find(d=>d.id===c.linkedDailyId);
-          if(daily && daily.estimatedMinutes){
-            const remaining = (daily.estimatedMinutes||0) - (daily.accumulatedFocusMinutes||0);
-            if(remaining>0 && state.pomodoro.settings.focus >= remaining+5){
-              toast('⚠️ 一个番茄('+state.pomodoro.settings.focus+'分)即可完成「'+daily.name+'」，建议专注到底', 'warn');
-            }
-          }
-        }
-        if(c.linkedTodoId){
-          const todo = state.todos.find(t=>t.id===c.linkedTodoId && !t.completed);
-          if(todo && todo.estimatedMinutes){
-            const remaining = (todo.estimatedMinutes||0) - (todo.accumulatedFocusMinutes||0);
-            if(remaining>0 && state.pomodoro.settings.focus >= remaining+5){
-              toast('⚠️ 一个番茄('+state.pomodoro.settings.focus+'分)即可完成「'+todo.name+'」，建议专注到底', 'warn');
-            }
-          }
-        }
-        startPhase('focus');
-      }else if(c.pausedAt !== null){
-        resumeTimer();
+    // Study / Companion actions
+    case 'study-set-dur':{
+      selectedStudyDuration = parseInt(btn.dataset.dur) || 25;
+      renderStudy();
+      break;
+    }
+    case 'study-start':{
+      if(companionSession){
+        toast('已在专注中，请先完成当前会话', 'warn');
+        break;
       }
-      renderPomodoro();
-      updateMiniTimer();
+      if(selectedStudyDuration < 5 || selectedStudyDuration > 180){
+        toast('时长需在 5–180 分钟之间', 'bad');
+        break;
+      }
+      startCompanionSession(selectedStudyDuration);
       break;
     }
-    case 'pomo-pause':{
-      pauseTimer();
-      renderPomodoro();
-      updateMiniTimer();
-      break;
-    }
-    case 'pomo-skip':{
-      skipPhase();
-      break;
-    }
-    case 'pomo-abandon':{
-      abandonPomodoro();
-      break;
-    }
-    case 'go-pomodoro':{
-      switchTab('pomodoro');
+    case 'go-study':{
+      switchTab('study');
       break;
     }
     case 'go-summary':{
@@ -3705,15 +3741,16 @@ document.getElementById('app').addEventListener('click', function(e){
         let tHtml='<div style="padding:10px 14px;font-weight:700;font-size:14px">'+title;
         // 活动记录时间线（仅当有 entries 时）
         if(entries.length>0){
-          const pomoEntries=entries.filter(e=>e.type==='pomodoro-complete');
-          const pomoCount=pomoEntries.length;
-          const studyMin=pomoCount*state.pomodoro.settings.focus;
+          const focusEntries=entries.filter(e=>e.type==='focus-complete' || e.type==='focus-abandon');
+          const focusCount=focusEntries.length;
+          const dayFocusSessions=(state.focusSessions||[]).filter(s=>s.date===dateStr);
+          const studyMin=dayFocusSessions.reduce((s,ses)=>s+(ses.settledMin||0),0);
           const doneCount=entries.filter(e=>['habit-positive','daily-complete','todo-complete','daily-claim'].includes(e.type)).length;
           let dayXp=0,dayGold=0,dayHp=0;
           for(const e of entries){dayXp+=e.xp;dayGold+=e.gold;dayHp+=e.hp;}
           const stripHtml=
             '<div class="day-summary-strip">'+
-              '<div class="dss-item"><span class="dss-val">🍅 '+pomoCount+'</span><span class="dss-sub">'+studyMin+'分钟</span></div>'+
+              '<div class="dss-item"><span class="dss-val">📖 '+focusCount+'</span><span class="dss-sub">'+studyMin+'分钟</span></div>'+
               '<div class="dss-item"><span class="dss-val">✅ '+doneCount+'</span><span class="dss-sub">完成项目</span></div>'+
               '<div class="dss-item"><span class="dss-val green">'+(dayXp>0?'+':'')+dayXp+'</span><span class="dss-sub">经验</span></div>'+
               '<div class="dss-item">'+
@@ -3798,25 +3835,20 @@ document.getElementById('app').addEventListener('change', function(e){
     }
     return;
   }
-  if(e.target.id === 'linkTodoSelect'){
-    state.pomodoro.current.linkedTodoId = e.target.value || null;
-    saveState();
-    renderLinkedTask();
+  // Study custom duration input
+  if(e.target.id === 'studyCustomInput'){
+    const val = parseInt(e.target.value);
+    const errEl = document.getElementById('studyCustomErr');
+    if(isNaN(val) || val < 5 || val > 180){
+      if(errEl){ errEl.textContent = '请输入 5–180 分钟'; errEl.classList.remove('hidden'); }
+    } else {
+      if(errEl) errEl.classList.add('hidden');
+      selectedStudyDuration = val;
+      // Update duration buttons to reflect custom value
+      document.querySelectorAll('#studyDurOptions .study-dur-btn').forEach(b=>b.classList.remove('active'));
+    }
     return;
   }
-  if(e.target.id === 'linkDailySelect'){
-    state.pomodoro.current.linkedDailyId = e.target.value || null;
-    saveState();
-    renderLinkedTask();
-    return;
-  }
-  // Settings changes
-  const s = state.pomodoro.settings;
-  if(e.target.id === 'setFocus'){ s.focus = Math.max(1, parseInt(e.target.value)||25); saveState(); renderPomodoro(); }
-  if(e.target.id === 'setShort'){ s.shortBreak = Math.max(1, parseInt(e.target.value)||5); saveState(); }
-  if(e.target.id === 'setLong'){ s.longBreak = Math.max(1, parseInt(e.target.value)||15); saveState(); }
-  if(e.target.id === 'setInterval'){ s.longInterval = Math.max(1, parseInt(e.target.value)||4); saveState(); }
-  if(e.target.id === 'setAutoStart'){ s.autoStart = e.target.checked; saveState(); }
 });
 
 // Type toggle in add form
@@ -3848,16 +3880,23 @@ document.getElementById('app').addEventListener('input', function(e){
 document.getElementById('app').addEventListener('click', function(e){
   if(e.target.closest('#confirmAdd')) confirmAdd();
   if(e.target.closest('#cancelAdd')) hideAddForm();
-  // Settings toggle
-  if(e.target.closest('#toggleSettings')){
-    const panel = document.getElementById('settingsPanel');
-    if(panel) panel.style.display = panel.style.display==='none'?'grid':'none';
+  // Study custom toggle
+  if(e.target.closest('#studyCustomToggle')){
+    studyCustomOpen = !studyCustomOpen;
+    renderStudy();
   }
 });
 
 // Enter key in add input
 document.getElementById('app').addEventListener('keydown', function(e){
   if(e.key === 'Enter' && (e.target.id === 'addInput' || e.target.id === 'addPrice')) confirmAdd();
+  if(e.key === 'Enter' && e.target.id === 'studyCustomInput'){
+    const val = parseInt(e.target.value);
+    if(!isNaN(val) && val >= 5 && val <= 180 && !companionSession){
+      selectedStudyDuration = val;
+      startCompanionSession(val);
+    }
+  }
   if(e.key === 'Escape' && (e.target.id === 'addInput' || e.target.id === 'addPrice')) hideAddForm();
 });
 
@@ -3933,14 +3972,36 @@ function init(){
   state = loadState();
   checkDailyReset();
 
-  // Restore pomodoro state: if was running, recalculate
-  const c = state.pomodoro.current;
-  if(c.phase !== 'idle' && c.pausedAt === null && c.startedAt){
-    // Was running when page was closed
-    if(getRemainingMs() <= 0){
-      advancePhase(true);
-    }else{
-      startTicking();
+  // Recover active companion session from localStorage (page refresh resilience)
+  if(state._activeCompanion && state._activeCompanion.startedAt){
+    const saved = state._activeCompanion;
+    const elapsed = Date.now() - saved.startedAt;
+    const totalMs = saved.durationMin * 60 * 1000;
+    if(elapsed < totalMs){
+      // Session still active — restore it
+      companionSession = {
+        durationMin: saved.durationMin,
+        startedAt: saved.startedAt,
+        timerId: null,
+        microTimerId: null
+      };
+      // Resume ticking and UI
+      startCompanionUI();
+      companionSession.timerId = setInterval(companionTick, 500);
+      scheduleCompanionMicro();
+      updateCompanionTimerDisplay();
+      updateCompanionTitle();
+    } else {
+      // Session should have finished while page was closed
+      companionSession = {
+        durationMin: saved.durationMin,
+        startedAt: saved.startedAt,
+        timerId: null,
+        microTimerId: null
+      };
+      // Show overlay briefly so completion animation is visible
+      document.getElementById('companionOverlay').classList.remove('hidden');
+      completeCompanion();
     }
   }
 
@@ -3950,13 +4011,14 @@ function init(){
   setInterval(checkReminders, 30000);
 }
 
-// 测试升级按钮
-document.getElementById('testLevelUp').addEventListener('click', function(){
-  gainXp(xpToNext(), '测试升级');
-  const t = document.getElementById('testToast');
-  t.style.opacity = '1'; t.textContent = '已触发升级 ✓';
-  setTimeout(function(){ t.style.opacity = '0'; }, 1200);
-});
+// Helper: show companion UI without starting timers (for recovery)
+function startCompanionUI(){
+  const overlay = document.getElementById('companionOverlay');
+  overlay.classList.remove('hidden');
+  const foxWrap = document.getElementById('companionFoxWrap');
+  foxWrap.classList.add('breathing');
+  foxWrap.classList.remove('stand-up','hop','sink','tilt','look-up');
+}
 init();
 // 调试钩子：访问 ?debug=1 后可在控制台用 __dbg 系列命令（必须在 init() 之后）
 if(location.search.includes('debug=1')){
