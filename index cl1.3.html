@@ -2966,10 +2966,12 @@ function renderRewards(){
     list.innerHTML = '<div class="empty"><span class="icon">🎁</span><p>还没有奖励，点击右下角 + 添加</p></div>';
     return;
   }
-  list.innerHTML = items.map(r=>{
+  const icons = ['🎁','🎬','🍫','🛍️','🎮','📚','☕','🍰','🎵','💎','🌟','🎯','🛒','🍿','👗','🕹️'];
+  list.innerHTML = items.map((r,i)=>{
     const canAfford = state.stats.gold >= r.price;
+    const icon = icons[i % icons.length];
     return '<div class="card reward-card" data-id="'+r.id+'">'+
-      '<div class="card-name">🎁 '+esc(r.name)+'</div>'+
+      '<div class="card-name">'+icon+' '+esc(r.name)+'</div>'+
       '<span class="reward-price">🪙 '+r.price+'</span>'+
       '<div class="card-actions">'+
         '<button class="btn btn-buy" data-action="buy-reward" data-id="'+r.id+'"'+(canAfford?'':' disabled')+' style="'+(canAfford?'':'opacity:.4;cursor:not-allowed')+'">兑换</button>'+
