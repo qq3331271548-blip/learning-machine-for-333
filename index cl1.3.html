@@ -367,42 +367,10 @@ body{
 .empty .icon{font-size:40px;display:block;margin-bottom:8px}
 .empty p{font-size:14px}
 /* ===== Reward Card ===== */
-/* ===== Reward Shop Cards ===== */
-.reward-card{
-  background:var(--card);border-radius:var(--radius);padding:16px;
-  box-shadow:var(--shadow);
-  display:flex;align-items:center;gap:12px;
-  transition:all .25s;
-}
-.reward-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
-.reward-card .rc-icon{
-  width:44px;height:44px;border-radius:12px;
-  background:var(--bg);
-  display:flex;align-items:center;justify-content:center;font-size:22px;
-  flex-shrink:0;
-}
-.reward-card .rc-body{flex:1;min-width:0}
-.reward-card .rc-name{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px}
-.reward-card .rc-price{
-  font-size:13px;font-weight:700;color:var(--gold);
-  display:flex;align-items:center;gap:2px;
-}
-.reward-card .rc-btn{
-  padding:10px 18px;border:none;border-radius:10px;
-  background:var(--gold);color:#fff;font-size:13px;font-weight:700;
-  cursor:pointer;font-family:var(--font);transition:all .15s;
-  flex-shrink:0;
-}
-.reward-card .rc-btn:active{transform:scale(.93)}
-.reward-card .rc-btn:disabled{opacity:.35;cursor:not-allowed}
-.reward-card.bought{
-  animation:rcBuy .5s ease;
-  box-shadow:0 0 0 3px var(--gold),0 8px 24px rgba(212,168,83,.3);
-}
+.reward-card.bought{animation:rcBuy .5s ease}
 @keyframes rcBuy{
-  0%{transform:scale(1)}
-  40%{transform:scale(1.03)}
-  100%{transform:scale(1)}
+  0%{background:var(--gold-bg)}
+  100%{background:transparent}
 }
 /* ===== Streak Badge ===== */
 .streak{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--text2)}
@@ -766,9 +734,6 @@ body{
   .card-name{font-size:14px}
   .companion-timer{font-size:52px}
   .companion-fox-wrap{width:100px;height:100px}
-  .reward-card{padding:12px;gap:8px}
-  .reward-card .rc-icon{width:36px;height:36px;font-size:18px}
-  .reward-card .rc-name{font-size:14px}
   .cal-grid{gap:2px}
   .cal-cell{font-size:11px;border-radius:5px}
   .cal-weekday{font-size:9px;padding:4px 0}
@@ -2634,7 +2599,7 @@ function buyReward(reward){
   render();
   // 购买动画：卡片脉冲 + 金币数字抖动
   setTimeout(()=>{
-    const card = document.querySelector('.reward-card[data-id="'+reward.id+'"]');
+    const card = document.querySelector('.card[data-id="'+reward.id+'"]');
     if(card){ card.classList.add('bought'); setTimeout(()=>card.classList.remove('bought'), 500); }
     flashGold();
   }, 50);
@@ -3001,16 +2966,15 @@ function renderRewards(){
     list.innerHTML = '<div class="empty"><span class="icon">🎁</span><p>还没有奖励，点击右下角 + 添加</p></div>';
     return;
   }
-  const icons = ['🎁','🎬','🍫','🛍️','🎮','📚','☕','🍰','🎵','💎','🌟','🎯','🛒','🍿','👗','🕹️'];
-  list.innerHTML = items.map((r,i)=>{
+  list.innerHTML = items.map(r=>{
     const canAfford = state.stats.gold >= r.price;
-    const icon = icons[i % icons.length];
-    return '<div class="reward-card" data-id="'+r.id+'">'+
-      '<div class="rc-icon">'+icon+'</div>'+
-      '<div class="rc-body"><div class="rc-name">'+esc(r.name)+'</div><div class="rc-price">🪙 '+r.price+'</div></div>'+
-      '<button class="rc-btn" data-action="buy-reward" data-id="'+r.id+'"'+(canAfford?'':' disabled')+'>'+(canAfford?'兑换':'太贵了')+'</button>'+
-      '<button class="btn-icon danger" data-action="delete-reward" data-id="'+r.id+'" title="删除" style="font-size:12px;width:24px;height:24px;opacity:.35">✕</button>'+
-    '</div>';
+    return '<div class="card reward-card" data-id="'+r.id+'">'+
+      '<div class="card-name">🎁 '+esc(r.name)+'</div>'+
+      '<span class="reward-price">🪙 '+r.price+'</span>'+
+      '<div class="card-actions">'+
+        '<button class="btn btn-buy" data-action="buy-reward" data-id="'+r.id+'"'+(canAfford?'':' disabled')+' style="'+(canAfford?'':'opacity:.4;cursor:not-allowed')+'">兑换</button>'+
+        '<button class="btn-icon danger" data-action="delete-reward" data-id="'+r.id+'" title="删除" style="font-size:14px;width:28px;height:28px;opacity:.5">✕</button>'+
+      '</div></div>';
   }).join('');
 }
 
