@@ -1048,7 +1048,7 @@ body{
   <div class="stats-bar" id="statsBar">
     <div class="stats-main">
       <div class="stats-left">
-        <div class="fox-float" id="foxFloat"><img src="狐狸  (1).png" alt="小狐狸"></div>
+        <div class="fox-float" id="foxFloat"><img src="fox-stats.png" alt="小狐狸"></div>
         <div class="companion-summary" id="companionSummary" style="font-size:10px;color:var(--text3);text-align:center;margin-top:2px;line-height:1.3"></div>
       </div>
       <div class="stats-right">
@@ -2362,9 +2362,9 @@ function handleDeath(){
 // 狐狸进化：3 个阶段，用全屏白光遮盖图片切换
 // 文件名注意：半角括号 + 两个空格
 const FOX_STAGES = [
-  { minLevel: 1,  src: '狐狸  (1).png' }, // 起始形态
-  { minLevel: 5,  src: '狐狸  (2).png' }, // 中间形态
-  { minLevel: 15, src: 'fox-stage1.png' },  // 最终形态
+  { minLevel: 1,  src: 'fox-stats.png' },
+  { minLevel: 5,  src: 'fox-stage2.png' },
+  { minLevel: 15, src: 'fox-stage1.png' }
 ];
 
 function checkFoxStage(level){
