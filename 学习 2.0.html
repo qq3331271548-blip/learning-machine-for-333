@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>习惯养成</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 /* ===== Reset & Variables ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1226,6 +1227,30 @@ body{
   40%     { box-shadow: 0 0 0 3px rgba(255,255,255,0.9), 0 0 12px 4px rgba(99,130,246,0.5); }
 }
 .xp-receive { animation: xpReceive 0.5s ease; }
+/* ===== Supabase Auth ===== */
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease}
+.auth-overlay.hidden{display:none}
+.auth-card{background:var(--card);border-radius:var(--radius);padding:28px 24px;width:340px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.25);animation:slideUp .25s ease}
+.auth-card h2{font-size:20px;margin-bottom:4px;text-align:center}
+.auth-card .auth-sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:20px}
+.auth-card label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px;margin-top:12px}
+.auth-card input[type=email],.auth-card input[type=password]{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font);outline:none;transition:border-color .15s}
+.auth-card input:focus{border-color:var(--tab)}
+.auth-card .auth-btn{width:100%;padding:12px;margin-top:16px;border:none;border-radius:10px;background:var(--tab);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s}
+.auth-card .auth-btn:active{transform:scale(.96)}
+.auth-card .auth-btn:disabled{opacity:.5;cursor:default}
+.auth-card .auth-switch{text-align:center;margin-top:14px;font-size:12px;color:var(--text2)}
+.auth-card .auth-switch button{background:none;border:none;color:var(--tab);font-weight:700;cursor:pointer;font-size:12px;font-family:var(--font);text-decoration:underline}
+.auth-card .auth-err{color:#dc2626;font-size:12px;margin-top:8px;text-align:center;min-height:18px}
+/* Header user pill */
+.header-user{position:relative;display:flex;align-items:center;gap:6px;background:var(--tab-bg);border-radius:20px;padding:4px 10px 4px 4px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tab);transition:all .15s;white-space:nowrap}
+.header-user:active{transform:scale(.95)}
+.header-user .user-avatar{width:26px;height:26px;border-radius:50%;background:var(--tab);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.header-user .user-menu{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card);border-radius:10px;box-shadow:var(--shadow-md);padding:4px;min-width:120px;z-index:100;border:1px solid var(--border)}
+.header-user.open .user-menu{display:block}
+.header-user .user-menu button{display:block;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;cursor:pointer;border-radius:8px;text-align:left;font-family:var(--font);color:var(--text)}
+.header-user .user-menu button:hover{background:var(--bg)}
+.header-user .user-menu button.danger{color:#dc2626}
 </style>
 </head>
 <body>
@@ -1263,6 +1288,14 @@ body{
       <div class="header-icons">
         <button data-action="go-study" title="自习陪伴">📖</button>
         <button data-action="go-summary" title="月度">📊</button>
+        <div class="header-user" id="headerUser">
+          <span class="user-avatar" id="userAvatar">☁️</span>
+          <span id="userEmailShort">登录同步</span>
+          <div class="user-menu" id="userMenu">
+            <button data-action="sync-now">🔄 同步数据</button>
+            <button data-action="show-auth" class="danger">🚪 退出登录</button>
+          </div>
+        </div>
       </div>
     </div>
     <!-- Middle: HP & XP bars -->
@@ -1528,9 +1561,413 @@ body{
   </div>
 </div>
 
+<!-- Auth overlay: 登录/注册 -->
+<div class="auth-overlay hidden" id="authOverlay">
+  <div class="auth-card">
+    <h2 id="authTitle">登录</h2>
+    <p class="auth-sub" id="authSub">同步你的数据到云端</p>
+    <label>邮箱</label>
+    <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email">
+    <label>密码</label>
+    <input type="password" id="authPassword" placeholder="至少6位" autocomplete="current-password">
+    <p class="auth-err" id="authErr"></p>
+    <button class="auth-btn" id="authBtn">登录</button>
+    <p class="auth-switch"><span id="authSwitchText">没有账号？</span> <button id="authSwitchBtn">去注册</button></p>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
+
+// ========== Supabase Cloud Sync ==========
+const SUPABASE_URL = 'https://mmlubydviqslvlftokqj.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_30yTaywSMoIHGp1Nb1gkEg_C0K5la_S';
+let supabase = null;
+let cloudUser = null;          // currently logged-in user
+let cloudSyncing = false;      // debounce flag
+let cloudSyncTimer = null;
+
+function initSupabase(){
+  if(typeof supabase !== 'undefined' && supabase.createClient){
+    supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}
+
+// ── Auth helpers ──
+async function checkAuthSession(){
+  if(!supabase) return null;
+  try{
+    const { data } = await supabase.auth.getSession();
+    return data.session ? data.session.user : null;
+  }catch(e){ return null; }
+}
+
+async function signUp(email, password){
+  if(!supabase) return { error: 'Supabase 未初始化' };
+  return await supabase.auth.signUp({ email, password });
+}
+
+async function signIn(email, password){
+  if(!supabase) return { error: 'Supabase 未初始化' };
+  return await supabase.auth.signInWithPassword({ email, password });
+}
+
+async function signOutUser(){
+  if(!supabase) return;
+  await supabase.auth.signOut();
+  cloudUser = null;
+}
+
+// ── Cloud push (debounced) ──
+function scheduleCloudPush(){
+  if(!supabase || !cloudUser) return;
+  if(cloudSyncing) return;
+  if(cloudSyncTimer) clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(pushToCloud, 800);
+}
+
+function stripLocalFields(item){
+  // Remove non-persistable fields before sending to cloud
+  const c = Object.assign({}, item);
+  delete c._local;  // any local-only flags
+  return c;
+}
+
+async function pushToCloud(){
+  if(!supabase || !cloudUser) return;
+  cloudSyncing = true;
+  const uid = cloudUser.id;
+  try{
+    // ── Tasks (habits + dailies + todos) ──
+    const taskRows = [];
+    if(Array.isArray(state.habits)){
+      for(const h of state.habits){
+        taskRows.push({
+          user_id: uid, type: 'habit', name: h.name,
+          difficulty: h.difficulty || 'medium',
+          custom_reward: h.customReward || null,
+          penalty: h.penalty || null,
+          streak: h.streak || 0, best_streak: h.best_streak || 0,
+          done_dates: h.doneDates || (h.history ? Object.keys(h.history) : []),
+          archived: h.archived || false,
+          updated_at: new Date().toISOString(),
+          extra_data: { type: h.type, doneDates: h.doneDates, history: h.history }
+        });
+      }
+    }
+    if(Array.isArray(state.dailies)){
+      for(const d of state.dailies){
+        taskRows.push({
+          user_id: uid, type: 'daily', name: d.name,
+          difficulty: d.difficulty || 'medium',
+          custom_reward: d.customReward || null,
+          done_dates: d.completedDates || [],
+          penalty: d.penalty || null,
+          streak: d.streak || 0, best_streak: d.best_streak || 0,
+          archived: d.archived || false,
+          updated_at: new Date().toISOString(),
+          extra_data: { estimatedMinutes: d.estimatedMinutes, accumulatedFocusMinutes: d.accumulatedFocusMinutes }
+        });
+      }
+    }
+    if(Array.isArray(state.todos)){
+      for(const t of state.todos){
+        taskRows.push({
+          user_id: uid, type: 'todo', name: t.name,
+          difficulty: t.difficulty || 'medium',
+          custom_reward: t.customReward || null,
+          done_dates: t.completed ? [t.completedAt || today()] : [],
+          penalty: t.penalty || null,
+          archived: t.completed || false,
+          updated_at: new Date().toISOString(),
+          extra_data: {
+            completed: t.completed, completedAt: t.completedAt,
+            createdAt: t.createdAt, dueDate: t.dueDate,
+            priority: t.priority, tag: t.tag, subtasks: t.subtasks,
+            estimatedMinutes: t.estimatedMinutes,
+            accumulatedFocusMinutes: t.accumulatedFocusMinutes,
+            reminderTime: t.reminderTime, reminded: t.reminded
+          }
+        });
+      }
+    }
+    // Clear old and insert new
+    await supabase.from('tasks').delete().eq('user_id', uid);
+    if(taskRows.length){
+      // Insert in batches of 50 to avoid payload limits
+      for(let i = 0; i < taskRows.length; i += 50){
+        await supabase.from('tasks').insert(taskRows.slice(i, i + 50));
+      }
+    }
+
+    // ── Rewards ──
+    await supabase.from('rewards').delete().eq('user_id', uid);
+    if(Array.isArray(state.rewards) && state.rewards.length){
+      const rewardRows = state.rewards.map(r => ({
+        user_id: uid, name: r.name, price: r.price,
+        created_at: r.createdAt || new Date().toISOString()
+      }));
+      await supabase.from('rewards').insert(rewardRows);
+    }
+
+    // ── Stats ──
+    await supabase.from('user_stats').upsert({
+      user_id: uid, xp: state.stats.xp, gold: state.stats.gold,
+      hp: state.stats.hp, level: state.stats.level,
+      updated_at: new Date().toISOString()
+    });
+
+    // ── Focus sessions (last 90 days only, to keep it light) ──
+    await supabase.from('focus_sessions').delete().eq('user_id', uid);
+    if(Array.isArray(state.focusSessions) && state.focusSessions.length){
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
+      const cutoffStr = cutoff.toISOString().slice(0, 10);
+      const recent = state.focusSessions.filter(s => s.date >= cutoffStr);
+      if(recent.length){
+        const fsRows = recent.map(s => ({
+          user_id: uid, date: s.date, duration_min: s.durationMin || 0,
+          settled_min: s.settledMin || 0, completed: s.completed || false,
+          created_at: s.createdAt || new Date().toISOString()
+        }));
+        await supabase.from('focus_sessions').insert(fsRows);
+      }
+    }
+  }catch(e){
+    console.warn('Cloud push failed, will retry:', e.message);
+  }
+  cloudSyncing = false;
+}
+
+// ── Cloud pull ──
+async function pullFromCloud(){
+  if(!supabase || !cloudUser) return null;
+  const uid = cloudUser.id;
+  try{
+    const [tasksRes, rewardsRes, statsRes, fsRes] = await Promise.all([
+      supabase.from('tasks').select('*').eq('user_id', uid),
+      supabase.from('rewards').select('*').eq('user_id', uid),
+      supabase.from('user_stats').select('*').eq('user_id', uid).maybeSingle(),
+      supabase.from('focus_sessions').select('*').eq('user_id', uid).order('date', {ascending: false}).limit(500)
+    ]);
+
+    if(tasksRes.error || rewardsRes.error){
+      console.warn('Cloud pull partial error');
+      return null;
+    }
+
+    const habits = [], dailies = [], todos = [];
+    if(tasksRes.data){
+      for(const t of tasksRes.data){
+        const base = {
+          id: t.id, name: t.name, difficulty: t.difficulty || 'medium',
+          customReward: t.custom_reward, penalty: t.penalty,
+          archived: t.archived || false
+        };
+        const ex = t.extra_data || {};
+        if(t.type === 'habit'){
+          const doneDates = Array.isArray(t.done_dates) ? t.done_dates : [];
+          const history = ex.history || {};
+          if(!Object.keys(history).length){
+            for(const d of doneDates){ history[d] = (history[d]||0)+1; }
+          }
+          habits.push(Object.assign({}, base, {
+            type: ex.type || 'positive',
+            streak: t.streak || 0,
+            best_streak: t.best_streak || 0,
+            doneDates: ex.doneDates || doneDates,
+            history: history
+          }));
+        }else if(t.type === 'daily'){
+          dailies.push(Object.assign({}, base, {
+            completedDates: Array.isArray(t.done_dates) ? t.done_dates : [],
+            estimatedMinutes: ex.estimatedMinutes || 0,
+            accumulatedFocusMinutes: ex.accumulatedFocusMinutes || 0,
+            streak: t.streak || 0,
+            best_streak: t.best_streak || 0
+          }));
+        }else if(t.type === 'todo'){
+          todos.push(Object.assign({}, base, {
+            completed: ex.completed != null ? ex.completed : (t.archived || false),
+            completedAt: ex.completedAt || (Array.isArray(t.done_dates) && t.done_dates.length ? t.done_dates[0] : null),
+            createdAt: ex.createdAt || today(),
+            dueDate: ex.dueDate || today(),
+            priority: ex.priority || 'medium',
+            tag: ex.tag || null,
+            subtasks: Array.isArray(ex.subtasks) ? ex.subtasks : [],
+            estimatedMinutes: ex.estimatedMinutes || 0,
+            accumulatedFocusMinutes: ex.accumulatedFocusMinutes || 0,
+            reminderTime: ex.reminderTime || null,
+            reminded: ex.reminded || false
+          }));
+        }
+      }
+    }
+
+    const rewards = (rewardsRes.data || []).map(r => ({
+      id: r.id, name: r.name, price: r.price, createdAt: r.created_at
+    }));
+
+    const stats = statsRes.data ? {
+      hp: statsRes.data.hp, xp: statsRes.data.xp,
+      gold: statsRes.data.gold, level: statsRes.data.level
+    } : null;
+
+    const focusSessions = (fsRes.data || []).map(s => ({
+      id: s.id, date: s.date, durationMin: s.duration_min,
+      settledMin: s.settled_min, completed: s.completed,
+      createdAt: s.created_at
+    }));
+
+    return { habits, dailies, todos, rewards, stats, focusSessions };
+  }catch(e){
+    console.warn('Cloud pull failed:', e.message);
+    return null;
+  }
+}
+
+// ── Merge cloud data into state ──
+function mergeCloudIntoState(cloudData){
+  if(!cloudData) return;
+  // Cloud wins over local defaults; keep local if cloud is empty
+  if(cloudData.habits && cloudData.habits.length > 0){
+    state.habits = cloudData.habits;
+  }
+  if(cloudData.dailies && cloudData.dailies.length > 0){
+    state.dailies = cloudData.dailies;
+  }
+  if(cloudData.todos && cloudData.todos.length > 0){
+    state.todos = cloudData.todos;
+  }
+  if(cloudData.rewards && cloudData.rewards.length > 0){
+    state.rewards = cloudData.rewards;
+  }
+  if(cloudData.stats){
+    state.stats = cloudData.stats;
+  }
+  if(cloudData.focusSessions && cloudData.focusSessions.length > 0){
+    state.focusSessions = cloudData.focusSessions;
+  }
+  state.lastResetDate = today();
+  state.streakMilestones = state.streakMilestones || [];
+  state.pendingMisses = state.pendingMisses || [];
+  state.activityLog = state.activityLog || [];
+}
+
+// ── UI helpers ──
+function updateUserUI(){
+  const pill = document.getElementById('headerUser');
+  const avatar = document.getElementById('userAvatar');
+  const emailShort = document.getElementById('userEmailShort');
+  const overlay = document.getElementById('authOverlay');
+  if(cloudUser){
+    const em = cloudUser.email || '';
+    emailShort.textContent = em.length > 14 ? em.slice(0,12)+'…' : em;
+    avatar.textContent = em.charAt(0).toUpperCase();
+    pill.title = em;
+    pill.style.cursor = 'pointer';
+    if(overlay) overlay.classList.add('hidden');
+  }else{
+    emailShort.textContent = '登录同步';
+    avatar.textContent = '☁️';
+    pill.title = '点击登录，同步数据到云端';
+    pill.style.cursor = 'pointer';
+  }
+}
+
+function showAuthOverlay(isSignUp){
+  const overlay = document.getElementById('authOverlay');
+  const title = document.getElementById('authTitle');
+  const sub = document.getElementById('authSub');
+  const btn = document.getElementById('authBtn');
+  const switchText = document.getElementById('authSwitchText');
+  const switchBtn = document.getElementById('authSwitchBtn');
+  overlay.classList.remove('hidden');
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authErr').textContent = '';
+  if(isSignUp){
+    title.textContent = '注册';
+    sub.textContent = '创建一个新账号，同步数据到云端';
+    btn.textContent = '注册';
+    switchText.textContent = '已有账号？';
+    switchBtn.textContent = '去登录';
+    overlay.dataset.mode = 'signup';
+  }else{
+    title.textContent = '登录';
+    sub.textContent = '登录后同步你的数据到云端';
+    btn.textContent = '登录';
+    switchText.textContent = '没有账号？';
+    switchBtn.textContent = '去注册';
+    overlay.dataset.mode = 'signin';
+  }
+}
+
+async function handleAuthAction(){
+  const overlay = document.getElementById('authOverlay');
+  const mode = overlay.dataset.mode || 'signin';
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authErr');
+  const btn = document.getElementById('authBtn');
+  errEl.textContent = '';
+  if(!email || !password){ errEl.textContent = '请填写邮箱和密码'; return; }
+  if(password.length < 6){ errEl.textContent = '密码至少6位'; return; }
+  btn.disabled = true;
+  btn.textContent = mode === 'signup' ? '注册中...' : '登录中...';
+  try{
+    let result;
+    if(mode === 'signup'){
+      result = await signUp(email, password);
+      if(result.error){
+        errEl.textContent = result.error.message || '注册失败';
+      }else if(result.data.user){
+        // Supabase may require email confirmation; if not, user is logged in immediately
+        cloudUser = result.data.user;
+        errEl.textContent = '';
+        toast('✅ 注册成功！', 'good');
+        await onUserLoggedIn();
+      }
+    }else{
+      result = await signIn(email, password);
+      if(result.error){
+        errEl.textContent = result.error.message || '登录失败';
+      }else if(result.data.user){
+        cloudUser = result.data.user;
+        errEl.textContent = '';
+        toast('✅ 登录成功！正在同步数据...', 'good');
+        await onUserLoggedIn();
+      }
+    }
+  }catch(e){
+    errEl.textContent = '网络错误，请稍后重试';
+  }
+  btn.disabled = false;
+  btn.textContent = mode === 'signup' ? '注册' : '登录';
+}
+
+async function onUserLoggedIn(){
+  updateUserUI();
+  // Pull cloud data and merge
+  const cloudData = await pullFromCloud();
+  if(cloudData){
+    mergeCloudIntoState(cloudData);
+  }
+  // Push current local state (cloud merge may have added new defaults)
+  saveState();
+  scheduleCloudPush();
+  render();
+  initAllSwipes();
+}
+
+async function doLogout(){
+  if(!confirm('退出登录将保留本地数据。确定退出？')) return;
+  await signOutUser();
+  cloudUser = null;
+  updateUserUI();
+  toast('已退出登录，数据保留在本地', 'info');
+}
+
 
 // ========== Constants ==========
 const STORAGE_KEY = 'habit-tracker-v1'; // v2 state structure, backward-compat key
@@ -1998,7 +2435,13 @@ function loadState(){
   }catch(e){}
   return defaultState();
 }
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); scheduleCloudPush(); }
+function initAllSwipes(){
+  initSwipe('habitsList');
+  initSwipe('dailiesList');
+  initSwipe('todosList');
+  initSwipe('rewardsList');
+}
 
 // ========== Activity Log ==========
 function logActivity(type, detail, xp, gold, hp){
@@ -4335,6 +4778,48 @@ if(entries.length===0 && claimz.length===0){
       }
       break;
     }
+    // Auth actions
+    case 'toggle-user-menu':{
+      if(cloudUser){
+        document.getElementById('headerUser').classList.toggle('open');
+      }else{
+        showAuthOverlay(false);
+      }
+      break;
+    }
+    case 'sync-now':{
+      document.getElementById('headerUser').classList.remove('open');
+      if(cloudUser){ toast('🔄 正在同步...', 'info'); scheduleCloudPush(); }
+      else{ toast('请先登录', 'warn'); }
+      break;
+    }
+    case 'show-auth':{
+      document.getElementById('headerUser').classList.remove('open');
+      doLogout();
+      break;
+    }
+  }
+});
+
+// Auth overlay events
+document.getElementById('authOverlay').addEventListener('click', function(e){
+  if(e.target === this){ this.classList.add('hidden'); }
+});
+document.getElementById('authBtn').addEventListener('click', handleAuthAction);
+document.getElementById('authSwitchBtn').addEventListener('click', function(){
+  const overlay = document.getElementById('authOverlay');
+  const isSignUp = overlay.dataset.mode === 'signup';
+  showAuthOverlay(!isSignUp);
+});
+document.getElementById('authPassword').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') handleAuthAction();
+});
+
+// Close user menu on outside click
+document.addEventListener('click', function(e){
+  const userPill = document.getElementById('headerUser');
+  if(userPill && !userPill.contains(e.target)){
+    userPill.classList.remove('open');
   }
 });
 
@@ -4531,7 +5016,35 @@ function checkReminders(){
   if(changed) saveState();
 }
 
-function init(){
+async function init(){
+  // Init Supabase
+  initSupabase();
+  // Try restore auth session
+  if(supabase){
+    cloudUser = await checkAuthSession();
+    if(cloudUser){
+      // Pull cloud data, merge with local
+      const cloudData = await pullFromCloud();
+      if(cloudData){ mergeCloudIntoState(cloudData); }
+    }
+    updateUserUI();
+    // Listen for future auth changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      const wasLoggedIn = !!cloudUser;
+      cloudUser = session ? session.user : null;
+      updateUserUI();
+      if(!wasLoggedIn && cloudUser){
+        // Just logged in
+        const cd = await pullFromCloud();
+        if(cd){ mergeCloudIntoState(cd); saveState(); render(); initAllSwipes(); }
+      }
+      if(wasLoggedIn && !cloudUser){
+        // Just logged out
+        toast('已退出登录，数据保留在本地', 'info');
+      }
+    });
+  }
+
   state = loadState();
   checkDailyReset();
 
@@ -4570,10 +5083,7 @@ function init(){
 
   saveState();
   render();
-  initSwipe('habitsList');
-  initSwipe('dailiesList');
-  initSwipe('todosList');
-  initSwipe('rewardsList');
+  initAllSwipes();
   checkReminders();
   setInterval(checkReminders, 30000);
 }
