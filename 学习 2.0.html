@@ -1254,6 +1254,41 @@ body{
 .header-user .user-menu button{display:block;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;cursor:pointer;border-radius:8px;text-align:left;font-family:var(--font);color:var(--text)}
 .header-user .user-menu button:hover{background:var(--bg)}
 .header-user .user-menu button.danger{color:#dc2626}
+/* ===== AI Settings ===== */
+.ai-settings-toggle{display:flex;align-items:center;gap:6px;background:none;border:1px dashed var(--border);border-radius:12px;padding:6px 12px;cursor:pointer;font-size:11px;color:var(--text3);font-family:var(--font);transition:all .15s;margin-top:8px;width:100%;max-width:200px}
+.ai-settings-toggle:hover{border-color:var(--tab);color:var(--tab)}
+.ai-settings{display:none;background:var(--bg);border-radius:12px;padding:12px;margin-top:6px;border:1px solid var(--border)}
+.ai-settings.show{display:block}
+.ai-settings label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px}
+.ai-settings input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);outline:none}
+.ai-settings input:focus{border-color:var(--tab)}
+.ai-settings .ai-save-btn{margin-top:8px;padding:6px 14px;border:none;border-radius:8px;background:var(--tab);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
+/* ===== AI Chat ===== */
+.ai-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;font-size:24px;cursor:pointer;z-index:400;box-shadow:0 4px 20px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center}
+.ai-fab:active{transform:scale(.9);box-shadow:0 2px 10px rgba(99,102,241,.3)}
+.ai-fab.hidden{display:none}
+.ai-panel{position:fixed;bottom:80px;right:20px;width:380px;max-width:92vw;height:520px;max-height:70vh;background:var(--card);border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.2);z-index:399;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border);animation:slideUp .25s ease}
+.ai-panel.hidden{display:none}
+.ai-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);font-weight:700;font-size:14px}
+.ai-panel-header button{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);padding:0 4px}
+.ai-panel-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;animation:fadeIn .2s ease}
+.ai-msg.user{align-self:flex-end;background:var(--tab);color:#fff;border-bottom-right-radius:4px}
+.ai-msg.assistant{align-self:flex-start;background:var(--bg);color:var(--text);border-bottom-left-radius:4px}
+.ai-msg.assistant .msg-avatar{font-size:18px;margin-bottom:4px;display:block}
+.ai-panel-input-wrap{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--bg)}
+.ai-panel-input-wrap input{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-family:var(--font);outline:none}
+.ai-panel-input-wrap input:focus{border-color:var(--tab)}
+.ai-panel-input-wrap button{width:36px;height:36px;border-radius:50%;border:none;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;transition:all .15s}
+.ai-panel-input-wrap button:active{transform:scale(.9)}
+.ai-panel-input-wrap button:disabled{opacity:.5}
+.ai-empty{text-align:center;color:var(--text3);font-size:12px;margin-top:40px}
+.ai-empty .ai-empty-icon{font-size:40px;display:block;margin-bottom:8px}
+/* Typing dot animation */
+.ai-typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text3);margin:0 1px;animation:aiDot 1.4s infinite ease-in-out}
+.ai-typing span:nth-child(2){animation-delay:.2s}
+.ai-typing span:nth-child(3){animation-delay:.4s}
+@keyframes aiDot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 </style>
 </head>
 <body>
@@ -1351,6 +1386,16 @@ body{
       </table>
       <div class="pop-note"><strong>✦ 经验</strong> 和 <strong>🪙 金币</strong> 享受倍率加成<br><strong>❤️ 生命</strong> 不受倍率影响</div>
       <div class="pop-note" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><strong>🎯 里程碑奖励：</strong>连续 7 天 +500💰 | 21 天 +2000💰 | 30 天 +5000💰 | 66 天 +20000💰 | 100 天 +50000💰</div>
+    </div>
+  </div>
+
+  <!-- AI 设置 -->
+  <div style="padding:0 14px;margin-bottom:6px">
+    <button class="ai-settings-toggle" id="aiSettingsToggle">⚙️ AI 设置（DeepSeek API Key）</button>
+    <div class="ai-settings" id="aiSettings">
+      <label>DeepSeek API Key</label>
+      <input type="password" id="aiKeyInput" placeholder="sk-..." autocomplete="off">
+      <button class="ai-save-btn" id="aiSaveKey">保存</button>
     </div>
   </div>
 
@@ -1561,6 +1606,22 @@ body{
 
     </div>
     <button class="help-got-it" id="helpGotIt">明白了 👍</button>
+  </div>
+</div>
+
+<!-- AI Chat -->
+<button class="ai-fab" id="aiFab" title="AI 助理">🤖</button>
+<div class="ai-panel hidden" id="aiPanel">
+  <div class="ai-panel-header">
+    <span>🤖 AI 助理</span>
+    <button id="aiPanelClose">✕</button>
+  </div>
+  <div class="ai-panel-messages" id="aiMessages">
+    <div class="ai-empty"><span class="ai-empty-icon">🤖</span>你好！我是你的习惯养成助理。<br>试试说：<em>"帮我创建一个每天跑步的习惯"</em></div>
+  </div>
+  <div class="ai-panel-input-wrap">
+    <input type="text" id="aiInput" placeholder="输入消息..." autocomplete="off">
+    <button id="aiSend">➤</button>
   </div>
 </div>
 
@@ -2343,7 +2404,9 @@ function defaultState(){
     focusSessions: [],
     intimacy: 0,
     totalCompanionMinutes: 0,
-    pomodoro: null // 保留键但不再使用（旧数据迁移用）
+    pomodoro: null, // 保留键但不再使用（旧数据迁移用）
+    aiKey: '',
+    aiChatHistory: []
   };
 }
 
@@ -4909,6 +4972,47 @@ document.addEventListener('click', function(e){
   }
 });
 
+// AI settings events
+document.getElementById('aiSettingsToggle').addEventListener('click', function(){
+  document.getElementById('aiSettings').classList.toggle('show');
+});
+document.getElementById('aiSaveKey').addEventListener('click', function(){
+  const val = document.getElementById('aiKeyInput').value.trim();
+  state.aiKey = val;
+  saveState();
+  document.getElementById('aiSettings').classList.remove('show');
+  if(val){
+    toast('✅ API Key 已保存', 'good');
+  }else{
+    toast('API Key 已清除', 'info');
+  }
+});
+// Pre-fill key input after state is loaded (called from init)
+function loadAiSettings(){
+  if(state.aiKey){ document.getElementById('aiKeyInput').value = state.aiKey; }
+}
+
+// AI chat events
+document.getElementById('aiFab').addEventListener('click', toggleAiPanel);
+document.getElementById('aiPanelClose').addEventListener('click', toggleAiPanel);
+document.getElementById('aiSend').addEventListener('click', function(){
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if(!text) return;
+  if(!state.aiKey){ toast('请先配置 DeepSeek API Key', 'warn'); return; }
+  input.value = '';
+  sendAiMessage(text);
+});
+document.getElementById('aiInput').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){
+    const text = this.value.trim();
+    if(!text) return;
+    if(!state.aiKey){ toast('请先配置 DeepSeek API Key', 'warn'); return; }
+    this.value = '';
+    sendAiMessage(text);
+  }
+});
+
 // Change event for select
 document.getElementById('app').addEventListener('change', function(e){
   // 待办内联编辑：日期/优先级
@@ -5102,6 +5206,328 @@ function checkReminders(){
   if(changed) saveState();
 }
 
+// ========== AI Chat ==========
+const AI_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'create_habit',
+      description: '创建一个新习惯。当用户说"帮我创建习惯"、"添加习惯"、"我要养成XX习惯"时调用。',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: '习惯名称' },
+          type: { type: 'string', enum: ['positive', 'negative'], description: 'positive=正向习惯（要做的事），negative=负向习惯（要避免的事）' },
+          difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'], description: '难度等级' }
+        },
+        required: ['name', 'type']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_daily',
+      description: '创建一个每日任务。当用户说"每天XX"、"每日任务"、"添加每日"时调用。',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: '每日任务名称' },
+          difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'], description: '难度等级' },
+          estimatedMinutes: { type: 'number', description: '预估耗时（分钟）' }
+        },
+        required: ['name']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_todo',
+      description: '创建一个待办事项。当用户说"待办"、"需要做XX"、"任务"时调用。',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: '待办名称' },
+          difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'], description: '难度等级' },
+          dueDate: { type: 'string', description: '截止日期 YYYY-MM-DD' },
+          priority: { type: 'string', enum: ['high', 'medium', 'low', 'none'], description: '优先级' },
+          estimatedMinutes: { type: 'number', description: '预估耗时（分钟）' }
+        },
+        required: ['name']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_reward',
+      description: '创建一个奖励。当用户说"奖励"、"添加奖励"、"想要XX奖励"时调用。',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: '奖励名称' },
+          price: { type: 'number', description: '金币价格' }
+        },
+        required: ['name', 'price']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_today_status',
+      description: '查看今日进度。当用户问"今天怎么样"、"进度"、"还有多少任务"、"完成情况"时调用。',
+      parameters: { type: 'object', properties: {}, required: [] }
+    }
+  }
+];
+
+function getSystemPrompt(){
+  return '你是一个友好、简洁的习惯养成助理。用户会说中文。你的名字叫"小狐"。'
+    + '你可以通过函数调用来帮助用户在页面中创建习惯、每日任务、待办和奖励。'
+    + '规则：\n'
+    + '- 用中文回复，语气温暖、鼓励，像朋友一样\n'
+    + '- 回复简洁（1-3句话），不要啰嗦\n'
+    + '- 当用户想创建习惯/任务/奖励时，主动调用对应函数\n'
+    + '- 不要猜测缺失的参数，先和用户确认\n'
+    + '- 调用函数后等待结果，然后简短告知用户已完成\n'
+    + '- 如果用户只是想聊天提问，正常回复即可\n'
+    + '- 难度默认 medium，正向习惯不需要惩罚参数\n'
+    + '用户统计：' + '等级'+state.stats.level+'，🔥连续'+calcStreak()+'天，🪙金币'+state.stats.gold+'，❤️生命'+state.stats.hp;
+}
+
+function executeToolCall(toolName, args){
+  switch(toolName){
+    case 'create_habit': return createHabitTool(args);
+    case 'create_daily': return createDailyTool(args);
+    case 'create_todo': return createTodoTool(args);
+    case 'create_reward': return createRewardTool(args);
+    case 'get_today_status': return getTodayStatusTool();
+    default: return { success: false, message: '未知工具: ' + toolName };
+  }
+}
+
+function createHabitTool(args){
+  const id = uid();
+  const habit = {
+    id, name: args.name, type: args.type || 'positive',
+    difficulty: args.difficulty || 'medium',
+    customReward: null, penalty: null, history: {},
+    streak: 0, best_streak: 0, archived: false
+  };
+  state.habits.push(habit);
+  saveState(); render(); initAllSwipes();
+  return { success: true, message: '已创建习惯：' + args.name };
+}
+
+function createDailyTool(args){
+  const id = uid();
+  const daily = {
+    id, name: args.name,
+    difficulty: args.difficulty || 'medium',
+    customReward: null, completedDates: [],
+    estimatedMinutes: args.estimatedMinutes || 0,
+    accumulatedFocusMinutes: 0,
+    streak: 0, best_streak: 0, archived: false, penalty: null
+  };
+  state.dailies.push(daily);
+  saveState(); render(); initAllSwipes();
+  return { success: true, message: '已创建每日任务：' + args.name };
+}
+
+function createTodoTool(args){
+  const id = uid();
+  const todo = {
+    id, name: args.name, completed: false, createdAt: today(),
+    difficulty: args.difficulty || 'medium',
+    dueDate: args.dueDate || today(),
+    priority: args.priority || 'medium', tag: null, subtasks: [],
+    completedAt: null, estimatedMinutes: args.estimatedMinutes || 0,
+    accumulatedFocusMinutes: 0, reminderTime: null, reminded: false,
+    customReward: null, penalty: null
+  };
+  state.todos.push(todo);
+  saveState(); render(); initAllSwipes();
+  return { success: true, message: '已创建待办：' + args.name };
+}
+
+function createRewardTool(args){
+  const id = uid();
+  const reward = { id, name: args.name, price: args.price || 100, createdAt: new Date().toISOString() };
+  state.rewards.push(reward);
+  saveState(); render(); initAllSwipes();
+  return { success: true, message: '已创建奖励：' + args.name + '（' + (args.price||100) + '🪙）' };
+}
+
+function getTodayStatusTool(){
+  const active = state.habits.filter(h => !h.archived).length;
+  const dailiesLeft = state.dailies.filter(d => !d.archived && !d.completedDates.includes(today())).length;
+  const todosLeft = state.todos.filter(t => !t.completed).length;
+  return {
+    success: true,
+    message: '今日概况：🔥连续'+calcStreak()+'天 | Lv.'+state.stats.level
+      +' | ❤️'+state.stats.hp+' | 🪙'+state.stats.gold
+      +' | 习惯'+active+'个，每日未完成'+dailiesLeft+'个，待办'+todosLeft+'个'
+  };
+}
+
+const AI_SYSTEM_MSG = { role: 'system', content: '' };
+
+function buildAiMessages(userText){
+  const msgs = [{ role: 'system', content: getSystemPrompt() }];
+  // Add saved history (last 20, to keep context lean)
+  const recent = state.aiChatHistory.slice(-20);
+  for(const m of recent){ msgs.push(m); }
+  msgs.push({ role: 'user', content: userText });
+  return msgs;
+}
+
+async function callDeepSeek(messages){
+  const key = state.aiKey;
+  if(!key) return { error: '请先配置 DeepSeek API Key（点击 ⚙️ AI 设置）' };
+  try{
+    const res = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'deepseek-chat', messages, tools: AI_TOOLS, tool_choice: 'auto' })
+    });
+    if(!res.ok){
+      const errText = await res.text();
+      let errMsg;
+      try{ const e = JSON.parse(errText); errMsg = e.error?.message || errText; }catch(e){ errMsg = errText; }
+      return { error: errMsg };
+    }
+    const data = await res.json();
+    return data;
+  }catch(e){
+    return { error: '网络错误，请稍后重试' };
+  }
+}
+
+async function sendAiMessage(userText){
+  const messagesEl = document.getElementById('aiMessages');
+  const inputEl = document.getElementById('aiInput');
+  const sendBtn = document.getElementById('aiSend');
+
+  // Clear empty state
+  const emptyEl = messagesEl.querySelector('.ai-empty');
+  if(emptyEl) emptyEl.remove();
+
+  // Add user message
+  addAiBubble('user', userText);
+  state.aiChatHistory.push({ role: 'user', content: userText });
+  if(state.aiChatHistory.length > 50) state.aiChatHistory = state.aiChatHistory.slice(-50);
+  saveState();
+
+  // Add typing indicator
+  const typingEl = document.createElement('div');
+  typingEl.className = 'ai-msg assistant ai-typing';
+  typingEl.innerHTML = '<span></span><span></span><span></span>';
+  typingEl.id = 'aiTyping';
+  messagesEl.appendChild(typingEl);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  try{
+    const msgs = buildAiMessages(userText);
+    let response = await callDeepSeek(msgs);
+    if(response.error){
+      typingEl.remove();
+      addAiBubble('assistant', '😥 ' + response.error);
+      return;
+    }
+
+    const choice = response.choices[0];
+    const msg = choice.message;
+
+    // Handle tool calls
+    if(msg.tool_calls && msg.tool_calls.length > 0){
+      typingEl.remove();
+      // Build assistant message with tool calls
+      const asstMsg = { role: 'assistant', content: msg.content || null, tool_calls: msg.tool_calls };
+      state.aiChatHistory.push(asstMsg);
+      // Execute each tool
+      const toolMsgs = [];
+      for(const tc of msg.tool_calls){
+        let args;
+        try{ args = JSON.parse(tc.function.arguments); }catch(e){ args = {}; }
+        const result = executeToolCall(tc.function.name, args);
+        toolMsgs.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
+        // Show result as system message
+        addAiBubble('assistant', '🔧 ' + result.message);
+      }
+      // Add tool results to history
+      for(const tm of toolMsgs){ state.aiChatHistory.push(tm); }
+      // Follow-up call with tool results
+      const followMsgs = [{ role: 'system', content: getSystemPrompt() }].concat(state.aiChatHistory.slice(-20));
+      typingEl.remove();
+      const followUp = document.createElement('div');
+      followUp.className = 'ai-msg assistant ai-typing';
+      followUp.id = 'aiTyping';
+      messagesEl.appendChild(followUp);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      const response2 = await callDeepSeek(followMsgs);
+      document.getElementById('aiTyping')?.remove();
+      if(response2.error){
+        addAiBubble('assistant', '✅ 已完成操作！（AI 跟进回复失败：' + response2.error + '）');
+      }else if(response2.choices && response2.choices[0]){
+        const text2 = response2.choices[0].message.content;
+        if(text2){
+          addAiBubble('assistant', text2);
+          state.aiChatHistory.push({ role: 'assistant', content: text2 });
+        }
+      }
+    }else{
+      // Normal text reply
+      typingEl.remove();
+      const text = msg.content;
+      if(text){
+        addAiBubble('assistant', text);
+        state.aiChatHistory.push({ role: 'assistant', content: text });
+      }
+    }
+  }catch(e){
+    typingEl?.remove();
+    addAiBubble('assistant', '😥 出错了：' + e.message);
+  }
+  if(state.aiChatHistory.length > 50) state.aiChatHistory = state.aiChatHistory.slice(-50);
+  saveState();
+}
+
+function addAiBubble(role, text){
+  const messagesEl = document.getElementById('aiMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + role;
+  if(role === 'assistant'){
+    div.innerHTML = '<span class="msg-avatar">🦊</span>' + escHtml(text);
+  }else{
+    div.textContent = text;
+  }
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function escHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function toggleAiPanel(){
+  const panel = document.getElementById('aiPanel');
+  const fab = document.getElementById('aiFab');
+  const input = document.getElementById('aiInput');
+  const hidden = panel.classList.contains('hidden');
+  if(hidden){
+    panel.classList.remove('hidden');
+    fab.classList.add('hidden');
+    setTimeout(() => input.focus(), 100);
+  }else{
+    panel.classList.add('hidden');
+    fab.classList.remove('hidden');
+  }
+}
+
 async function init(){
   // Init Supabase
   initSupabase();
@@ -5139,6 +5565,7 @@ async function init(){
   }
 
   state = loadState();
+  loadAiSettings();
   checkDailyReset();
 
   // Recover active companion session from localStorage (page refresh resilience)
