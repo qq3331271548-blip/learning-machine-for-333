@@ -1583,45 +1583,45 @@ body{
 // ========== Supabase Cloud Sync ==========
 const SUPABASE_URL = 'https://mmlubydviqslvlftokqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_30yTaywSMoIHGp1Nb1gkEg_C0K5la_S';
-let supabase = null;
+let sb = null;                 // Supabase client instance (not 'supabase' to avoid shadowing CDN global)
 let cloudUser = null;          // currently logged-in user
 let cloudSyncing = false;      // debounce flag
 let cloudSyncTimer = null;
 
 function initSupabase(){
-  if(typeof supabase !== 'undefined' && supabase.createClient){
-    supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if(typeof window.supabase !== 'undefined' && window.supabase.createClient){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 }
 
 // ── Auth helpers ──
 async function checkAuthSession(){
-  if(!supabase) return null;
+  if(!sb) return null;
   try{
-    const { data } = await supabase.auth.getSession();
+    const { data } = await sb.auth.getSession();
     return data.session ? data.session.user : null;
   }catch(e){ return null; }
 }
 
 async function signUp(email, password){
-  if(!supabase) return { error: 'Supabase 未初始化' };
-  return await supabase.auth.signUp({ email, password });
+  if(!sb) return { error: 'Supabase 未初始化' };
+  return await sb.auth.signUp({ email, password });
 }
 
 async function signIn(email, password){
-  if(!supabase) return { error: 'Supabase 未初始化' };
-  return await supabase.auth.signInWithPassword({ email, password });
+  if(!sb) return { error: 'Supabase 未初始化' };
+  return await sb.auth.signInWithPassword({ email, password });
 }
 
 async function signOutUser(){
-  if(!supabase) return;
-  await supabase.auth.signOut();
+  if(!sb) return;
+  await sb.auth.signOut();
   cloudUser = null;
 }
 
 // ── Cloud push (debounced) ──
 function scheduleCloudPush(){
-  if(!supabase || !cloudUser) return;
+  if(!sb || !cloudUser) return;
   if(cloudSyncing) return;
   if(cloudSyncTimer) clearTimeout(cloudSyncTimer);
   cloudSyncTimer = setTimeout(pushToCloud, 800);
@@ -1635,7 +1635,7 @@ function stripLocalFields(item){
 }
 
 async function pushToCloud(){
-  if(!supabase || !cloudUser) return;
+  if(!sb || !cloudUser) return;
   cloudSyncing = true;
   const uid = cloudUser.id;
   try{
@@ -1693,33 +1693,33 @@ async function pushToCloud(){
       }
     }
     // Clear old and insert new
-    await supabase.from('tasks').delete().eq('user_id', uid);
+    await sb.from('tasks').delete().eq('user_id', uid);
     if(taskRows.length){
       // Insert in batches of 50 to avoid payload limits
       for(let i = 0; i < taskRows.length; i += 50){
-        await supabase.from('tasks').insert(taskRows.slice(i, i + 50));
+        await sb.from('tasks').insert(taskRows.slice(i, i + 50));
       }
     }
 
     // ── Rewards ──
-    await supabase.from('rewards').delete().eq('user_id', uid);
+    await sb.from('rewards').delete().eq('user_id', uid);
     if(Array.isArray(state.rewards) && state.rewards.length){
       const rewardRows = state.rewards.map(r => ({
         user_id: uid, name: r.name, price: r.price,
         created_at: r.createdAt || new Date().toISOString()
       }));
-      await supabase.from('rewards').insert(rewardRows);
+      await sb.from('rewards').insert(rewardRows);
     }
 
     // ── Stats ──
-    await supabase.from('user_stats').upsert({
+    await sb.from('user_stats').upsert({
       user_id: uid, xp: state.stats.xp, gold: state.stats.gold,
       hp: state.stats.hp, level: state.stats.level,
       updated_at: new Date().toISOString()
     });
 
     // ── Focus sessions (last 90 days only, to keep it light) ──
-    await supabase.from('focus_sessions').delete().eq('user_id', uid);
+    await sb.from('focus_sessions').delete().eq('user_id', uid);
     if(Array.isArray(state.focusSessions) && state.focusSessions.length){
       const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
       const cutoffStr = cutoff.toISOString().slice(0, 10);
@@ -1730,7 +1730,7 @@ async function pushToCloud(){
           settled_min: s.settledMin || 0, completed: s.completed || false,
           created_at: s.createdAt || new Date().toISOString()
         }));
-        await supabase.from('focus_sessions').insert(fsRows);
+        await sb.from('focus_sessions').insert(fsRows);
       }
     }
   }catch(e){
@@ -1741,14 +1741,14 @@ async function pushToCloud(){
 
 // ── Cloud pull ──
 async function pullFromCloud(){
-  if(!supabase || !cloudUser) return null;
+  if(!sb || !cloudUser) return null;
   const uid = cloudUser.id;
   try{
     const [tasksRes, rewardsRes, statsRes, fsRes] = await Promise.all([
-      supabase.from('tasks').select('*').eq('user_id', uid),
-      supabase.from('rewards').select('*').eq('user_id', uid),
-      supabase.from('user_stats').select('*').eq('user_id', uid).maybeSingle(),
-      supabase.from('focus_sessions').select('*').eq('user_id', uid).order('date', {ascending: false}).limit(500)
+      sb.from('tasks').select('*').eq('user_id', uid),
+      sb.from('rewards').select('*').eq('user_id', uid),
+      sb.from('user_stats').select('*').eq('user_id', uid).maybeSingle(),
+      sb.from('focus_sessions').select('*').eq('user_id', uid).order('date', {ascending: false}).limit(500)
     ]);
 
     if(tasksRes.error || rewardsRes.error){
@@ -5020,7 +5020,7 @@ async function init(){
   // Init Supabase
   initSupabase();
   // Try restore auth session
-  if(supabase){
+  if(sb){
     cloudUser = await checkAuthSession();
     if(cloudUser){
       // Pull cloud data, merge with local
@@ -5029,7 +5029,7 @@ async function init(){
     }
     updateUserUI();
     // Listen for future auth changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    sb.auth.onAuthStateChange(async (event, session) => {
       const wasLoggedIn = !!cloudUser;
       cloudUser = session ? session.user : null;
       updateUserUI();
