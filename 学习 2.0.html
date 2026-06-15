@@ -1242,6 +1242,9 @@ body{
 .auth-card .auth-switch{text-align:center;margin-top:14px;font-size:12px;color:var(--text2)}
 .auth-card .auth-switch button{background:none;border:none;color:var(--tab);font-weight:700;cursor:pointer;font-size:12px;font-family:var(--font);text-decoration:underline}
 .auth-card .auth-err{color:#dc2626;font-size:12px;margin-top:8px;text-align:center;min-height:18px}
+.auth-card .auth-forgot{display:block;width:100%;margin-top:10px;background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font);text-align:center;transition:color .15s}
+.auth-card .auth-forgot:hover{color:var(--tab)}
+.auth-card .auth-switch button.back-btn{color:var(--text3);text-decoration:none;font-weight:400;margin-right:8px}
 /* Header user pill */
 .header-user{position:relative;display:flex;align-items:center;gap:6px;background:var(--tab-bg);border-radius:20px;padding:4px 10px 4px 4px;cursor:pointer;font-size:12px;font-weight:600;color:var(--tab);transition:all .15s;white-space:nowrap}
 .header-user:active{transform:scale(.95)}
@@ -1568,11 +1571,13 @@ body{
     <p class="auth-sub" id="authSub">同步你的数据到云端</p>
     <label>邮箱</label>
     <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email">
-    <label>密码</label>
+    <label id="authPwLabel">密码</label>
     <input type="password" id="authPassword" placeholder="至少6位" autocomplete="current-password">
+    <input type="password" id="authNewPassword" placeholder="输入新密码（至少6位）" style="display:none" autocomplete="new-password">
     <p class="auth-err" id="authErr"></p>
     <button class="auth-btn" id="authBtn">登录</button>
-    <p class="auth-switch"><span id="authSwitchText">没有账号？</span> <button id="authSwitchBtn">去注册</button></p>
+    <button class="auth-forgot" id="authForgot">忘记密码？</button>
+    <p class="auth-switch"><button class="back-btn" id="authBackBtn" style="display:none">← 返回</button><span id="authSwitchText">没有账号？</span> <button id="authSwitchBtn">去注册</button></p>
   </div>
 </div>
 
@@ -1875,31 +1880,72 @@ function updateUserUI(){
   }
 }
 
-function showAuthOverlay(isSignUp){
+function showAuthOverlay(mode){
   const overlay = document.getElementById('authOverlay');
   const title = document.getElementById('authTitle');
   const sub = document.getElementById('authSub');
   const btn = document.getElementById('authBtn');
   const switchText = document.getElementById('authSwitchText');
   const switchBtn = document.getElementById('authSwitchBtn');
+  const backBtn = document.getElementById('authBackBtn');
+  const forgotBtn = document.getElementById('authForgot');
+  const pwLabel = document.getElementById('authPwLabel');
+  const pwInput = document.getElementById('authPassword');
+  const newPwInput = document.getElementById('authNewPassword');
   overlay.classList.remove('hidden');
   document.getElementById('authEmail').value = '';
   document.getElementById('authPassword').value = '';
+  document.getElementById('authNewPassword').value = '';
   document.getElementById('authErr').textContent = '';
-  if(isSignUp){
+  // Reset UI visibility
+  pwLabel.style.display = '';
+  pwInput.style.display = '';
+  newPwInput.style.display = 'none';
+  backBtn.style.display = 'none';
+  forgotBtn.style.display = '';
+  switchText.style.display = '';
+  switchBtn.style.display = '';
+  switchBtn.classList.remove('back-btn');
+  btn.disabled = false;
+  overlay.dataset.mode = mode;
+  if(mode === 'signup'){
     title.textContent = '注册';
     sub.textContent = '创建一个新账号，同步数据到云端';
     btn.textContent = '注册';
     switchText.textContent = '已有账号？';
     switchBtn.textContent = '去登录';
-    overlay.dataset.mode = 'signup';
+    switchBtn.onclick = function(){ showAuthOverlay('signin'); };
+    forgotBtn.onclick = function(){ showAuthOverlay('reset'); };
+  }else if(mode === 'reset'){
+    title.textContent = '找回密码';
+    sub.textContent = '输入注册邮箱，我们会发送重置链接';
+    pwLabel.style.display = 'none';
+    pwInput.style.display = 'none';
+    btn.textContent = '发送重置邮件';
+    switchText.style.display = 'none';
+    switchBtn.style.display = 'none';
+    forgotBtn.style.display = 'none';
+    backBtn.style.display = 'inline-block';
+    backBtn.onclick = function(){ showAuthOverlay('signin'); };
+  }else if(mode === 'recovery'){
+    title.textContent = '设置新密码';
+    sub.textContent = '请输入你的新密码';
+    pwLabel.textContent = '新密码';
+    pwInput.style.display = 'none';
+    newPwInput.style.display = '';
+    btn.textContent = '更新密码';
+    switchText.style.display = 'none';
+    switchBtn.style.display = 'none';
+    forgotBtn.style.display = 'none';
   }else{
+    // signin (default)
     title.textContent = '登录';
     sub.textContent = '登录后同步你的数据到云端';
     btn.textContent = '登录';
     switchText.textContent = '没有账号？';
     switchBtn.textContent = '去注册';
-    overlay.dataset.mode = 'signin';
+    switchBtn.onclick = function(){ showAuthOverlay('signup'); };
+    forgotBtn.onclick = function(){ showAuthOverlay('reset'); };
   }
 }
 
@@ -1908,9 +1954,46 @@ async function handleAuthAction(){
   const mode = overlay.dataset.mode || 'signin';
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
+  const newPassword = document.getElementById('authNewPassword').value;
   const errEl = document.getElementById('authErr');
   const btn = document.getElementById('authBtn');
   errEl.textContent = '';
+  // ── Reset mode: send recovery email ──
+  if(mode === 'reset'){
+    if(!email){ errEl.textContent = '请输入注册邮箱'; return; }
+    btn.disabled = true; btn.textContent = '发送中...';
+    try{
+      const redirectTo = location.origin + location.pathname;
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if(error){ errEl.textContent = error.message || '发送失败'; }
+      else{
+        errEl.style.color = '#16a34a';
+        errEl.textContent = '✅ 重置邮件已发送，请查收邮箱';
+        btn.textContent = '已发送';
+      }
+    }catch(e){ errEl.textContent = '网络错误，请稍后重试'; }
+    btn.disabled = false;
+    return;
+  }
+  // ── Recovery mode: update password ──
+  if(mode === 'recovery'){
+    if(!newPassword || newPassword.length < 6){ errEl.textContent = '新密码至少6位'; return; }
+    btn.disabled = true; btn.textContent = '更新中...';
+    try{
+      const { error } = await sb.auth.updateUser({ password: newPassword });
+      if(error){ errEl.textContent = error.message || '更新失败'; }
+      else{
+        errEl.style.color = '#16a34a';
+        errEl.textContent = '✅ 密码已更新！';
+        btn.textContent = '完成';
+        setTimeout(() => showAuthOverlay('signin'), 1500);
+        return;
+      }
+    }catch(e){ errEl.textContent = '网络错误，请稍后重试'; }
+    btn.disabled = false;
+    return;
+  }
+  // ── Signin / Signup ──
   if(!email || !password){ errEl.textContent = '请填写邮箱和密码'; return; }
   if(password.length < 6){ errEl.textContent = '密码至少6位'; return; }
   btn.disabled = true;
@@ -4783,7 +4866,7 @@ if(entries.length===0 && claimz.length===0){
       if(cloudUser){
         document.getElementById('headerUser').classList.toggle('open');
       }else{
-        showAuthOverlay(false);
+        showAuthOverlay('signin');
       }
       break;
     }
@@ -4808,10 +4891,13 @@ document.getElementById('authOverlay').addEventListener('click', function(e){
 document.getElementById('authBtn').addEventListener('click', handleAuthAction);
 document.getElementById('authSwitchBtn').addEventListener('click', function(){
   const overlay = document.getElementById('authOverlay');
-  const isSignUp = overlay.dataset.mode === 'signup';
-  showAuthOverlay(!isSignUp);
+  const mode = overlay.dataset.mode;
+  showAuthOverlay(mode === 'signup' ? 'signin' : 'signup');
 });
 document.getElementById('authPassword').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') handleAuthAction();
+});
+document.getElementById('authNewPassword').addEventListener('keydown', function(e){
   if(e.key === 'Enter') handleAuthAction();
 });
 
@@ -5030,6 +5116,13 @@ async function init(){
     updateUserUI();
     // Listen for future auth changes
     sb.auth.onAuthStateChange(async (event, session) => {
+      // Handle password recovery flow
+      if(event === 'PASSWORD_RECOVERY'){
+        cloudUser = session ? session.user : null;
+        updateUserUI();
+        showAuthOverlay('recovery');
+        return;
+      }
       const wasLoggedIn = !!cloudUser;
       cloudUser = session ? session.user : null;
       updateUserUI();
