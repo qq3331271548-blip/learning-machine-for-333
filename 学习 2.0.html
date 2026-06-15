@@ -1254,15 +1254,15 @@ body{
 .header-user .user-menu button{display:block;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;cursor:pointer;border-radius:8px;text-align:left;font-family:var(--font);color:var(--text)}
 .header-user .user-menu button:hover{background:var(--bg)}
 .header-user .user-menu button.danger{color:#dc2626}
-/* ===== AI Settings ===== */
-.ai-settings-toggle{display:flex;align-items:center;gap:6px;background:none;border:1px dashed var(--border);border-radius:12px;padding:6px 12px;cursor:pointer;font-size:11px;color:var(--text3);font-family:var(--font);transition:all .15s;margin-top:8px;width:100%;max-width:200px}
-.ai-settings-toggle:hover{border-color:var(--tab);color:var(--tab)}
-.ai-settings{display:none;background:var(--bg);border-radius:12px;padding:12px;margin-top:6px;border:1px solid var(--border)}
-.ai-settings.show{display:block}
-.ai-settings label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px}
-.ai-settings input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--font);outline:none}
-.ai-settings input:focus{border-color:var(--tab)}
-.ai-settings .ai-save-btn{margin-top:8px;padding:6px 14px;border:none;border-radius:8px;background:var(--tab);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
+/* ===== AI Key Area (inside chat panel) ===== */
+.ai-key-area{border-top:1px solid var(--border);padding:6px 8px}
+.ai-key-toggle{display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);font-family:var(--font);padding:4px 8px;width:100%;transition:all .15s}
+.ai-key-toggle:hover{color:var(--text)}
+.ai-key-form{display:none;padding:6px 4px 4px;animation:fadeIn .15s ease}
+.ai-key-form.show{display:block}
+.ai-key-form input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font);outline:none;margin-bottom:6px}
+.ai-key-form input:focus{border-color:var(--tab)}
+.ai-key-form .ai-save-btn{padding:5px 12px;border:none;border-radius:6px;background:var(--tab);color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)}
 /* ===== AI Chat ===== */
 .ai-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;font-size:24px;cursor:pointer;z-index:400;box-shadow:0 4px 20px rgba(99,102,241,.4);transition:all .2s;display:flex;align-items:center;justify-content:center}
 .ai-fab:active{transform:scale(.9);box-shadow:0 2px 10px rgba(99,102,241,.3)}
@@ -1386,16 +1386,6 @@ body{
       </table>
       <div class="pop-note"><strong>✦ 经验</strong> 和 <strong>🪙 金币</strong> 享受倍率加成<br><strong>❤️ 生命</strong> 不受倍率影响</div>
       <div class="pop-note" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><strong>🎯 里程碑奖励：</strong>连续 7 天 +500💰 | 21 天 +2000💰 | 30 天 +5000💰 | 66 天 +20000💰 | 100 天 +50000💰</div>
-    </div>
-  </div>
-
-  <!-- AI 设置 -->
-  <div style="padding:0 14px;margin-bottom:6px">
-    <button class="ai-settings-toggle" id="aiSettingsToggle">⚙️ AI 设置（DeepSeek API Key）</button>
-    <div class="ai-settings" id="aiSettings">
-      <label>DeepSeek API Key</label>
-      <input type="password" id="aiKeyInput" placeholder="sk-..." autocomplete="off">
-      <button class="ai-save-btn" id="aiSaveKey">保存</button>
     </div>
   </div>
 
@@ -1622,6 +1612,13 @@ body{
   <div class="ai-panel-input-wrap">
     <input type="text" id="aiInput" placeholder="输入消息..." autocomplete="off">
     <button id="aiSend">➤</button>
+  </div>
+  <div class="ai-key-area">
+    <button class="ai-key-toggle" id="aiKeyToggle">⚙️ API Key</button>
+    <div class="ai-key-form" id="aiKeyForm">
+      <input type="password" id="aiKeyInput" placeholder="sk-... 输入 DeepSeek API Key" autocomplete="off">
+      <button class="ai-save-btn" id="aiSaveKey">保存</button>
+    </div>
   </div>
 </div>
 
@@ -4973,14 +4970,14 @@ document.addEventListener('click', function(e){
 });
 
 // AI settings events
-document.getElementById('aiSettingsToggle').addEventListener('click', function(){
-  document.getElementById('aiSettings').classList.toggle('show');
+document.getElementById('aiKeyToggle').addEventListener('click', function(){
+  document.getElementById('aiKeyForm').classList.toggle('show');
 });
 document.getElementById('aiSaveKey').addEventListener('click', function(){
   const val = document.getElementById('aiKeyInput').value.trim();
   state.aiKey = val;
   saveState();
-  document.getElementById('aiSettings').classList.remove('show');
+  document.getElementById('aiKeyForm').classList.remove('show');
   if(val){
     toast('✅ API Key 已保存', 'good');
   }else{
