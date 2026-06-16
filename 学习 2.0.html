@@ -1331,6 +1331,7 @@ body{
           <span id="userEmailShort">登录同步</span>
           <div class="user-menu" id="userMenu">
             <button data-action="sync-now">🔄 同步数据</button>
+            <button data-action="change-password">🔒 修改密码</button>
             <button data-action="show-auth" class="danger">🚪 退出登录</button>
           </div>
         </div>
@@ -2001,6 +2002,21 @@ function showAuthOverlay(mode){
     switchText.style.display = 'none';
     switchBtn.style.display = 'none';
     forgotBtn.style.display = 'none';
+  }else if(mode === 'changepw'){
+    title.textContent = '修改密码';
+    sub.textContent = '验证当前密码，设置新密码';
+    document.getElementById('authEmail').value = cloudUser ? (cloudUser.email || '') : '';
+    pwLabel.textContent = '当前密码';
+    pwInput.style.display = '';
+    pwInput.placeholder = '输入当前密码';
+    newPwInput.style.display = '';
+    newPwInput.placeholder = '输入新密码（至少6位）';
+    btn.textContent = '修改密码';
+    switchText.style.display = 'none';
+    switchBtn.style.display = 'none';
+    forgotBtn.style.display = 'none';
+    backBtn.style.display = 'inline-block';
+    backBtn.onclick = function(){ document.getElementById('authOverlay').classList.add('hidden'); };
   }else{
     // signin (default)
     title.textContent = '登录';
@@ -2051,6 +2067,29 @@ async function handleAuthAction(){
         btn.textContent = '完成';
         setTimeout(() => showAuthOverlay('signin'), 1500);
         return;
+      }
+    }catch(e){ errEl.textContent = '网络错误，请稍后重试'; }
+    btn.disabled = false;
+    return;
+  }
+  // ── Change password mode ──
+  if(mode === 'changepw'){
+    if(!password){ errEl.textContent = '请输入当前密码'; return; }
+    if(!newPassword || newPassword.length < 6){ errEl.textContent = '新密码至少6位'; return; }
+    if(password === newPassword){ errEl.textContent = '新密码不能与当前密码相同'; return; }
+    btn.disabled = true; btn.textContent = '验证中...';
+    try{
+      // Re-authenticate to verify current password
+      const { error: signInErr } = await signIn(email, password);
+      if(signInErr){ errEl.textContent = '当前密码错误'; btn.disabled = false; btn.textContent = '修改密码'; return; }
+      btn.textContent = '更新中...';
+      const { error } = await sb.auth.updateUser({ password: newPassword });
+      if(error){ errEl.textContent = error.message || '修改失败'; }
+      else{
+        errEl.style.color = '#16a34a';
+        errEl.textContent = '✅ 密码已修改！';
+        btn.textContent = '完成';
+        setTimeout(() => document.getElementById('authOverlay').classList.add('hidden'), 1500);
       }
     }catch(e){ errEl.textContent = '网络错误，请稍后重试'; }
     btn.disabled = false;
@@ -4939,6 +4978,11 @@ if(entries.length===0 && claimz.length===0){
       document.getElementById('headerUser').classList.remove('open');
       if(cloudUser){ toast('🔄 正在同步...', 'info'); scheduleCloudPush(); }
       else{ toast('请先登录', 'warn'); }
+      break;
+    }
+    case 'change-password':{
+      document.getElementById('headerUser').classList.remove('open');
+      showAuthOverlay('changepw');
       break;
     }
     case 'show-auth':{
