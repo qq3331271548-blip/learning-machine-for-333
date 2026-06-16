@@ -1662,16 +1662,9 @@ function initSupabase(){
 async function checkAuthSession(){
   if(!sb) return null;
   try{
-    // Read cached session
     const { data } = await sb.auth.getSession();
-    if(data.session) return data.session.user;
-    // Token expired? Try refresh token to auto-renew
-    if(sb.auth.refreshSession){
-      const { data: rd, error } = await sb.auth.refreshSession();
-      if(!error && rd.session) return rd.session.user;
-    }
-    return null;
-  }catch(e){ console.warn('checkAuthSession:', e); return null; }
+    return data.session ? data.session.user : null;
+  }catch(e){ return null; }
 }
 
 async function signUp(email, password){
@@ -5578,18 +5571,10 @@ function toggleAiPanel(){
 async function init(){
   // Init Supabase
   initSupabase();
-  // Try restore auth session
+  // Restore auth session: register listener FIRST (fires INITIAL_SESSION synchronously),
+  // then do a passive read from localStorage (no network refresh — let onAuthStateChange handle that)
   if(sb){
-    cloudUser = await checkAuthSession();
-    if(cloudUser){
-      // Pull cloud data, merge with local
-      const cloudData = await pullFromCloud();
-      if(cloudData){ mergeCloudIntoState(cloudData); }
-    }
-    updateUserUI();
-    // Listen for future auth changes
     sb.auth.onAuthStateChange(async (event, session) => {
-      // Handle password recovery flow
       if(event === 'PASSWORD_RECOVERY'){
         cloudUser = session ? session.user : null;
         updateUserUI();
@@ -5600,15 +5585,21 @@ async function init(){
       cloudUser = session ? session.user : null;
       updateUserUI();
       if(!wasLoggedIn && cloudUser){
-        // Just logged in
+        // Just logged in (or initial session restored)
         const cd = await pullFromCloud();
         if(cd){ mergeCloudIntoState(cd); saveState(); render(); initAllSwipes(); }
       }
       if(wasLoggedIn && !cloudUser){
-        // Just logged out
         toast('已退出登录，数据保留在本地', 'info');
       }
     });
+    // Passive check: read cached session only, no network refresh
+    cloudUser = await checkAuthSession();
+    if(cloudUser){
+      const cloudData = await pullFromCloud();
+      if(cloudData){ mergeCloudIntoState(cloudData); }
+    }
+    updateUserUI();
   }
 
   state = loadState();
@@ -5621,28 +5612,24 @@ async function init(){
     const elapsed = Date.now() - saved.startedAt;
     const totalMs = saved.durationMin * 60 * 1000;
     if(elapsed < totalMs){
-      // Session still active — restore it
       companionSession = {
         durationMin: saved.durationMin,
         startedAt: saved.startedAt,
         timerId: null,
         microTimerId: null
       };
-      // Resume ticking and UI
       startCompanionUI();
       companionSession.timerId = setInterval(companionTick, 500);
       scheduleCompanionMicro();
       updateCompanionTimerDisplay();
       updateCompanionTitle();
     } else {
-      // Session should have finished while page was closed
       companionSession = {
         durationMin: saved.durationMin,
         startedAt: saved.startedAt,
         timerId: null,
         microTimerId: null
       };
-      // Show overlay briefly so completion animation is visible
       document.getElementById('companionOverlay').classList.remove('hidden');
       completeCompanion();
     }
