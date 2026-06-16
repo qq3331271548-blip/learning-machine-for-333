@@ -1649,6 +1649,7 @@ const SUPABASE_URL = 'https://mmlubydviqslvlftokqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_30yTaywSMoIHGp1Nb1gkEg_C0K5la_S';
 let sb = null;                 // Supabase client instance (not 'supabase' to avoid shadowing CDN global)
 let cloudUser = null;          // currently logged-in user
+let _changingPw = false;       // flag to prevent overlay hide during changepw
 let cloudSyncing = false;      // debounce flag
 let cloudSyncTimer = null;
 
@@ -1930,7 +1931,7 @@ function updateUserUI(){
     avatar.textContent = em.charAt(0).toUpperCase();
     pill.title = em;
     pill.style.cursor = 'pointer';
-    if(overlay) overlay.classList.add('hidden');
+    if(overlay && !_changingPw) overlay.classList.add('hidden');
   }else{
     emailShort.textContent = '登录同步';
     avatar.textContent = '☁️';
@@ -2071,6 +2072,7 @@ async function handleAuthAction(){
     if(!newPassword || newPassword.length < 6){ errEl.textContent = '新密码至少6位'; return; }
     if(password === newPassword){ errEl.textContent = '新密码不能与当前密码相同'; return; }
     btn.disabled = true; btn.textContent = '验证中...';
+    _changingPw = true;  // prevent onAuthStateChange from hiding overlay
     try{
       // Re-authenticate to verify current password
       const { error: signInErr } = await signIn(email, password);
@@ -2085,6 +2087,7 @@ async function handleAuthAction(){
         setTimeout(() => document.getElementById('authOverlay').classList.add('hidden'), 1500);
       }
     }catch(e){ errEl.textContent = '网络错误，请稍后重试'; }
+    finally{ _changingPw = false; }
     btn.disabled = false;
     return;
   }
@@ -2099,22 +2102,25 @@ async function handleAuthAction(){
       result = await signUp(email, password);
       if(result.error){
         errEl.textContent = result.error.message || '注册失败';
-      }else if(result.data.user){
-        // Supabase may require email confirmation; if not, user is logged in immediately
-        cloudUser = result.data.user;
-        errEl.textContent = '';
+      }else if(result.data.user && result.data.session){
+        // Email not required — user is logged in immediately, onAuthStateChange handles init
         toast('✅ 注册成功！', 'good');
-        await onUserLoggedIn();
+        // overlay hidden by updateUserUI() from onAuthStateChange
+      }else if(result.data.user){
+        // Email confirmation required
+        errEl.style.color = '#16a34a';
+        errEl.textContent = '✅ 注册成功！请查收验证邮件';
+        btn.textContent = '已注册';
       }
     }else{
       result = await signIn(email, password);
       if(result.error){
         errEl.textContent = result.error.message || '登录失败';
       }else if(result.data.user){
-        cloudUser = result.data.user;
-        errEl.textContent = '';
+        // onAuthStateChange handles cloud data pull + render
         toast('✅ 登录成功！正在同步数据...', 'good');
-        await onUserLoggedIn();
+        // Close overlay (onAuthStateChange already did it, this is a fallback)
+        document.getElementById('authOverlay').classList.add('hidden');
       }
     }
   }catch(e){
