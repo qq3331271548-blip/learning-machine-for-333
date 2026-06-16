@@ -1667,12 +1667,12 @@ async function checkAuthSession(){
 }
 
 async function signUp(email, password){
-  if(!sb) return { error: 'Supabase 未初始化' };
+  if(!sb) return { error: { message: 'Supabase 未初始化，请刷新页面重试' } };
   return await sb.auth.signUp({ email, password });
 }
 
 async function signIn(email, password){
-  if(!sb) return { error: 'Supabase 未初始化' };
+  if(!sb) return { error: { message: 'Supabase 未初始化，请刷新页面重试' } };
   return await sb.auth.signInWithPassword({ email, password });
 }
 
@@ -1972,7 +1972,6 @@ function showAuthOverlay(mode){
     btn.textContent = '注册';
     switchText.textContent = '已有账号？';
     switchBtn.textContent = '去登录';
-    switchBtn.onclick = function(){ showAuthOverlay('signin'); };
     forgotBtn.onclick = function(){ showAuthOverlay('reset'); };
   }else if(mode === 'reset'){
     title.textContent = '找回密码';
@@ -2002,7 +2001,6 @@ function showAuthOverlay(mode){
     btn.textContent = '登录';
     switchText.textContent = '没有账号？';
     switchBtn.textContent = '去注册';
-    switchBtn.onclick = function(){ showAuthOverlay('signup'); };
     forgotBtn.onclick = function(){ showAuthOverlay('reset'); };
   }
 }
