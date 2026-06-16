@@ -1272,10 +1272,17 @@ body{
 .ai-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg);font-weight:700;font-size:14px}
 .ai-panel-header button{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);padding:0 4px}
 .ai-panel-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-.ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;animation:fadeIn .2s ease}
+.ai-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;word-break:break-word;animation:fadeIn .2s ease}
 .ai-msg.user{align-self:flex-end;background:var(--tab);color:#fff;border-bottom-right-radius:4px}
 .ai-msg.assistant{align-self:flex-start;background:var(--bg);color:var(--text);border-bottom-left-radius:4px}
-.ai-msg.assistant .msg-avatar{font-size:18px;margin-bottom:4px;display:block}
+.ai-msg.assistant .msg-avatar{font-size:18px;margin-bottom:6px;display:block}
+.ai-msg-body strong{color:#6366f1;font-weight:700}
+.ai-msg-body code{background:#e5e7eb;color:#dc2626;padding:1px 5px;border-radius:4px;font-size:12px;font-family:'SF Mono','Fira Code',monospace}
+.ai-msg-body ul,.ai-msg-body ol{margin:6px 0;padding-left:18px}
+.ai-msg-body li{margin:2px 0}
+.ai-msg-body h3{font-size:14px;font-weight:700;margin:8px 0 4px;color:var(--text)}
+.ai-msg-body h4{font-size:13px;font-weight:700;margin:6px 0 2px;color:var(--text)}
+.ai-msg-body hr{border:none;border-top:1px solid var(--border);margin:10px 0}
 .ai-panel-input-wrap{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:var(--bg)}
 .ai-panel-input-wrap input{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-family:var(--font);outline:none}
 .ai-panel-input-wrap input:focus{border-color:var(--tab)}
@@ -1705,6 +1712,10 @@ async function pushToCloud(){
   cloudSyncing = true;
   const uid = cloudUser.id;
   try{
+    // 8s timeout — if Supabase is blocked, don't hang forever
+    await Promise.race([
+      (async() => {
+
     // ── Tasks (habits + dailies + todos) ──
     const taskRows = [];
     if(Array.isArray(state.habits)){
@@ -1799,10 +1810,15 @@ async function pushToCloud(){
         await sb.from('focus_sessions').insert(fsRows);
       }
     }
+    toast('☁️ 已同步', 'info');
+      })(),
+      new Promise(r => setTimeout(() => r(), 8000))
+    ]);
   }catch(e){
     console.warn('Cloud push failed, will retry:', e.message);
+  }finally{
+    cloudSyncing = false;
   }
-  cloudSyncing = false;
 }
 
 // ── Cloud pull ──
@@ -2053,6 +2069,7 @@ async function handleAuthAction(){
   if(mode === 'recovery'){
     if(!newPassword || newPassword.length < 6){ errEl.textContent = '新密码至少6位'; return; }
     btn.disabled = true; btn.textContent = '更新中...';
+    _changingPw = true;
     try{
       const { error } = await sb.auth.updateUser({ password: newPassword });
       if(error){ errEl.textContent = error.message || '更新失败'; }
@@ -2064,6 +2081,7 @@ async function handleAuthAction(){
         return;
       }
     }catch(e){ errEl.textContent = '网络错误，请稍后重试'; }
+    finally{ _changingPw = false; }
     btn.disabled = false;
     return;
   }
@@ -2100,14 +2118,18 @@ async function handleAuthAction(){
   try{
     let result;
     if(mode === 'signup'){
+      _loggingIn = true;
       result = await signUp(email, password);
       if(result.error){
+        _loggingIn = false;
         errEl.textContent = result.error.message || '注册失败';
       }else if(result.data.user && result.data.session){
         cloudUser = result.data.user;
         toast('✅ 注册成功！', 'good');
         await onUserLoggedIn();
+        _loggingIn = false;
       }else if(result.data.user){
+        _loggingIn = false;
         errEl.style.color = '#16a34a';
         errEl.textContent = '✅ 注册成功！请查收验证邮件';
         btn.textContent = '已注册';
@@ -2126,6 +2148,7 @@ async function handleAuthAction(){
       }
     }
   }catch(e){
+    _loggingIn = false;
     errEl.textContent = '网络错误，请稍后重试';
   }
   btn.disabled = false;
@@ -5547,7 +5570,7 @@ function addAiBubble(role, text){
   const div = document.createElement('div');
   div.className = 'ai-msg ' + role;
   if(role === 'assistant'){
-    div.innerHTML = '<span class="msg-avatar">🦊</span>' + escHtml(text);
+    div.innerHTML = '<span class="msg-avatar">🦊</span><div class="ai-msg-body">' + formatAiText(text) + '</div>';
   }else{
     div.textContent = text;
   }
@@ -5559,6 +5582,35 @@ function escHtml(s){
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+// Lightweight markdown → HTML for AI chat
+function formatAiText(text){
+  let html = escHtml(text);
+  // bold **text**
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // inline code `text`
+  html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+  // headings ### text
+  html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  // horizontal rule ---
+  html = html.replace(/^---$/gm, '<hr>');
+  // unordered list: lines starting with - or *
+  html = html.replace(/(?:^|\n)([-*] .+(?:\n[-*] .+)*)/g, function(m){
+    const items = m.replace(/^[-*] /gm, '<li>').replace(/\n(?!<li>)/g, '').replace(/(<li>.*?)(?=<li>|$)/g, '$1</li>');
+    return '<ul>' + items + '</ul>';
+  });
+  // numbered list: lines starting with 1. 2. etc
+  html = html.replace(/(?:^|\n)(\d+\. .+(?:\n\d+\. .+)*)/g, function(m){
+    const items = m.replace(/^\d+\. /gm, '<li>').replace(/\n(?!<li>)/g, '').replace(/(<li>.*?)(?=<li>|$)/g, '$1</li>');
+    return '<ol>' + items + '</ol>';
+  });
+  // newlines to <br> (but not inside lists/pre)
+  if(!/<ul|<ol|<pre|<hr|<h[1-4]/.test(html)){
+    html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+  }
+  return html;
 }
 
 function toggleAiPanel(){
@@ -5577,42 +5629,52 @@ function toggleAiPanel(){
 }
 
 async function init(){
+  // Load state FIRST — auth callbacks below call mergeCloudIntoState which needs state
+  state = loadState();
+  loadAiSettings();
+  checkDailyReset();
+
   // Init Supabase
   initSupabase();
-  // Restore auth session: register listener FIRST (fires INITIAL_SESSION synchronously),
-  // then do a passive read from localStorage (no network refresh — let onAuthStateChange handle that)
+  // Restore auth session: onAuthStateChange fires INITIAL_SESSION synchronously.
+  // Callback only handles logout + password recovery; cloud pull is done explicitly below
+  // to avoid double render/initAllSwipes racing with init().
   if(sb){
     sb.auth.onAuthStateChange(async (event, session) => {
       if(event === 'PASSWORD_RECOVERY'){
         cloudUser = session ? session.user : null;
         updateUserUI();
+        _changingPw = true;
         showAuthOverlay('recovery');
         return;
       }
       const wasLoggedIn = !!cloudUser;
       cloudUser = session ? session.user : null;
       updateUserUI();
-      if(!wasLoggedIn && cloudUser && !_loggingIn){
-        // Just logged in (or initial session restored) — skip if handleAuthAction is doing it
-        const cd = await pullFromCloud();
-        if(cd){ mergeCloudIntoState(cd); saveState(); render(); initAllSwipes(); }
-      }
+      // SIGNED_IN during login → handleAuthAction does onUserLoggedIn() (guarded by _loggingIn)
+      // INITIAL_SESSION → explicit pull below in init()
       if(wasLoggedIn && !cloudUser){
         toast('已退出登录，数据保留在本地', 'info');
       }
     });
-    // Passive check: read cached session only, no network refresh
-    cloudUser = await checkAuthSession();
+    // Explicit initial session check (state is already loaded above)
+    // 3s timeout — sb.auth.getSession() may try to refresh token via network
+    cloudUser = await Promise.race([
+      checkAuthSession(),
+      new Promise(r => setTimeout(() => r(null), 3000))
+    ]);
     if(cloudUser){
-      const cloudData = await pullFromCloud();
-      if(cloudData){ mergeCloudIntoState(cloudData); }
+      try{
+        // 3s timeout — if Supabase is blocked/slow, render with local data
+        const result = await Promise.race([
+          pullFromCloud().then(cd => ({ok:true, cd})),
+          new Promise(r => setTimeout(() => r({ok:false}), 3000))
+        ]);
+        if(result.ok && result.cd){ mergeCloudIntoState(result.cd); }
+      }catch(e){ console.warn('Init cloud pull failed:', e.message); }
     }
     updateUserUI();
   }
-
-  state = loadState();
-  loadAiSettings();
-  checkDailyReset();
 
   // Recover active companion session from localStorage (page refresh resilience)
   if(state._activeCompanion && state._activeCompanion.startedAt){
