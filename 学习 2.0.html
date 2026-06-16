@@ -1650,6 +1650,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_30yTaywSMoIHGp1Nb1gkEg_C0K5la_S';
 let sb = null;                 // Supabase client instance (not 'supabase' to avoid shadowing CDN global)
 let cloudUser = null;          // currently logged-in user
 let _changingPw = false;       // flag to prevent overlay hide during changepw
+let _loggingIn = false;        // flag to prevent onAuthStateChange double-init during login
 let cloudSyncing = false;      // debounce flag
 let cloudSyncTimer = null;
 
@@ -2103,24 +2104,25 @@ async function handleAuthAction(){
       if(result.error){
         errEl.textContent = result.error.message || '注册失败';
       }else if(result.data.user && result.data.session){
-        // Email not required — user is logged in immediately, onAuthStateChange handles init
+        cloudUser = result.data.user;
         toast('✅ 注册成功！', 'good');
-        // overlay hidden by updateUserUI() from onAuthStateChange
+        await onUserLoggedIn();
       }else if(result.data.user){
-        // Email confirmation required
         errEl.style.color = '#16a34a';
         errEl.textContent = '✅ 注册成功！请查收验证邮件';
         btn.textContent = '已注册';
       }
     }else{
+      _loggingIn = true;
       result = await signIn(email, password);
       if(result.error){
+        _loggingIn = false;
         errEl.textContent = result.error.message || '登录失败';
       }else if(result.data.user){
-        // onAuthStateChange handles cloud data pull + render
+        cloudUser = result.data.user;
         toast('✅ 登录成功！正在同步数据...', 'good');
-        // Close overlay (onAuthStateChange already did it, this is a fallback)
-        document.getElementById('authOverlay').classList.add('hidden');
+        await onUserLoggedIn();
+        _loggingIn = false;
       }
     }
   }catch(e){
@@ -2147,9 +2149,9 @@ async function onUserLoggedIn(){
 async function doLogout(){
   if(!confirm('退出登录将保留本地数据。确定退出？')) return;
   await signOutUser();
+  // onAuthStateChange handles updateUserUI + toast
   cloudUser = null;
   updateUserUI();
-  toast('已退出登录，数据保留在本地', 'info');
 }
 
 
@@ -5590,8 +5592,8 @@ async function init(){
       const wasLoggedIn = !!cloudUser;
       cloudUser = session ? session.user : null;
       updateUserUI();
-      if(!wasLoggedIn && cloudUser){
-        // Just logged in (or initial session restored)
+      if(!wasLoggedIn && cloudUser && !_loggingIn){
+        // Just logged in (or initial session restored) — skip if handleAuthAction is doing it
         const cd = await pullFromCloud();
         if(cd){ mergeCloudIntoState(cd); saveState(); render(); initAllSwipes(); }
       }
