@@ -1661,9 +1661,16 @@ function initSupabase(){
 async function checkAuthSession(){
   if(!sb) return null;
   try{
+    // Read cached session
     const { data } = await sb.auth.getSession();
-    return data.session ? data.session.user : null;
-  }catch(e){ return null; }
+    if(data.session) return data.session.user;
+    // Token expired? Try refresh token to auto-renew
+    if(sb.auth.refreshSession){
+      const { data: rd, error } = await sb.auth.refreshSession();
+      if(!error && rd.session) return rd.session.user;
+    }
+    return null;
+  }catch(e){ console.warn('checkAuthSession:', e); return null; }
 }
 
 async function signUp(email, password){
