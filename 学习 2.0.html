@@ -519,6 +519,8 @@ body{
 .empty{text-align:center;padding:40px 20px;color:var(--text3)}
 .empty .icon{font-size:40px;display:block;margin-bottom:8px}
 .empty p{font-size:14px}
+.empty-hint{margin-top:12px;font-size:12px;color:var(--text2)}
+.empty-hint code{background:var(--tab-bg);padding:2px 8px;border-radius:5px;font-size:12px;font-family:var(--font);color:var(--tab)}
 /* ===== Reward Card ===== */
 .card-reward.bought .card-front{animation:rcBuy .5s ease}
 @keyframes rcBuy{
@@ -664,6 +666,13 @@ body{
 .companion-subtitle{
   font-size:15px;color:var(--text3);font-weight:500;
 }
+.companion-subtitle.bound{color:var(--tab);font-weight:600}
+.companion-bind{margin-top:10px;display:flex;align-items:center;gap:8px;justify-content:center}
+.companion-bind.hidden{display:none}
+.bind-hint{font-size:12px;color:var(--text3)}
+.bind-select{font-size:13px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-family:var(--font);max-width:200px}
+.bind-unbind{font-size:12px;color:var(--text3);cursor:pointer;background:none;border:none;font-family:var(--font);margin-left:4px}
+.bind-unbind:hover{color:var(--bad)}
 /* Hearts burst from fox */
 .companion-heart{
   position:absolute;pointer-events:none;z-index:520;
@@ -779,6 +788,48 @@ body{
 .summary-card .sc-val.green{color:var(--good)}
 .summary-card .sc-val.red{color:var(--bad)}
 .summary-card .sc-val.amber{color:var(--text2)}
+
+/* Charts */
+.chart-section{
+  background:var(--card);border-radius:var(--radius);padding:16px;
+  box-shadow:var(--shadow);margin-bottom:12px;text-align:center;
+}
+.chart-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text)}
+.pie-legend{text-align:left;font-size:12px;display:flex;flex-direction:column;gap:6px}
+.legend-item{display:flex;align-items:center;gap:8px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.fold-toggle{
+  background:transparent;border:1.5px solid var(--border);border-radius:6px;
+  padding:4px 12px;font-size:11px;font-weight:600;color:var(--text3);
+  cursor:pointer;font-family:var(--font);-webkit-tap-highlight-color:transparent;
+}
+.fold-toggle:hover,.fold-toggle:active{color:var(--tab);border-color:var(--tab)}
+
+/* Ledger */
+.ledger-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.ledger-row:last-of-type{border-bottom:none}
+.ledger-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ledger-subject{font-weight:700;font-size:13px;color:var(--text)}
+.ledger-nums{font-size:11px;color:var(--text3)}
+.ledger-bar{height:6px;border-radius:3px;background:var(--bg);overflow:hidden;margin-bottom:8px}
+.ledger-fill{height:100%;background:var(--tab);border-radius:3px;transition:width .3s}
+.ledger-actions{display:flex;gap:6px;align-items:center}
+.ledger-btn{
+  width:32px;height:28px;border-radius:6px;border:1.5px solid var(--border);
+  background:var(--card);font-weight:700;font-size:13px;cursor:pointer;
+  font-family:var(--font);color:var(--text);-webkit-tap-highlight-color:transparent;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.ledger-btn.plus{color:var(--good);border-color:var(--good-bg)}
+.ledger-btn.minus{color:var(--focus)}
+.ledger-btn.del{color:var(--text3);border-color:transparent;width:auto;padding:0 8px;font-size:14px}
+.ledger-btn:active{transform:scale(.94)}
+.ledger-add-btn{
+  width:100%;margin-top:10px;padding:8px;border-radius:8px;border:1.5px dashed var(--border);
+  background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;
+  font-family:var(--font);-webkit-tap-highlight-color:transparent;
+}
+.ledger-add-btn:hover,.ledger-add-btn:active{color:var(--tab);border-color:var(--tab)}
 
 .day-list{display:flex;flex-direction:column;gap:8px}
 .day-item{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
@@ -931,6 +982,8 @@ body{
 .group-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;margin:0 0 7px 2px}
 .group-head .cnt{color:var(--text3);font-weight:600}
 .group-head.overdue{color:#dc2626}
+.postpone-all-btn{font-size:11px;font-weight:600;padding:3px 10px;border:1px solid #dc2626;border-radius:12px;background:transparent;color:#dc2626;cursor:pointer;margin-left:auto;font-family:var(--font);transition:all .2s;white-space:nowrap}
+.postpone-all-btn:hover{background:#dc2626;color:#fff}
 .group-head.today{color:var(--good)}
 .group-head.upcoming{color:var(--text2)}
 
@@ -946,6 +999,10 @@ body{
 .todo-check.diff-h{border-color:var(--gold)}
 .todo-check.diff-x{border-color:var(--bad)}
 .todo-check:hover{background:var(--bg)}
+/* Todo card focus button */
+.todo-focus-btn{width:26px;height:26px;border:1.5px solid var(--tab);border-radius:50%;background:var(--tab-bg);color:var(--tab);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;transition:all .15s}
+.todo-focus-btn:hover{background:var(--tab);color:#fff;transform:scale(1.1)}
+.todo-focus-btn:active{transform:scale(.9)}
 /* .card-body is now unified (see Card body section above) */
 .card-aux .mini{font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px}
 .card-aux .mini-tag{background:var(--tab-bg);color:#4338ca}
@@ -969,6 +1026,15 @@ body{
   font-family:var(--font);-webkit-tap-highlight-color:transparent;
 }
 .streak-info-btn:hover,.streak-info-btn:active{opacity:1;color:var(--text);border-color:var(--text)}
+.rest-day-btn{
+  font-size:9px;font-weight:600;padding:2px 6px;border-radius:6px;
+  border:1.5px solid var(--border);background:transparent;color:var(--text3);
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  font-family:var(--font);-webkit-tap-highlight-color:transparent;
+  transition:all .2s;
+}
+.rest-day-btn:hover,.rest-day-btn:active{opacity:1;color:var(--focus);border-color:var(--focus);background:var(--focus-bg)}
+.rest-day-btn.active{background:var(--focus-bg);color:var(--focus);border-color:var(--focus)}
 .streak-info-popover{
   display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);
   margin-top:6px;background:var(--card);border-radius:14px;
@@ -1066,6 +1132,21 @@ body{
 .todo-add-form input:focus,.todo-add-form select:focus{border-color:var(--tab)}
 .add-hint{font-size:12px;color:var(--text2);padding:2px 2px;word-break:break-word}
 .add-hint b{font-weight:700}
+/* 科目 chip 行 */
+.subject-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip-subject{padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:var(--card);color:var(--text2);transition:all .15s;font-family:var(--font);white-space:nowrap}
+.chip-subject:hover{background:var(--tab-bg);border-color:var(--tab);color:var(--tab)}
+.chip-subject.active{background:var(--tab);color:#fff;border-color:var(--tab)}
+.chip-add{padding:5px 10px;border:1.5px dashed var(--border);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--text3);transition:all .15s;font-family:var(--font)}
+.chip-add:hover{border-color:var(--tab);color:var(--tab);background:var(--tab-bg)}
+/* 科目色点 */
+.subj-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px;flex-shrink:0}
+.card-aux .mini-tag{display:inline-flex;align-items:center}
+/* 自动补全下拉 */
+.autocomplete-drop{position:absolute;z-index:1000;background:var(--card);border:1.5px solid var(--tab);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);max-height:160px;overflow-y:auto;min-width:120px;display:none}
+.autocomplete-drop.show{display:block}
+.autocomplete-item{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--text);font-weight:500;transition:background .1s}
+.autocomplete-item:hover,.autocomplete-item.focus{background:var(--tab-bg);color:var(--tab)}
 
 /* ===== Todos header + Help button ===== */
 .todos-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
@@ -1254,6 +1335,13 @@ body{
 .header-user .user-menu button{display:block;width:100%;padding:8px 12px;border:none;background:none;font-size:13px;cursor:pointer;border-radius:8px;text-align:left;font-family:var(--font);color:var(--text)}
 .header-user .user-menu button:hover{background:var(--bg)}
 .header-user .user-menu button.danger{color:#dc2626}
+/* Sync status dot on user pill */
+.header-user::after{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:2px;flex-shrink:0}
+.header-user.sync-ok::after{background:#22c55e}
+.header-user.sync-fail::after{background:#ef4444}
+.header-user.sync-syncing::after{background:#f59e0b;animation:syncPulse .8s ease-in-out infinite}
+.header-user.sync-off::after{background:#9ca3af}
+@keyframes syncPulse{0%,100%{opacity:.4}50%{opacity:1}}
 /* ===== AI Key Area (inside chat panel) ===== */
 .ai-key-area{border-top:1px solid var(--border);padding:6px 8px}
 .ai-key-toggle{display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);font-family:var(--font);padding:4px 8px;width:100%;transition:all .15s}
@@ -1296,6 +1384,13 @@ body{
 .ai-typing span:nth-child(2){animation-delay:.2s}
 .ai-typing span:nth-child(3){animation-delay:.4s}
 @keyframes aiDot{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -1364,6 +1459,7 @@ body{
         <span class="stat-mini-sub" id="streakMult" style="display:none"></span>
       </div>
       <button class="streak-info-btn" data-action="toggle-streak-info" title="奖励机制">!</button>
+      <button class="rest-day-btn" id="restDayBtn" data-action="toggle-rest-day" title="休息日：连胜冻结，不扣不罚">😴 休息日</button>
       <div class="sep"></div>
       <div class="stat-mini" id="todayBadge">
         <span class="stat-mini-sub">✅今日</span>
@@ -1481,7 +1577,11 @@ body{
       <div class="companion-fox-wrap" id="companionFoxWrap">
         <img src="fox-stage1.png" alt="小狐狸" class="companion-fox-img" id="companionFoxImg">
       </div>
-      <div class="companion-subtitle">小狐狸正陪着你</div>
+      <div class="companion-subtitle" id="companionSubtitle">小狐狸正陪着你</div>
+      <div class="companion-bind hidden" id="companionBind">
+        <span class="bind-hint">绑定任务：</span>
+        <select class="bind-select" id="companionBindSelect" data-action="companion-bind"><option value="">不绑定（通用专注）</option></select>
+      </div>
     </div>
   </div>
 </div>
@@ -1535,7 +1635,7 @@ body{
           <tr><td><code>#标签</code></td><td>分类标签</td></tr>
           <tr><td><code>90分钟 / 1.5小时 / 2h</code></td><td>预估时长 🆕</td></tr>
         </table>
-        <p class="help-sub">顺序随便写、不写就用默认；也可以用表单里的按钮点选，两种混用。</p>
+        <p class="help-sub">顺序随便写、不写就用默认；也可以用表单里的按钮点选，两种混用。<br>给任务点一个 <b>#科目</b>（数学/物理…），回顾页才能按科目统计你的时间。</p>
       </div>
 
       <div class="help-section">
@@ -1550,14 +1650,15 @@ body{
         <div class="help-demo">
           <div class="hd-card">
             <span class="hd-bar"></span>
-            <span class="hd-circle h"></span>
-            <div>
+            <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span>
+            <div style="flex:1;min-width:0">
               <div class="hd-cn">复习数学</div>
               <div class="hd-cs"><span style="color:#d97706">📅 6月11日</span><span style="color:#4338ca"># 数学</span><span style="color:var(--xp)">+500 XP</span></div>
             </div>
+            <span style="background:var(--tab-bg);color:var(--tab);border:1.5px solid var(--tab);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">▶</span>
           </div>
         </div>
-        <p class="help-sub"><b>左侧竖条</b>=优先级（🔴高·🟠中·🔵低）；<b>圆圈颜色</b>=难度。<br>截止日期会变色：<b style="color:#dc2626">逾期红</b>·<b style="color:#10b981">今天绿</b>·<b style="color:#d97706">快到期黄</b>·普通灰。</p>
+        <p class="help-sub"><b>左侧竖条</b>=优先级（🔴高·🟠中·🔵低）；<b>色点颜色</b>=科目（同一科永远同色）；<b>最右 ▶</b>=带这条任务去自习。<br>截止日期会变色：<b style="color:#dc2626">逾期红</b>·<b style="color:#10b981">今天绿</b>·<b style="color:#d97706">快到期黄</b>·普通灰。</p>
       </div>
 
       <div class="help-section">
@@ -1568,22 +1669,46 @@ body{
           <div><span class="hd-circle h"></span><b>困难</b>+500</div>
           <div><span class="hd-circle x"></span><b>史诗</b>+500</div>
         </div>
-        <p class="help-sub">数字为 XP，金币按比例同发（+60 / +120 / +250 🪙）。</p>
+        <p class="help-sub">数字为 XP，金币按比例同发（+60 / +120 / +250 🪙）。有连胜倍率时，完成瞬间会飘出计算过程：<b style="color:var(--xp)">+250 × 1.45 = 362 XP</b>，一眼看清加成。</p>
       </div>
 
       <div class="help-section">
-        <div class="help-h">④ 自习陪伴 📖 🆕</div>
-        <p>去<b>自习</b>tab，选时长开始专注。小狐狸全程陪着，<b>按分钟结算</b>经验和金币：</p>
+        <div class="help-h">④ 自习陪伴 📖</div>
+        <p>去<b>自习</b>tab，先选一段时长（也可以自定义）：</p>
         <div class="help-demo">
-          <div class="hd-pomo">📖 📖 <span style="opacity:.45">📖</span></div>
-          <div class="hd-prog"><div class="hd-prog-fill" style="width:50%"></div><span>25 / 50 分钟</span></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="background:var(--tab);color:#fff;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700">25 分钟</span>
+            <span style="background:var(--card);color:var(--text);padding:6px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600">45 分钟</span>
+            <span style="background:var(--card);color:var(--text);padding:6px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600">60 分钟</span>
+            <span style="background:transparent;color:var(--text3);padding:6px 10px;font-size:12px">⚙️ 自定义…</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);text-align:center">↓ 点「开始陪伴」进入全屏专注</div>
         </div>
-        <p class="help-sub">完成后自动结算 XP 和金币（受连胜倍率加成）。中途放弃按实际时长的 50% 结算。</p>
+        <p>专注中小狐狸全程陪着，进度条实时推进：</p>
+        <div class="help-demo" style="text-align:center">
+          <div style="font-size:28px;font-weight:800;margin-bottom:6px">18:42</div>
+          <div style="font-size:24px;margin:4px 0">🦊</div>
+          <div class="hd-prog"><div class="hd-prog-fill" style="width:65%"></div><span>18 / 25 分钟</span></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">小狐狸正陪着你</div>
+        </div>
+        <p>完成后弹出结算面板，<b>按分钟结算</b>经验金币，连续天数越多倍率越高：</p>
+        <div class="help-demo" style="text-align:center">
+          <div style="background:var(--card);border-radius:12px;padding:14px 16px;display:inline-block;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:left;min-width:200px">
+            <div style="text-align:center;font-size:32px;margin-bottom:6px">🎉</div>
+            <div style="text-align:center;font-size:14px;font-weight:800;margin-bottom:10px">专注完成！</div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)"><span>专注时长</span><span style="font-weight:700">25 分钟</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)"><span>连胜加成</span><span style="font-weight:700;color:var(--xp)">×1.45</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)"><span>获得经验</span><span style="font-weight:700;color:var(--xp)">+362 XP</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)"><span>获得金币</span><span style="font-weight:700;color:#92400e">+181 🪙</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)"><span>亲密度</span><span style="font-weight:700;color:var(--tab)">+25</span></div>
+          </div>
+        </div>
+        <p class="help-sub">中途放弃：实际坐了多久就记多久，经验金币按 50% 结算——<b>奖励打折，时长不打折</b>。连续天数越多，倍率越高（×1.15 → ×1.45 → ×1.75 → ×2.0）。</p>
       </div>
 
       <div class="help-section">
-        <div class="help-h">⑤ 到点提醒 🆕</div>
-        <p>添加时勾选 <b>⏰ 提醒</b>，才展开选时间：</p>
+        <div class="help-h">⑤ 到点提醒 ⏰</div>
+        <p>添加任务时勾选 <b>⏰ 提醒</b>，会展开时间选择器：</p>
         <div class="help-demo">
           <div class="hd-remind">
             <span class="hd-pill">☐ ⏰ 提醒</span>
@@ -1591,13 +1716,117 @@ body{
             <span class="hd-pill">☑ ⏰ 提醒 <span class="hd-time-box">09:30</span></span>
           </div>
         </div>
-        <p class="help-sub">到点弹提示（授权后还能发系统通知）。注意：本地网页只在<b>打开时</b>提醒。</p>
+        <p>到点后页面顶部弹出提示条：</p>
+        <div class="help-demo" style="text-align:center">
+          <div style="display:inline-block;background:#fff;border-left:3px solid var(--tab);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.1);color:#1e40af">
+            ⏰ 提醒：复习数学
+          </div>
+        </div>
+        <p class="help-sub">首次勾选时浏览器会弹出「允许通知」——点允许后，即使切到其他窗口也能收到系统通知。注意：本地网页只在<b>打开时</b>才能触发提醒，关了页面就不会弹。</p>
       </div>
 
       <div class="help-section">
         <div class="help-h">⑥ 编辑 · 拆步骤 · 删除</div>
-        <p>点任务<b>文字区</b>展开编辑（改日期/优先级/难度、拆成步骤）；点最右 <b>✕</b> 删除。</p>
-        <p class="help-sub">子任务只显示进度（如 1/3），完成整个任务才结算全额 XP。</p>
+        <p>点任务<b>文字区</b>展开编辑面板，可以改日期、优先级、难度、科目，还可以拆成步骤：</p>
+        <div class="help-demo">
+          <div style="background:#fff;border-radius:10px;padding:12px;box-shadow:var(--shadow);font-size:12px">
+            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+              <span style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px">📅 2025-06-20</span>
+              <span style="border:1.5px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px">🚩 中</span>
+            </div>
+            <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap">
+              <span style="background:var(--tab-bg);color:var(--tab);padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600">🔵 数学</span>
+              <span style="background:var(--card);color:var(--text2);padding:3px 8px;border:1.5px solid var(--border);border-radius:12px;font-size:11px">🟢 物理</span>
+              <span style="background:transparent;color:var(--text3);padding:3px 6px;border:1.5px dashed var(--border);border-radius:12px;font-size:12px;font-weight:700">＋</span>
+            </div>
+            <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap">
+              <span style="background:var(--good-bg);color:#047857;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">⭐ 简单</span>
+              <span style="background:var(--xp-bg);color:var(--xp);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">⭐⭐ 普通</span>
+              <span style="background:var(--gold-bg);color:#92400e;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">⭐⭐⭐ 困难</span>
+            </div>
+            <div style="border-top:1px solid var(--border);padding-top:6px">
+              <div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px"><span style="width:14px;height:14px;border:1.5px solid var(--text3);border-radius:3px;flex-shrink:0"></span> 整理错题</div>
+              <div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px"><span style="width:14px;height:14px;background:var(--xp);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff">✓</span> <span style="text-decoration:line-through;color:var(--text3)">看课本</span></div>
+              <div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;color:var(--text3)"><span style="width:14px;height:14px;border:1.5px dashed var(--text3);border-radius:3px;flex-shrink:0"></span> + 添加步骤</div>
+            </div>
+          </div>
+        </div>
+        <p>删除有两种方式：点卡片右侧 <b>✕</b>，或者<b>左滑</b>卡片露出 🗑 按钮。</p>
+        <p class="help-sub">子任务打勾只显示进度（如 1/3），完成整个任务才结算全额 XP。拆步骤不会改变总奖励——把大任务拆小是为了降低心理门槛，更容易开始。</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-h">⑦ 给任务标科目 🆕</div>
+        <p>打 <code>#</code> 自动弹出科目下拉，方向键选、回车定：</p>
+        <div class="help-demo" style="font-family:var(--font)">
+          <div style="margin-bottom:6px;color:var(--text2);font-size:12px">输入：复习 #</div>
+          <div style="background:var(--card);border:1.5px solid var(--tab);border-radius:8px;padding:6px 10px;display:inline-block;box-shadow:0 4px 12px rgba(0,0,0,.1)">
+            <div style="padding:5px 8px;border-radius:4px;color:#3b82f6;font-weight:600;font-size:13px">🔵 数学</div>
+            <div style="padding:5px 8px;border-radius:4px;color:var(--text);font-size:13px">🟢 物理</div>
+            <div style="padding:5px 8px;border-radius:4px;color:var(--text);font-size:13px">🟡 英语</div>
+            <div style="padding:5px 8px;border-radius:4px;color:var(--text3);font-size:12px;border-top:1px solid var(--border);margin-top:2px">＋ 新增科目…</div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">↑↓ 选 · 回车定</div>
+        </div>
+        <p>也可以在表单里点科目 chip 直接选：</p>
+        <div class="help-demo">
+          <span style="color:var(--text3);font-size:12px">科目：</span>
+          <span style="background:var(--tab);color:#fff;padding:4px 10px;border-radius:14px;font-size:12px;font-weight:600">🔵 数学</span>
+          <span style="background:var(--card);color:var(--text2);padding:4px 10px;border:1.5px solid var(--border);border-radius:14px;font-size:12px;font-weight:600">🟢 物理</span>
+          <span style="background:var(--card);color:var(--text2);padding:4px 10px;border:1.5px solid var(--border);border-radius:14px;font-size:12px;font-weight:600">🟡 英语</span>
+          <span style="background:transparent;color:var(--text3);padding:4px 8px;border:1.5px dashed var(--border);border-radius:14px;font-size:13px;font-weight:700">＋</span>
+          <div style="font-size:10px;color:var(--text3);margin-top:3px">▲ 选中高亮<span style="margin-left:12px">新增</span></div>
+        </div>
+        <p>标好科目后，任务卡片左边有一个科目色点，同一科目永远同一个颜色，一眼区分：</p>
+        <div class="help-demo">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+            <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6"></span>
+            <span style="font-size:13px">● 复习导数</span>
+            <span style="color:#d97706;font-size:11px">📅 今天</span>
+            <span style="color:var(--xp);font-size:12px;font-weight:700;margin-left:auto">+500 XP</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+            <span style="width:8px;height:8px;border-radius:50%;background:#22c55e"></span>
+            <span style="font-size:13px">● 整理力学错题</span>
+            <span style="color:var(--text3);font-size:11px">📅 明天</span>
+            <span style="color:var(--xp);font-size:12px;font-weight:700;margin-left:auto">+250 XP</span>
+          </div>
+        </div>
+        <p class="help-sub">💡 科目不是必填。不打 <code>#</code> 也能建任务，只是没有色点、不计入科目时间统计。</p>
+      </div>
+
+      <div class="help-section">
+        <div class="help-h">⑧ 带着任务去自习 🆕</div>
+        <p>待办卡片上有个 <b>▶</b> 按钮，点它直接带着这条任务进自习陪伴，小狐狸知道你在学什么：</p>
+        <div class="help-demo">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+            <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6"></span>
+            <span style="font-size:13px">● 刷导数 30 题</span>
+            <span style="color:var(--text3);font-size:11px">📅 今天</span>
+            <span style="background:var(--tab-bg);color:var(--tab);padding:2px 6px;border:1.5px solid var(--tab);border-radius:50%;font-size:11px;font-weight:700;margin-left:auto">▶</span>
+            <span style="font-size:10px;color:var(--text3)">← 点这里进自习</span>
+          </div>
+        </div>
+        <p>进去后，专注页副标题会显示你正在学什么：</p>
+        <div class="help-demo" style="text-align:center">
+          <div style="font-size:24px;margin-bottom:4px">🦊</div>
+          <div style="font-size:13px;color:var(--tab);font-weight:600;margin-bottom:2px">正在学：数学 · 刷导数 30 题 <span style="color:var(--text3);cursor:pointer;font-size:11px">✕</span></div>
+          <div style="color:var(--text3);font-size:10px;margin-bottom:4px">← 点 ✕ 解绑</div>
+          <div style="font-size:28px;font-weight:800;margin-bottom:2px">25:00</div>
+        </div>
+        <p>如果你是直接进自习页（没从任务点进来），副标题是「小狐狸正陪着你」，可以点下拉临时绑一条待办；点 <b>✕</b> 随时解绑，回到通用专注。</p>
+        <p>专注结束结算时，时间会自动计入那条任务的科目：</p>
+        <div class="help-demo" style="text-align:center">
+          <div style="background:var(--card);border-radius:12px;padding:16px;display:inline-block;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+            <div style="font-size:32px">🎉</div>
+            <div style="font-size:14px;font-weight:700;margin:6px 0">专注完成！</div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text2)"><span>已计入</span><span style="color:var(--tab);font-weight:700">「数学」</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text2)"><span>本次</span><span style="font-weight:700">45 分 · 累计 120 分</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text2)"><span>✦ 经验</span><span style="color:var(--xp);font-weight:700">+653 XP</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--text2)"><span>🪙 金币</span><span style="color:#92400e;font-weight:700">+326 🪙</span></div>
+          </div>
+        </div>
+        <p class="help-sub">💡 中途放弃也会按实际时长计入学习时间，经验金币按 50% 结算——坐了多久就记多久，奖励才打折。</p>
       </div>
 
       <div class="help-tip">💡 <b>难度</b>=值多少奖励，<b>优先级</b>=有多急，两者独立。大任务设成困难/史诗、填上时长、拆成子任务，去自习页面专注完成最有成就感。</div>
@@ -1693,11 +1922,151 @@ async function signOutUser(){
 }
 
 // ── Cloud push (debounced) ──
+let _syncStatus = 'off';  // 'ok' | 'fail' | 'syncing' | 'off'
+let _selectedTag = null;      // chip-selected subject for current add form
+let _pendingTaskFocus = null; // { taskId, taskName, subject } — set before opening companion UI
+
+function updateSyncStatus(status){
+  _syncStatus = status;
+  const pill = document.getElementById('headerUser');
+  if(!pill) return;
+  pill.classList.remove('sync-ok','sync-fail','sync-syncing','sync-off');
+  pill.classList.add('sync-'+status);
+}
+
 function scheduleCloudPush(){
   if(!sb || !cloudUser) return;
   if(cloudSyncing) return;
   if(cloudSyncTimer) clearTimeout(cloudSyncTimer);
   cloudSyncTimer = setTimeout(pushToCloud, 800);
+}
+
+// ── Subject helpers ──
+function getSubjectColor(subject){
+  if(!subject) return '#9ca3af';
+  let hash = 0;
+  for(let i = 0; i < subject.length; i++){
+    hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return 'hsl('+hue+',55%,50%)';
+}
+
+function renderSubjectChips(){
+  if(!state.subjects || !state.subjects.length) return '';
+  const chips = state.subjects.map(s => {
+    const active = _selectedTag === s ? ' active' : '';
+    return '<button class="chip-subject'+active+'" data-action="pick-subject" data-subject="'+esc(s)+'">'+esc(s)+'</button>';
+  }).join('');
+  return '<div class="subject-chips" id="subjectChips">'+chips+'<button class="chip-add" data-action="add-subject" title="新增科目">+</button></div>';
+}
+
+function setupSubjectAutocomplete(inputEl){
+  if(!inputEl) return;
+  let drop = document.getElementById('autocompleteDrop');
+  if(!drop){
+    drop = document.createElement('div');
+    drop.className = 'autocomplete-drop';
+    drop.id = 'autocompleteDrop';
+    inputEl.parentNode.appendChild(drop);
+  }
+  let focusIdx = -1;
+
+  inputEl.addEventListener('input', function(){
+    const val = inputEl.value;
+    const hashIdx = val.lastIndexOf('#');
+    if(hashIdx === -1 || hashIdx === val.length - 1){
+      drop.classList.remove('show');
+      focusIdx = -1;
+      return;
+    }
+    const partial = val.slice(hashIdx + 1).toLowerCase();
+    const matches = (state.subjects||[]).filter(s => s.toLowerCase().includes(partial));
+    if(!matches.length){ drop.classList.remove('show'); focusIdx = -1; return; }
+    focusIdx = -1;
+    drop.innerHTML = matches.map((m,i) => '<div class="autocomplete-item" data-idx="'+i+'" data-subject="'+esc(m)+'">'+esc(m)+'</div>').join('');
+    drop.classList.add('show');
+    // Position below the input
+    const rect = inputEl.getBoundingClientRect();
+    drop.style.top = (rect.bottom - inputEl.parentNode.getBoundingClientRect().top + 4)+'px';
+    drop.style.left = (rect.left - inputEl.parentNode.getBoundingClientRect().left)+'px';
+  });
+
+  inputEl.addEventListener('keydown', function(e){
+    const drop2 = document.getElementById('autocompleteDrop');
+    if(!drop2 || !drop2.classList.contains('show')) return;
+    const items = drop2.querySelectorAll('.autocomplete-item');
+    if(!items.length) return;
+
+    if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      focusIdx = Math.min(focusIdx + 1, items.length - 1);
+      items.forEach((el,i) => el.classList.toggle('focus', i === focusIdx));
+    }else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      focusIdx = Math.max(focusIdx - 1, -1);
+      items.forEach((el,i) => el.classList.toggle('focus', i === focusIdx));
+    }else if(e.key === 'Enter' && focusIdx >= 0){
+      e.preventDefault();
+      const sel = items[focusIdx];
+      if(sel){
+        const subj = sel.dataset.subject;
+        const val2 = inputEl.value;
+        const hIdx = val2.lastIndexOf('#');
+        inputEl.value = val2.slice(0, hIdx + 1) + subj + ' ';
+        _selectedTag = subj;
+        renderSubjectChipsInline();
+      }
+      drop2.classList.remove('show');
+      focusIdx = -1;
+    }else if(e.key === 'Escape'){
+      drop2.classList.remove('show');
+      focusIdx = -1;
+    }
+  });
+
+  // Click on autocomplete item
+  drop.addEventListener('pointerdown', function(e){
+    const item = e.target.closest('.autocomplete-item');
+    if(!item) return;
+    e.preventDefault();
+    const subj = item.dataset.subject;
+    const hIdx = inputEl.value.lastIndexOf('#');
+    inputEl.value = inputEl.value.slice(0, hIdx + 1) + subj + ' ';
+    _selectedTag = subj;
+    renderSubjectChipsInline();
+    drop.classList.remove('show');
+    focusIdx = -1;
+    inputEl.focus();
+  });
+
+  // Hide dropdown when clicking outside
+  document.addEventListener('pointerdown', function(e){
+    if(!drop.classList.contains('show')) return;
+    if(!drop.contains(e.target) && e.target !== inputEl){
+      drop.classList.remove('show');
+      focusIdx = -1;
+    }
+  });
+}
+
+function renderSubjectChipsInline(){
+  const row = document.getElementById('subjectChips');
+  if(!row) return;
+  const chips = (state.subjects||[]).map(s => {
+    const active = _selectedTag === s ? ' active' : '';
+    return '<button class="chip-subject'+active+'" data-action="pick-subject" data-subject="'+esc(s)+'">'+esc(s)+'</button>';
+  }).join('');
+  row.innerHTML = chips+'<button class="chip-add" data-action="add-subject" title="新增科目">+</button>';
+}
+
+function editSubjectChips(t){
+  const tag = t.tag || '';
+  const chips = (state.subjects||[]).map(s => {
+    const active = tag === s ? ' active' : '';
+    return '<button class="chip-subject'+active+'" data-action="edit-subject" data-id="'+t.id+'" data-subject="'+esc(s)+'">'+esc(s)+'</button>';
+  }).join('');
+  return chips+'<button class="chip-add" data-action="add-subject" title="新增科目">+</button>';
 }
 
 function stripLocalFields(item){
@@ -1709,55 +2078,62 @@ function stripLocalFields(item){
 
 async function pushToCloud(){
   if(!sb || !cloudUser) return;
+  if(!_pullDone) return;  // never push before first successful pull
   cloudSyncing = true;
+  updateSyncStatus('syncing');
   const uid = cloudUser.id;
   try{
     // 8s timeout — if Supabase is blocked, don't hang forever
+    let _pushOk = false;
     await Promise.race([
       (async() => {
 
     // ── Tasks (habits + dailies + todos) ──
     const taskRows = [];
+    const localTaskIds = [];
     if(Array.isArray(state.habits)){
       for(const h of state.habits){
+        localTaskIds.push(h.id);
         taskRows.push({
-          user_id: uid, type: 'habit', name: h.name,
+          user_id: uid, local_id: h.id, type: 'habit', name: h.name,
           difficulty: h.difficulty || 'medium',
           custom_reward: h.customReward || null,
           penalty: h.penalty || null,
           streak: h.streak || 0, best_streak: h.best_streak || 0,
           done_dates: h.doneDates || (h.history ? Object.keys(h.history) : []),
           archived: h.archived || false,
-          updated_at: new Date().toISOString(),
+          updated_at: h.updatedAt || new Date().toISOString(),
           extra_data: { type: h.type, doneDates: h.doneDates, history: h.history }
         });
       }
     }
     if(Array.isArray(state.dailies)){
       for(const d of state.dailies){
+        localTaskIds.push(d.id);
         taskRows.push({
-          user_id: uid, type: 'daily', name: d.name,
+          user_id: uid, local_id: d.id, type: 'daily', name: d.name,
           difficulty: d.difficulty || 'medium',
           custom_reward: d.customReward || null,
           done_dates: d.completedDates || [],
           penalty: d.penalty || null,
           streak: d.streak || 0, best_streak: d.best_streak || 0,
           archived: d.archived || false,
-          updated_at: new Date().toISOString(),
+          updated_at: d.updatedAt || new Date().toISOString(),
           extra_data: { estimatedMinutes: d.estimatedMinutes, accumulatedFocusMinutes: d.accumulatedFocusMinutes }
         });
       }
     }
     if(Array.isArray(state.todos)){
       for(const t of state.todos){
+        localTaskIds.push(t.id);
         taskRows.push({
-          user_id: uid, type: 'todo', name: t.name,
+          user_id: uid, local_id: t.id, type: 'todo', name: t.name,
           difficulty: t.difficulty || 'medium',
           custom_reward: t.customReward || null,
           done_dates: t.completed ? [t.completedAt || today()] : [],
           penalty: t.penalty || null,
           archived: t.completed || false,
-          updated_at: new Date().toISOString(),
+          updated_at: t.updatedAt || new Date().toISOString(),
           extra_data: {
             completed: t.completed, completedAt: t.completedAt,
             createdAt: t.createdAt, dueDate: t.dueDate,
@@ -1769,23 +2145,53 @@ async function pushToCloud(){
         });
       }
     }
-    // Clear old and insert new
-    await sb.from('tasks').delete().eq('user_id', uid);
+    // Upsert all current tasks
     if(taskRows.length){
-      // Insert in batches of 50 to avoid payload limits
       for(let i = 0; i < taskRows.length; i += 50){
-        await sb.from('tasks').insert(taskRows.slice(i, i + 50));
+        await sb.from('tasks').upsert(taskRows.slice(i, i + 50), { onConflict: 'user_id, local_id' });
+      }
+    }
+    // Delete stale cloud rows (locally deleted tasks)
+    {
+      const { data: cloudTasks } = await sb.from('tasks').select('id, local_id').eq('user_id', uid);
+      if(cloudTasks && cloudTasks.length){
+        const toDelete = cloudTasks.filter(r => r.local_id != null && !localTaskIds.includes(r.local_id)).map(r => r.id);
+        if(toDelete.length){
+          for(let i = 0; i < toDelete.length; i += 100){
+            await sb.from('tasks').delete().in('id', toDelete.slice(i, i + 100));
+          }
+        }
       }
     }
 
     // ── Rewards ──
-    await sb.from('rewards').delete().eq('user_id', uid);
-    if(Array.isArray(state.rewards) && state.rewards.length){
-      const rewardRows = state.rewards.map(r => ({
-        user_id: uid, name: r.name, price: r.price,
-        created_at: r.createdAt || new Date().toISOString()
-      }));
-      await sb.from('rewards').insert(rewardRows);
+    const localRewardIds = [];
+    if(Array.isArray(state.rewards)){
+      const rewardRows = [];
+      for(const r of state.rewards){
+        localRewardIds.push(r.id);
+        rewardRows.push({
+          user_id: uid, local_id: r.id, name: r.name, price: r.price,
+          created_at: r.createdAt || new Date().toISOString(),
+          updated_at: r.updatedAt || new Date().toISOString()
+        });
+      }
+      if(rewardRows.length){
+        await sb.from('rewards').upsert(rewardRows, { onConflict: 'user_id, local_id' });
+      }
+      // Delete stale rewards
+      const { data: cloudRewards } = await sb.from('rewards').select('id, local_id').eq('user_id', uid);
+      if(cloudRewards && cloudRewards.length){
+        const toDelete = cloudRewards.filter(r => r.local_id != null && !localRewardIds.includes(r.local_id)).map(r => r.id);
+        if(toDelete.length){
+          for(let i = 0; i < toDelete.length; i += 100){
+            await sb.from('rewards').delete().in('id', toDelete.slice(i, i + 100));
+          }
+        }
+      }
+    }else{
+      // state.rewards is not an array — delete all
+      await sb.from('rewards').delete().eq('user_id', uid);
     }
 
     // ── Stats ──
@@ -1795,27 +2201,49 @@ async function pushToCloud(){
       updated_at: new Date().toISOString()
     });
 
-    // ── Focus sessions (last 90 days only, to keep it light) ──
-    await sb.from('focus_sessions').delete().eq('user_id', uid);
-    if(Array.isArray(state.focusSessions) && state.focusSessions.length){
-      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
-      const cutoffStr = cutoff.toISOString().slice(0, 10);
-      const recent = state.focusSessions.filter(s => s.date >= cutoffStr);
-      if(recent.length){
-        const fsRows = recent.map(s => ({
-          user_id: uid, date: s.date, duration_min: s.durationMin || 0,
+    // ── Focus sessions (upsert, keep all) ──
+    const localFsIds = [];
+    if(Array.isArray(state.focusSessions)){
+      const fsRows = [];
+      for(const s of state.focusSessions){
+        localFsIds.push(s.id);
+        fsRows.push({
+          user_id: uid, local_id: s.id, date: s.date,
+          duration_min: s.durationMin || 0,
           settled_min: s.settledMin || 0, completed: s.completed || false,
-          created_at: s.createdAt || new Date().toISOString()
-        }));
-        await sb.from('focus_sessions').insert(fsRows);
+          task_id: s.taskId || null,
+          subject: s.subject || '未分类',
+          started_at: s.startedAt || null,
+          actual_min: s.actualMin || 0,
+          streak_mult: s.streakMult || 1.0,
+          created_at: s.createdAt || new Date().toISOString(),
+          updated_at: s.updatedAt || new Date().toISOString()
+        });
+      }
+      if(fsRows.length){
+        for(let i = 0; i < fsRows.length; i += 100){
+          await sb.from('focus_sessions').upsert(fsRows.slice(i, i + 100), { onConflict: 'user_id, local_id' });
+        }
+      }
+      // Delete stale sessions
+      const { data: cloudFs } = await sb.from('focus_sessions').select('id, local_id').eq('user_id', uid);
+      if(cloudFs && cloudFs.length){
+        const toDelete = cloudFs.filter(r => r.local_id != null && !localFsIds.includes(r.local_id)).map(r => r.id);
+        if(toDelete.length){
+          for(let i = 0; i < toDelete.length; i += 100){
+            await sb.from('focus_sessions').delete().in('id', toDelete.slice(i, i + 100));
+          }
+        }
       }
     }
-    toast('☁️ 已同步', 'info');
-      })(),
+        _pushOk = true;
+      })().catch(() => {}),  // suppress late rejection after timeout
       new Promise(r => setTimeout(() => r(), 8000))
     ]);
+    updateSyncStatus(_pushOk ? 'ok' : 'fail');
   }catch(e){
     console.warn('Cloud push failed, will retry:', e.message);
+    updateSyncStatus('fail');
   }finally{
     cloudSyncing = false;
   }
@@ -1842,9 +2270,9 @@ async function pullFromCloud(){
     if(tasksRes.data){
       for(const t of tasksRes.data){
         const base = {
-          id: t.id, name: t.name, difficulty: t.difficulty || 'medium',
+          id: t.local_id || t.id, name: t.name, difficulty: t.difficulty || 'medium',
           customReward: t.custom_reward, penalty: t.penalty,
-          archived: t.archived || false
+          archived: t.archived || false, updatedAt: t.updated_at || null
         };
         const ex = t.extra_data || {};
         if(t.type === 'habit'){
@@ -1887,7 +2315,7 @@ async function pullFromCloud(){
     }
 
     const rewards = (rewardsRes.data || []).map(r => ({
-      id: r.id, name: r.name, price: r.price, createdAt: r.created_at
+      id: r.local_id || r.id, name: r.name, price: r.price, createdAt: r.created_at, updatedAt: r.updated_at || null
     }));
 
     const stats = statsRes.data ? {
@@ -1896,9 +2324,12 @@ async function pullFromCloud(){
     } : null;
 
     const focusSessions = (fsRes.data || []).map(s => ({
-      id: s.id, date: s.date, durationMin: s.duration_min,
+      id: s.local_id || s.id, date: s.date, durationMin: s.duration_min,
       settledMin: s.settled_min, completed: s.completed,
-      createdAt: s.created_at
+      taskId: s.task_id || null, subject: s.subject || '未分类',
+      startedAt: s.started_at || null, actualMin: s.actual_min || 0,
+      streakMult: s.streak_mult || 1.0,
+      createdAt: s.created_at, updatedAt: s.updated_at || null
     }));
 
     return { habits, dailies, todos, rewards, stats, focusSessions };
@@ -1908,27 +2339,43 @@ async function pullFromCloud(){
   }
 }
 
-// ── Merge cloud data into state ──
+// ── Merge cloud data into state (per-item, timestamp-based) ──
+function mergeItems(localArr, cloudArr, key){
+  const map = new Map();
+  // Index local items
+  for(const item of (localArr||[])){
+    if(item[key] != null) map.set(item[key], item);
+  }
+  // Merge cloud items
+  for(const c of (cloudArr||[])){
+    const ck = c[key];
+    if(ck == null) continue;
+    const local = map.get(ck);
+    if(local){
+      // Both have it — keep the newer one
+      const lt = local.updatedAt ? (+new Date(local.updatedAt) || 0) : 0;
+      const ct = c.updatedAt ? (+new Date(c.updatedAt) || 0) : 0;
+      if(ct > lt) map.set(ck, c); // cloud is newer, replace
+      // else keep local (already in map)
+    }else{
+      // Only in cloud — add it
+      map.set(ck, c);
+    }
+  }
+  return Array.from(map.values());
+}
+
 function mergeCloudIntoState(cloudData){
   if(!cloudData) return;
-  // Cloud wins over local defaults; keep local if cloud is empty
-  if(cloudData.habits && cloudData.habits.length > 0){
-    state.habits = cloudData.habits;
-  }
-  if(cloudData.dailies && cloudData.dailies.length > 0){
-    state.dailies = cloudData.dailies;
-  }
-  if(cloudData.todos && cloudData.todos.length > 0){
-    state.todos = cloudData.todos;
-  }
-  if(cloudData.rewards && cloudData.rewards.length > 0){
-    state.rewards = cloudData.rewards;
-  }
+  state.habits = mergeItems(state.habits, cloudData.habits, 'id');
+  state.dailies = mergeItems(state.dailies, cloudData.dailies, 'id');
+  state.todos = mergeItems(state.todos, cloudData.todos, 'id');
+  state.rewards = mergeItems(state.rewards, cloudData.rewards, 'id');
   if(cloudData.stats){
-    state.stats = cloudData.stats;
+    state.stats = Object.assign({}, state.stats, cloudData.stats);
   }
-  if(cloudData.focusSessions && cloudData.focusSessions.length > 0){
-    state.focusSessions = cloudData.focusSessions;
+  if(cloudData.focusSessions){
+    state.focusSessions = mergeItems(state.focusSessions, cloudData.focusSessions, 'id');
   }
   state.lastResetDate = today();
   state.streakMilestones = state.streakMilestones || [];
@@ -2161,6 +2608,10 @@ async function onUserLoggedIn(){
   const cloudData = await pullFromCloud();
   if(cloudData){
     mergeCloudIntoState(cloudData);
+    _pullDone = true;
+    updateSyncStatus('ok');
+  }else{
+    updateSyncStatus('fail');
   }
   // Push current local state (cloud merge may have added new defaults)
   saveState();
@@ -2442,25 +2893,32 @@ function pad(n){ return n.toString().padStart(2,'0'); }
 function fmtTime(iso){ const d=new Date(iso); return pad(d.getHours())+':'+pad(d.getMinutes()); }
 function fmtDuration(min){ const h=Math.floor(min/60),m=min%60; return h>0?h+'h'+m+'m':m+'min'; }
 
-// ========== State ==========
+let _pullDone = false;           // guard: only allow push after first successful pull
+
+function touch(item){
+  item.updatedAt = new Date().toISOString();
+}
+
+// ── State ──
 function defaultState(){
+  const now = new Date().toISOString();
   return {
     stats: { hp: 50, xp: 0, level: 1, gold: 150 },
     habits: [
-      { id: uid(), name: '喝一杯水', type: 'positive', difficulty: 'medium', history: {} },
-      { id: uid(), name: '久坐超过1小时', type: 'negative', difficulty: 'medium', history: {} },
+      { id: uid(), name: '喝一杯水', type: 'positive', difficulty: 'medium', history: {}, updatedAt: now },
+      { id: uid(), name: '久坐超过1小时', type: 'negative', difficulty: 'medium', history: {}, updatedAt: now },
     ],
     dailies: [
-      { id: uid(), name: '运动30分钟', difficulty: 'medium', completedDates: [], estimatedMinutes: 30, accumulatedFocusMinutes: 0 },
-      { id: uid(), name: '阅读20分钟', difficulty: 'medium', completedDates: [], estimatedMinutes: 20, accumulatedFocusMinutes: 0 },
+      { id: uid(), name: '运动30分钟', difficulty: 'medium', completedDates: [], estimatedMinutes: 30, accumulatedFocusMinutes: 0, updatedAt: now },
+      { id: uid(), name: '阅读20分钟', difficulty: 'medium', completedDates: [], estimatedMinutes: 20, accumulatedFocusMinutes: 0, updatedAt: now },
     ],
     todos: [
-      { id: uid(), name: '👋 点我完成 · 也可以左边点开设置难度和日期', completed: false, createdAt: today(), difficulty: 'medium', dueDate: today(), priority: 'medium', tag: null, subtasks: [], completedAt: null, estimatedMinutes: 0, accumulatedFocusMinutes: 0, reminderTime: null, reminded: false },
+      { id: uid(), name: '👋 点我完成 · 也可以左边点开设置难度和日期', completed: false, createdAt: today(), difficulty: 'medium', dueDate: today(), priority: 'medium', tag: null, subtasks: [], completedAt: null, estimatedMinutes: 0, accumulatedFocusMinutes: 0, reminderTime: null, reminded: false, updatedAt: now },
     ],
     rewards: [
-      { id: uid(), name: '看一集喜欢的剧', price: 200 },
-      { id: uid(), name: '吃一块巧克力', price: 150 },
-      { id: uid(), name: '买一个小玩意', price: 500 },
+      { id: uid(), name: '看一集喜欢的剧', price: 200, updatedAt: now },
+      { id: uid(), name: '吃一块巧克力', price: 150, updatedAt: now },
+      { id: uid(), name: '买一个小玩意', price: 500, updatedAt: now },
     ],
     lastResetDate: today(),
     streakMilestones: [],
@@ -2470,8 +2928,13 @@ function defaultState(){
     intimacy: 0,
     totalCompanionMinutes: 0,
     pomodoro: null, // 保留键但不再使用（旧数据迁移用）
+    subjects: ['数学','物理','英语'],
     aiKey: '',
-    aiChatHistory: []
+    aiChatHistory: [],
+    restDays: [],
+    _streakGrace: null,
+    _streakRecovery: 0,
+    ledger: []
   };
 }
 
@@ -2583,6 +3046,11 @@ function loadState(){
       s.stats = Object.assign({}, def.stats, s.stats);
       // 新字段迁移
       if(!Array.isArray(s.focusSessions)) s.focusSessions = [];
+      // 迁移：为旧 focusSessions 补齐 taskId 和 subject
+      for(const fs of s.focusSessions){
+        if(fs.taskId === undefined) fs.taskId = null;
+        if(fs.subject === undefined) fs.subject = '未分类';
+      }
       if(s.intimacy == null) s.intimacy = 0;
       if(s.totalCompanionMinutes == null) s.totalCompanionMinutes = 0;
       // 旧 pomodoro 数据保留但不使用
@@ -2591,9 +3059,15 @@ function loadState(){
       if(!Array.isArray(s.activityLog)) s.activityLog = [];
       if(!Array.isArray(s.streakMilestones)) s.streakMilestones = [];
       if(!Array.isArray(s.pendingMisses)) s.pendingMisses = [];
+      if(!Array.isArray(s.restDays)) s.restDays = [];
+      if(s._streakGrace === undefined) s._streakGrace = null;
+      if(s._streakRecovery === undefined) s._streakRecovery = 0;
+      if(!Array.isArray(s.subjects)) s.subjects = ['数学','物理','英语'];
+      if(!Array.isArray(s.ledger)) s.ledger = [];
       // 迁移：为老数据的待办补齐新字段
       if(Array.isArray(s.todos)){
         for(const t of s.todos){
+          if(t.id == null) t.id = uid();
           if(t.difficulty === undefined || t.difficulty === 'normal') t.difficulty = 'medium';
           if(t.difficulty === 'epic') t.difficulty = 'hard';
           if(t.dueDate === undefined) t.dueDate = null;
@@ -2608,17 +3082,24 @@ function loadState(){
           if(t.customReward === undefined) t.customReward = null;
         }
       }
-      // 迁移：为老数据的习惯和每日补齐难度
+      // 迁移：为老数据的习惯和每日补齐难度 + id
       if(Array.isArray(s.habits)){
         for(const h of s.habits){
+          if(h.id == null) h.id = uid();
           if(h.difficulty === undefined) h.difficulty = 'medium';
           if(h.customReward === undefined) h.customReward = null;
         }
       }
       if(Array.isArray(s.dailies)){
         for(const d of s.dailies){
+          if(d.id == null) d.id = uid();
           if(d.difficulty === undefined) d.difficulty = 'medium';
           if(d.customReward === undefined) d.customReward = null;
+        }
+      }
+      if(Array.isArray(s.rewards)){
+        for(const r of s.rewards){
+          if(r.id == null) r.id = uid();
         }
       }
       // 迁移 v2 → v3：全局数值 ×10（存量一次性公平过渡）
@@ -2703,31 +3184,51 @@ function getCompanionElapsedMin(){
   return Math.floor(elapsed / 60000);
 }
 
-function startCompanionSession(durationMin){
+function startCompanionSession(durationMin, opts){
   // Prevent double sessions
   if(companionSession){
     return;
   }
+  // opts: { taskId, taskName, subject }
+  const taskId = (opts && opts.taskId) || (_pendingTaskFocus && _pendingTaskFocus.taskId) || null;
+  const taskName = (opts && opts.taskName) || (_pendingTaskFocus && _pendingTaskFocus.taskName) || null;
+  const subject = (opts && opts.subject) || (_pendingTaskFocus && _pendingTaskFocus.subject) || null;
+  _pendingTaskFocus = null;
 
   companionSession = {
     durationMin: durationMin,
     startedAt: Date.now(),
     timerId: null,
-    microTimerId: null
+    microTimerId: null,
+    taskId: taskId,
+    taskName: taskName,
+    subject: subject
   };
 
   // Persist active session for page refresh recovery
   state._activeCompanion = {
     durationMin: durationMin,
-    startedAt: companionSession.startedAt
+    startedAt: companionSession.startedAt,
+    taskId: taskId,
+    taskName: taskName,
+    subject: subject
   };
   saveState();
 
   const overlay = document.getElementById('companionOverlay');
   overlay.classList.remove('hidden');
 
+  // 同步主页面小狐狸图片
+  const mainFoxImg = document.querySelector('#foxFloat img');
+  const companionFoxImg = document.getElementById('companionFoxImg');
+  if(mainFoxImg && companionFoxImg){
+    companionFoxImg.src = mainFoxImg.getAttribute('src') || mainFoxImg.src;
+  }
+
   // Set initial timer
   updateCompanionTimerDisplay();
+  updateCompanionSubtitle();
+  updateBindUI();
 
   // Start fox breathing animation
   const foxWrap = document.getElementById('companionFoxWrap');
@@ -2742,6 +3243,34 @@ function startCompanionSession(durationMin){
 
   // Update document title
   updateCompanionTitle();
+}
+
+function updateCompanionSubtitle(){
+  const el = document.getElementById('companionSubtitle');
+  if(!el) return;
+  if(companionSession && companionSession.taskId){
+    const subj = companionSession.subject || '未分类';
+    el.innerHTML = '正在学：'+esc(subj)+' · '+esc(companionSession.taskName)+' <button class="bind-unbind" data-action="unbind-companion" title="解绑任务">✕</button>';
+    el.classList.add('bound');
+  }else{
+    el.textContent = '小狐狸正陪着你';
+    el.classList.remove('bound');
+  }
+}
+
+function updateBindUI(){
+  const bindEl = document.getElementById('companionBind');
+  const selectEl = document.getElementById('companionBindSelect');
+  if(!bindEl || !selectEl) return;
+  if(companionSession && !companionSession.taskId){
+    // Not bound yet — show binder with active (non-completed) todos
+    const active = state.todos.filter(t => !t.completed);
+    selectEl.innerHTML = '<option value="">不绑定（通用专注）</option>'+
+      active.map(t => '<option value="'+t.id+'">'+(t.tag ? '● '+esc(t.tag)+' ':'')+esc(t.name)+'</option>').join('');
+    bindEl.classList.remove('hidden');
+  }else{
+    bindEl.classList.add('hidden');
+  }
 }
 
 function companionTick(){
@@ -2868,7 +3397,6 @@ function abandonCompanion(){
   };
   const onStay = () => { companionAbandoning = false; cleanup(); };
   const onQuit = () => {
-    companionAbandoning = false;
     cleanup();
     executeAbandon();
   };
@@ -2881,6 +3409,7 @@ function executeAbandon(){
 
   const elapsedMin = getCompanionElapsedMin();
   stopCompanionTimer();
+  companionAbandoning = false;
 
   // Fox sink animation
   const foxWrap = document.getElementById('companionFoxWrap');
@@ -2894,6 +3423,7 @@ function executeAbandon(){
     recordFocusSession(false);
     companionSession = null;
     delete state._activeCompanion;
+    companionAbandoning = false;
     document.title = '习惯养成';
     overlay.classList.add('hidden');
     foxWrap.classList.remove('sink');
@@ -2902,11 +3432,11 @@ function executeAbandon(){
     return;
   }
 
-  // Settle at 50%
-  const settleMin = Math.floor(elapsedMin * 0.5);
-
-  // Delay then show settlement
+  // Delay then show settlement (recompute timing inside timeout for consistency)
   setTimeout(() => {
+    const finalElapsedMin = getCompanionElapsedMin();
+    const settleMin = Math.floor(finalElapsedMin * 0.5);
+
     overlay.classList.add('hidden');
     foxWrap.classList.remove('sink');
 
@@ -2919,18 +3449,29 @@ function executeAbandon(){
     gainXp(xp, '自习（提前结束）');
     gainGold(gold, '自习（提前结束）');
     state.intimacy = (state.intimacy || 0) + intimacy;
-    state.totalCompanionMinutes = (state.totalCompanionMinutes || 0) + settleMin;
+    // 奖励按半额结算（防滥用），但客观学习时长记真实值
+    state.totalCompanionMinutes = (state.totalCompanionMinutes || 0) + finalElapsedMin;
 
     recordFocusSession(false);
-    logActivity('focus-abandon', '自习提前结束 ('+elapsedMin+'分钟 → 按'+settleMin+'分钟结算)', xp, gold, 0);
-
-    companionSession = null;
-    delete state._activeCompanion;
-    document.title = '习惯养成';
-    saveState();
-    render();
-
-    showSettlementPanel(settleMin, xp, gold, intimacy, false);
+    // Write back actual elapsed minutes to bound task (not halved — truth)
+    if(companionSession){
+      if(companionSession.taskId){
+        const todo = state.todos.find(t => t.id === companionSession.taskId);
+        if(todo){
+          todo.accumulatedFocusMinutes = (todo.accumulatedFocusMinutes || 0) + finalElapsedMin;
+          touch(todo);
+        }
+      }
+      logActivity('focus-abandon', '自习提前结束 ('+finalElapsedMin+'分钟 → 按'+settleMin+'分钟结算奖励)', xp, gold, 0);
+      var boundSubj = companionSession.subject || null;
+      var boundTaskId = companionSession.taskId;
+      companionSession = null;
+      delete state._activeCompanion;
+      document.title = '习惯养成';
+      saveState();
+      render();
+      showSettlementPanel(settleMin, xp, gold, intimacy, false, boundSubj, boundTaskId);
+    }
   }, 2000);
 }
 
@@ -2964,7 +3505,18 @@ function completeCompanion(){
   state.totalCompanionMinutes = (state.totalCompanionMinutes || 0) + durationMin;
 
   recordFocusSession(true);
+  // Write back accumulatedFocusMinutes to bound task
+  if(companionSession.taskId){
+    const todo = state.todos.find(t => t.id === companionSession.taskId);
+    if(todo){
+      todo.accumulatedFocusMinutes = (todo.accumulatedFocusMinutes || 0) + durationMin;
+      touch(todo);
+    }
+  }
   logActivity('focus-complete', '专注自习完成 ('+durationMin+'分钟)', xp, gold, 0);
+
+  const boundSubj = companionSession.subject || null;
+  const boundTaskId = companionSession.taskId;
 
   companionSession = null;
   delete state._activeCompanion;
@@ -2976,7 +3528,7 @@ function completeCompanion(){
   setTimeout(() => {
     document.getElementById('companionOverlay').classList.add('hidden');
     foxWrap.classList.remove('hop','stand-up');
-    showSettlementPanel(durationMin, xp, gold, intimacy, true);
+    showSettlementPanel(durationMin, xp, gold, intimacy, true, boundSubj, boundTaskId);
   }, 800);
 }
 
@@ -3020,7 +3572,10 @@ function recordFocusSession(completed){
     actualMin: Math.min(elapsedMin, companionSession.durationMin),
     settledMin: settleMin,
     completed: completed,
-    streakMult: getStreakMultiplier()
+    streakMult: getStreakMultiplier(),
+    taskId: companionSession.taskId || null,
+    subject: companionSession.subject || '未分类',
+    updatedAt: new Date().toISOString()
   });
   // Keep last 365 sessions max
   if(state.focusSessions.length > 365){
@@ -3028,7 +3583,7 @@ function recordFocusSession(completed){
   }
 }
 
-function showSettlementPanel(minutes, xp, gold, intimacy, completed){
+function showSettlementPanel(minutes, xp, gold, intimacy, completed, subject, taskId){
   const overlay = document.getElementById('companionSettleOverlay');
   const card = document.getElementById('companionSettleCard');
 
@@ -3036,10 +3591,24 @@ function showSettlementPanel(minutes, xp, gold, intimacy, completed){
   let multLine = '';
   if(m > 1) multLine = '<div class="cs-stat"><span>连胜加成</span><span class="cs-val">×'+m.toFixed(2)+'</span></div>';
 
+  let subjectLine = '';
+  if(subject){
+    let accMin = 0;
+    if(taskId){
+      const todo = state.todos.find(t => t.id === taskId);
+      if(todo) accMin = todo.accumulatedFocusMinutes || 0;
+    }
+    subjectLine = '<div class="cs-stat"><span>已计入</span><span class="cs-val intimacy">「'+esc(subject)+'」</span></div>'+
+      '<div class="cs-stat"><span>本次</span><span class="cs-val">'+minutes+' 分 · 累计 '+accMin+' 分</span></div>';
+  }else{
+    subjectLine = '<div class="cs-stat"><span>分类</span><span class="cs-val" style="color:var(--text3)">未分类</span></div>';
+  }
+
   card.innerHTML =
     '<div class="cs-icon">'+(completed ? '🎉' : '🦊')+'</div>'+
     '<div class="cs-title">'+(completed ? '专注完成！' : '提前结束')+'</div>'+
     '<div class="cs-stat"><span>专注时长</span><span class="cs-val">'+minutes+' 分钟</span></div>'+
+    subjectLine+
     '<div class="cs-stat"><span>获得经验</span><span class="cs-val xp">+'+xp+' XP</span></div>'+
     '<div class="cs-stat"><span>获得金币</span><span class="cs-val gold">+'+gold+' 🪙</span></div>'+
     '<div class="cs-stat"><span>亲密度</span><span class="cs-val intimacy">+'+intimacy+'</span></div>'+
@@ -3189,6 +3758,7 @@ function showClaimForm(miss){
     const daily = state.dailies.find(d=>d.id===m.dailyId);
     if(daily && !daily.completedDates.includes(m.date)){
       daily.completedDates.push(m.date);
+      touch(daily);
       const r = applyMult(getEffectiveReward('daily', daily));
       gainXp(r.xp, '补申报: '+m.dailyName);
       gainGold(r.gold, '补申报: '+m.dailyName);
@@ -3212,6 +3782,7 @@ function doMakeup(miss){
   // 如果今天尚未完成该每日，补做 = 打卡今天
   if(!daily.completedDates.includes(t)){
     daily.completedDates.push(t);
+    touch(daily);
   }
   // 按窗口倍率发奖（rate=0 时只标记不打款，仍算 resolved 避免逃逸）
   if(rate > 0){
@@ -3266,22 +3837,54 @@ document.addEventListener('click', function(e){
     abandonCompanion();
   }
 });
+document.addEventListener('change', function(e){
+  if(e.target.id === 'companionBindSelect'){
+    const selId = e.target.value;
+    if(!companionSession) return;
+    if(selId){
+      const t = state.todos.find(x=>x.id===selId);
+      if(t){
+        companionSession.taskId = t.id;
+        companionSession.taskName = t.name;
+        companionSession.subject = t.tag || null;
+        if(state._activeCompanion){
+          state._activeCompanion.taskId = t.id;
+          state._activeCompanion.taskName = t.name;
+          state._activeCompanion.subject = t.tag || null;
+        }
+        saveState();
+        updateCompanionSubtitle();
+        updateBindUI();
+      }
+    }
+  }
+});
 
 // ========== Actions ==========
+function getPrevStreakTier(streak){
+  // Tiers from getStreakMultiplier: drop to previous tier on streak break
+  var tiers = [3, 7, 14, 21, 30, 42, 66];
+  for(var i = tiers.length - 1; i >= 0; i--){
+    if(streak >= tiers[i]) return tiers[i];
+  }
+  return 0;
+}
+
 function checkDailyReset(){
-  const t = today();
+  var t = today();
   if(state.lastResetDate === t) return;
-  const y = yesterday();
-  // 清理超过 3 天的补做项（已过补做窗口）
+  var y = yesterday();
+  var restDays = state.restDays || [];
+
+  // Cleanup expired makeups (>3 days)
   if(!state.pendingMisses) state.pendingMisses = [];
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 3);
-  const cutoffStr = localDay(cutoff);
-  state.pendingMisses = state.pendingMisses.filter(m => {
-    if(m.resolved) return true; // 已处理，保留记录
-    // 任何未处理项超过 3 天 → 自动放弃扣 HP
+  var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 3);
+  var cutoffStr = localDay(cutoff);
+  state.pendingMisses = state.pendingMisses.filter(function(m){
+    if(m.resolved) return true;
     if(!m.resolved && m.date < cutoffStr){
-      const daily = state.dailies.find(d=>d.id===m.dailyId);
-      const mr = getReward('dailyMiss', daily ? daily.difficulty : 'medium');
+      var daily = state.dailies.find(function(d2){ return d2.id === m.dailyId; });
+      var mr = getReward('dailyMiss', daily ? daily.difficulty : 'medium');
       applyDamage(Math.abs(mr.hp), '补做超时: '+m.dailyName);
       logActivity('daily-miss', '补做超时: '+m.dailyName, 0, 0, -Math.abs(mr.hp));
       m.resolved = true; m.type = 'abandoned'; m.resolvedAt = t;
@@ -3289,13 +3892,36 @@ function checkDailyReset(){
     }
     return true;
   });
-  // 昨天未完成的每日 → 生成 pendingMisses
-  for(const d of state.dailies){
+
+  // Yesterday was a rest day → freeze streak (no misses generated)
+  if(restDays.includes(y)){
+    // Clear grace if user is back today with any daily done
+    var anyDoneToday = state.dailies.some(function(d3){ return d3.completedDates && d3.completedDates.includes(t); });
+    if(anyDoneToday && state._streakGrace){
+      state._streakGrace = null;
+      state._streakRecovery = 0;
+    }
+    // Reset daily focus counters
+    for(var i3 = 0; i3 < state.dailies.length; i3++){
+      var d3 = state.dailies[i3];
+      if(!d3.completedDates) d3.completedDates = [];
+      d3.accumulatedFocusMinutes = 0;
+    }
+    state.lastResetDate = t;
+    saveState();
+    return;
+  }
+
+  // Check for yesterday's misses
+  var missedYesterday = false;
+  for(var i = 0; i < state.dailies.length; i++){
+    var d = state.dailies[i];
     if(!d.completedDates) d.completedDates = [];
     if(d.accumulatedFocusMinutes === undefined) d.accumulatedFocusMinutes = 0;
     if(d.estimatedMinutes === undefined) d.estimatedMinutes = 0;
     if(!d.completedDates.includes(y)){
-      const alreadyPending = state.pendingMisses.some(m => m.dailyId === d.id && m.date === y);
+      missedYesterday = true;
+      var alreadyPending = state.pendingMisses.some(function(m){ return m.dailyId === d.id && m.date === y; });
       if(!alreadyPending){
         state.pendingMisses.push({
           id: uid(), dailyId: d.id, dailyName: d.name, difficulty: d.difficulty || 'medium',
@@ -3307,6 +3933,30 @@ function checkDailyReset(){
     }
     d.accumulatedFocusMinutes = 0;
   }
+
+  // ── Streak grace / tier-drop logic ──
+  var anyDoneToday2 = state.dailies.some(function(d4){ return d4.completedDates && d4.completedDates.includes(t); });
+
+  if(missedYesterday && !anyDoneToday2){
+    // Yesterday missed AND today not yet done → at risk
+    if(!state._streakGrace){
+      // First miss: start grace period, streak pauses (not resets)
+      var curStreak = calcStreak();
+      state._streakGrace = { missedDate: y, preMissStreak: curStreak };
+      toast('⚠️ 昨天漏签了！明天必须回来，否则连胜会掉档', 'warn');
+    }else if(state._streakGrace.missedDate !== y){
+      // Second consecutive miss: apply tier drop
+      var prevTier = getPrevStreakTier(state._streakGrace.preMissStreak);
+      state._streakRecovery = prevTier;
+      toast('📉 连漏两天，连胜降至 Lv.'+prevTier+'。别灰心，回来就好！', 'warn');
+      state._streakGrace = null;
+    }
+  }else if(anyDoneToday2 && state._streakGrace){
+    // User came back today → clear grace, streak resumes
+    state._streakGrace = null;
+    state._streakRecovery = 0;
+  }
+
   state.lastResetDate = t;
   saveState();
 }
@@ -3436,13 +4086,15 @@ function gainGold(amount, reason){
 }
 
 function triggerPositiveHabit(habit){
-  const r = applyMult(getEffectiveReward('positiveHabit', habit));
+  const baseR = getEffectiveReward('positiveHabit', habit);
+  const r = applyMult(baseR);
   const isHard = (habit.difficulty || 'medium') === 'hard';
   gainXp(r.xp, habit.name);
   gainGold(r.gold, habit.name);
   const t = today();
   if(!habit.history) habit.history = {};
   habit.history[t] = (habit.history[t]||0) + 1;
+  touch(habit);
   logActivity('habit-positive', habit.name+' ×'+(habit.history[t]), r.xp, r.gold, 0);
   saveState();
   render();
@@ -3452,7 +4104,9 @@ function triggerPositiveHabit(habit){
     if(card){ card.classList.add('card-glow'); setTimeout(()=>{ card.classList.add('fade'); setTimeout(()=>{ card.classList.remove('card-glow','fade'); },600); },100); }
   }
   const bar = document.getElementById('statsBar');
-  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)',cls:'xp'},{text:'+'+r.gold+' 🪙',color:'#92400e',cls:'gold'}], {hard:isHard});
+  const xpText = r.mult > 1 ? '+'+baseR.xp+'×'+r.mult.toFixed(2)+'='+r.xp+' XP' : '+'+r.xp+' XP';
+  const goldText = r.mult > 1 ? '+'+baseR.gold+'×'+r.mult.toFixed(2)+'='+r.gold+' 🪙' : '+'+r.gold+' 🪙';
+  flyReward(bar, [{text:xpText,color:'var(--xp)',cls:'xp'},{text:goldText,color:'#92400e',cls:'gold'}], {hard:isHard});
 }
 
 function triggerNegativeHabit(habit){
@@ -3461,6 +4115,7 @@ function triggerNegativeHabit(habit){
   const t = today();
   if(!habit.history) habit.history = {};
   habit.history[t] = (habit.history[t]||0) + 1;
+  touch(habit);
   logActivity('habit-negative', habit.name+' ×'+(habit.history[t]), 0, 0, r.hp);
   saveState();
   render();
@@ -3474,6 +4129,7 @@ function toggleDaily(daily){
   if(idx >= 0){
     const r = applyMult(getEffectiveReward('daily', daily));
     daily.completedDates.splice(idx,1);
+    touch(daily);
     state.stats.xp = Math.max(0, state.stats.xp - r.xp);
     state.stats.gold = Math.max(0, state.stats.gold - r.gold);
     saveState();
@@ -3481,8 +4137,10 @@ function toggleDaily(daily){
     return;
   }
   daily.completedDates.push(t);
+  touch(daily);
   daily.accumulatedFocusMinutes = daily.estimatedMinutes||0;
-  const r = applyMult(getEffectiveReward('daily', daily));
+  const baseR = getEffectiveReward('daily', daily);
+  const r = applyMult(baseR);
   const isHard = (daily.difficulty || 'medium') === 'hard';
   gainXp(r.xp, daily.name);
   gainGold(r.gold, daily.name);
@@ -3494,7 +4152,9 @@ function toggleDaily(daily){
     if(card){ card.classList.add('card-glow'); setTimeout(()=>{ card.classList.add('fade'); setTimeout(()=>{ card.classList.remove('card-glow','fade'); },600); },100); }
   }
   const bar = document.getElementById('statsBar');
-  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)',cls:'xp'},{text:'+'+r.gold+' 🪙',color:'#92400e',cls:'gold'}], {hard:isHard});
+  const xpText = r.mult > 1 ? '+'+baseR.xp+'×'+r.mult.toFixed(2)+'='+r.xp+' XP' : '+'+r.xp+' XP';
+  const goldText = r.mult > 1 ? '+'+baseR.gold+'×'+r.mult.toFixed(2)+'='+r.gold+' 🪙' : '+'+r.gold+' 🪙';
+  flyReward(bar, [{text:xpText,color:'var(--xp)',cls:'xp'},{text:goldText,color:'#92400e',cls:'gold'}], {hard:isHard});
 }
 
 function completeTodo(todo, clickX, clickY){
@@ -3511,7 +4171,9 @@ function completeTodo(todo, clickX, clickY){
 
   todo.completed = true;
   todo.completedAt = today();
-  const r = applyMult(getEffectiveReward('todo', todo));
+  touch(todo);
+  const baseR = getEffectiveReward('todo', todo);
+  const r = applyMult(baseR);
   const isHard = (todo.difficulty || 'medium') === 'hard';
   gainXp(r.xp, todo.name);
   gainGold(r.gold, todo.name);
@@ -3523,7 +4185,9 @@ function completeTodo(todo, clickX, clickY){
     if(card){ card.classList.add('card-glow'); setTimeout(()=>{ card.classList.add('fade'); setTimeout(()=>{ card.classList.remove('card-glow','fade'); },600); },100); }
   }
   const bar = document.getElementById('statsBar');
-  flyReward(bar, [{text:'+'+r.xp+' XP',color:'var(--xp)',cls:'xp'},{text:'+'+r.gold+' 🪙',color:'#92400e',cls:'gold'}], {hard:isHard});
+  const xpText = r.mult > 1 ? '+'+baseR.xp+'×'+r.mult.toFixed(2)+'='+r.xp+' XP' : '+'+r.xp+' XP';
+  const goldText = r.mult > 1 ? '+'+baseR.gold+'×'+r.mult.toFixed(2)+'='+r.gold+' 🪙' : '+'+r.gold+' 🪙';
+  flyReward(bar, [{text:xpText,color:'var(--xp)',cls:'xp'},{text:goldText,color:'#92400e',cls:'gold'}], {hard:isHard});
   // 【第二重】粒子飞行，飞抵后自动触发第三重
   if(clickX !== undefined && clickY !== undefined){
     spawnParticles(clickX, clickY);
@@ -3695,6 +4359,12 @@ function render(){
     multEl.style.display = '';
   }else if(multEl){
     multEl.style.display = 'none';
+  }
+  // Rest day button state
+  var restBtn = document.getElementById('restDayBtn');
+  if(restBtn){
+    var isRest = (state.restDays || []).includes(today());
+    restBtn.classList.toggle('active', isRest);
   }
   // 更新弹窗当前档位高亮
   const popRows = document.querySelectorAll('#streakInfoPop tbody tr');
@@ -3881,7 +4551,7 @@ function renderTodos(){
   const active = state.todos.filter(t=>!t.completed);
   const completedItems = state.todos.filter(t=>t.completed);
   if(!active.length && !completedItems.length){
-    list.innerHTML = '<div class="empty"><span class="icon">✅</span><p>还没有待办事项，点击右下角 + 添加</p></div>';
+    list.innerHTML = '<div class="empty"><span class="icon">✅</span><p>还没有待办事项，点击右下角 + 添加</p><p class="empty-hint">试试输入：<code>明天 复习数学 #数学 !! 90分钟</code></p></div>';
     return;
   }
 
@@ -3915,7 +4585,11 @@ function renderTodos(){
   for(const [key, title, cls] of groupMeta){
     const arr = groups[key];
     if(!arr.length) continue;
-    html += '<div class="todo-group"><div class="group-head '+cls+'">'+title+' <span class="cnt">'+arr.length+'</span></div>';
+    html += '<div class="todo-group"><div class="group-head '+cls+'">'+title+' <span class="cnt">'+arr.length+'</span>';
+    if(key === 'overdue' && arr.length >= 2){
+      html += '<button class="postpone-all-btn" data-action="postpone-all-overdue">全部顺延到今天</button>';
+    }
+    html += '</div>';
     html += arr.map(renderTodoCard).join('');
     html += '</div>';
   }
@@ -3938,7 +4612,7 @@ function renderTodoCard(t){
 
   // 辅助行：标签 / 提醒 / 子任务进度 / 时长（日期移到了 row2）
   const auxParts = [];
-  if(t.tag) auxParts.push('<span class="mini mini-tag"># '+esc(t.tag)+'</span>');
+  if(t.tag) auxParts.push('<span class="mini mini-tag"><span class="subj-dot" style="background:'+getSubjectColor(t.tag)+'"></span># '+esc(t.tag)+'</span>');
   if(t.reminderTime) auxParts.push('<span class="mini-date">⏰ '+t.reminderTime+'</span>');
   const subs = t.subtasks || [];
   if(subs.length){
@@ -3994,6 +4668,7 @@ function renderTodoCard(t){
           '<input type="date" class="edit-date" data-id="'+t.id+'" value="'+(t.dueDate||'')+'" style="flex:1;min-width:110px">'+
           '<select class="edit-prio" data-id="'+t.id+'">'+opts+'</select>'+
         '</div>'+
+        '<div class="subject-chips" style="margin-top:4px">'+editSubjectChips(t)+'</div>'+
         '<div class="diff-toggle" style="margin-top:6px">'+diffBtns+'</div>'+
         '<div style="margin-top:6px;font-size:11px;color:var(--text3);cursor:pointer;user-select:none" data-action="toggle-custom-reward" data-id="'+t.id+'">⚙ 自定义奖励 '+(t.customReward?'●':'▸')+'</div>'+
         (t.customReward ?
@@ -4026,7 +4701,10 @@ function renderTodoCard(t){
         '<span class="reward-xp" data-mult-tier="'+tier+'"><span class="ricon"><svg class="ixp" width="14" height="14"><use href="#icon-xp"/></svg></span><span class="rnum">+'+rd.xp+'</span></span>'+
         '<span class="reward-gold" data-mult-tier="'+tier+'"><span class="ricon">🪙</span><span class="rnum">+'+rd.gold+'</span></span>'+
       '</div>'+
-      '<button class="card-trigger todo" data-action="complete-todo" data-id="'+t.id+'" title="完成（'+DIFF_NAME[diff]+' +'+rd.xp+'XP）">✅</button>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<button class="todo-focus-btn" data-action="focus-todo" data-id="'+t.id+'" title="专注这个任务" style="flex-shrink:0">▶</button>'+
+        '<button class="card-trigger todo" data-action="complete-todo" data-id="'+t.id+'" title="完成（'+DIFF_NAME[diff]+' +'+rd.xp+'XP）">✅</button>'+
+      '</div>'+
     '</div>'+
     '<div class="swipe-actions"><button class="swipe-btn swipe-edit" data-action="edit-todo" data-id="'+t.id+'">✏️<br>编辑</button><button class="swipe-btn swipe-del" data-action="delete-todo" data-id="'+t.id+'">🗑<br>删除</button></div>'+
   '</div>';
@@ -4109,163 +4787,377 @@ function renderStudy(){
 }
 
 function renderSummary(){
-  const container = document.getElementById('summaryContainer');
+  var container = document.getElementById('summaryContainer');
   if(!container) return;
 
-  const year = summaryYear;
-  const month = summaryMonth;
-  const monthStr = year+'-'+pad(month);
-  const nextM = month===12?1:month+1;
-  const nextY = month===12?year+1:year;
-  const prevM = month===1?12:month-1;
-  const prevY = month===1?year-1:year;
+  var year = summaryYear;
+  var month = summaryMonth;
+  var monthStr = year+'-'+pad(month);
+  var nextM = month===12?1:month+1;
+  var nextY = month===12?year+1:year;
 
-  // Filter log entries for this month
-  const monthEntries = (state.activityLog || []).filter(e => {
-    const day = tsDay(e.ts);
+  // ── Compute learning stats from focusSessions ──
+  var monthSessions = (state.focusSessions || []).filter(function(s){
+    return s.date >= monthStr+'-01' && s.date < nextY+'-'+pad(nextM)+'-01';
+  });
+  var totalFocusMin = 0; var bestDayMin = 0; var studyDays = {};
+  var subjectMin = {}; // subject → total settledMin
+  for(var si = 0; si < monthSessions.length; si++){
+    var s2 = monthSessions[si];
+    totalFocusMin += (s2.settledMin || 0);
+    var subj = s2.subject || '未分类';
+    subjectMin[subj] = (subjectMin[subj] || 0) + (s2.settledMin || 0);
+    studyDays[s2.date] = (studyDays[s2.date] || 0) + (s2.settledMin || 0);
+  }
+  var studyDayCount = Object.keys(studyDays).length;
+  for(var dk in studyDays){ if(studyDays[dk] > bestDayMin) bestDayMin = studyDays[dk]; }
+
+  // ── Compute task completions ──
+  var completedTasks = 0;
+  var allTodos = state.todos || [];
+  for(var ti = 0; ti < allTodos.length; ti++){
+    var td = allTodos[ti];
+    if(td.completed && td.completedAt && td.completedAt >= monthStr+'-01' && td.completedAt < nextY+'-'+pad(nextM)+'-01') completedTasks++;
+  }
+
+  // ── Build daily completion map for burn-down data ──
+  var daysInMonth = new Date(year, month, 0).getDate();
+  var dailyDone = []; // {date, count}
+  for(var d2 = 1; d2 <= daysInMonth; d2++){
+    var ds2 = year+'-'+pad(month)+'-'+pad(d2);
+    var cnt = 0;
+    for(var ti2 = 0; ti2 < allTodos.length; ti2++){
+      if(allTodos[ti2].completed && allTodos[ti2].completedAt === ds2) cnt++;
+    }
+    // Also count dailies + habits for that day
+    var dailiesDone = (state.dailies || []).filter(function(dd){ return dd.completedDates && dd.completedDates.includes(ds2); }).length;
+    var habitsDone = (state.habits || []).filter(function(hh){ return hh.history && hh.history[ds2]; }).length;
+    dailyDone.push({ date: ds2, count: cnt + dailiesDone + habitsDone });
+  }
+
+  // ── Activity log for list/calendar (grouped by day) ──
+  var monthEntries = (state.activityLog || []).filter(function(e){
+    var day = tsDay(e.ts);
     return day >= monthStr+'-01' && day < nextY+'-'+pad(nextM)+'-01';
   });
-
-  // Aggregate stats
-  let totalXp=0,totalGoldEarned=0,totalGoldSpent=0,totalHpLost=0,pomoCount=0;
-  for(const e of monthEntries){
-    if(e.xp>0) totalXp+=e.xp;
-    if(e.gold>0) totalGoldEarned+=e.gold;
-    if(e.gold<0) totalGoldSpent+=Math.abs(e.gold);
-    if(e.hp<0) totalHpLost+=Math.abs(e.hp);
-    if(e.type==='pomodoro-complete'||e.type==='focus-complete') pomoCount++;
+  var dayMap = {};
+  for(var ei = 0; ei < monthEntries.length; ei++){
+    var e2 = monthEntries[ei];
+    var day = tsDay(e2.ts);
+    if(!dayMap[day]) dayMap[day] = [];
+    dayMap[day].push(e2);
   }
 
-  // Group entries by day
-  const dayMap = {};
-  for(const e of monthEntries){
-    const day=tsDay(e.ts);
-    if(!dayMap[day]) dayMap[day]=[];
-    dayMap[day].push(e);
-  }
+  var isCurrentMonth = (year===new Date().getFullYear() && month===new Date().getMonth()+1);
 
-  const daysInMonth = new Date(year, month, 0).getDate();
-
-  const isCurrentMonth = (year===new Date().getFullYear() && month===new Date().getMonth()+1);
-
-  container.innerHTML =
-    '<div class="summary-header">'+
-      '<button data-action="summary-prev">◀</button>'+
-      '<div class="month-title">📊 '+year+'年'+month+'月</div>'+
-      '<button data-action="summary-next"'+(isCurrentMonth?' disabled style="opacity:.3"':'')+'>▶</button>'+
-    '</div>'+
-    '<div style="display:flex;justify-content:center;margin-bottom:14px">'+
-      '<div class="view-toggle">'+
-        '<button class="'+(summaryView==='list'?'active':'')+'" data-action="summary-view-list">📋 列表</button>'+
-        '<button class="'+(summaryView==='calendar'?'active':'')+'" data-action="summary-view-cal">📅 日历</button>'+
-      '</div>'+
-    '</div>'+
-    '<div class="summary-cards">'+
-      '<div class="summary-card"><div class="sc-val green">+'+totalXp+'</div><div class="sc-label">经验</div></div>'+
-      '<div class="summary-card"><div class="sc-val amber">+'+totalGoldEarned+'</div><div class="sc-label">金币收入</div></div>'+
-      '<div class="summary-card"><div class="sc-val red">-'+totalHpLost+'</div><div class="sc-label">HP 损失</div></div>'+
-      '<div class="summary-card"><div class="sc-val">'+pomoCount+'</div><div class="sc-label">番茄数</div></div>'+
+  // ── Render ──
+  var html = '';
+  html += '<div class="summary-header">'+
+    '<button data-action="summary-prev">◀</button>'+
+    '<div class="month-title">📊 '+year+'年'+month+'月</div>'+
+    '<button data-action="summary-next"'+(isCurrentMonth?' disabled style="opacity:.3"':'')+'>▶</button>'+
     '</div>';
 
+  // ── ① Four learning stat cards ──
+  html += '<div class="summary-cards">'+
+    '<div class="summary-card"><div class="sc-val" style="color:var(--tab)">'+(totalFocusMin/60).toFixed(1)+'h</div><div class="sc-label">专注时长</div></div>'+
+    '<div class="summary-card"><div class="sc-val" style="color:var(--xp)">'+completedTasks+'</div><div class="sc-label">完成任务</div></div>'+
+    '<div class="summary-card"><div class="sc-val" style="color:var(--good)">'+studyDayCount+'</div><div class="sc-label">学习天数</div></div>'+
+    '<div class="summary-card"><div class="sc-val">'+bestDayMin+'分</div><div class="sc-label">最猛一天</div></div>'+
+    '</div>';
+
+  // ── Ledger: 总账（各科复习进度）──
+  var ledger = state.ledger || [];
+  html += '<div class="chart-section" style="text-align:left"><div class="chart-title">📚 复习总账</div>';
+  if(ledger.length === 0){
+    html += '<p style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">暂无总账数据。录入各科复习总量后，燃尽图会自动开启。</p>';
+  }else{
+    for(var li = 0; li < ledger.length; li++){
+      var entry = ledger[li];
+      var pct = entry.totalUnits > 0 ? Math.round(entry.completedUnits / entry.totalUnits * 100) : 0;
+      var remaining = Math.max(0, entry.totalUnits - entry.completedUnits);
+      html += '<div class="ledger-row" data-id="'+entry.id+'">'+
+        '<div class="ledger-top">'+
+          '<span class="ledger-subject">'+esc(entry.subject)+'</span>'+
+          '<span class="ledger-nums">'+entry.completedUnits+' / '+entry.totalUnits+' · 剩 '+remaining+'</span>'+
+        '</div>'+
+        '<div class="ledger-bar"><div class="ledger-fill" style="width:'+pct+'%"></div></div>'+
+        '<div class="ledger-actions">'+
+          '<button class="ledger-btn minus" data-action="ledger-minus" data-id="'+entry.id+'">−1</button>'+
+          '<button class="ledger-btn plus" data-action="ledger-plus" data-id="'+entry.id+'">+1</button>'+
+          '<button class="ledger-btn del" data-action="ledger-del" data-id="'+entry.id+'" style="margin-left:auto">✕</button>'+
+        '</div>'+
+        '</div>';
+    }
+  }
+  html += '<button class="ledger-add-btn" data-action="ledger-add">＋ 新增/编辑科目总账</button>';
+  html += '</div>';
+
+  // ── ② Pie chart: subject focus time ──
+  var subjKeys = Object.keys(subjectMin).sort(function(a,b){ return subjectMin[b] - subjectMin[a]; });
+  if(subjKeys.length === 0) subjKeys = ['暂无数据'];
+  html += '<div class="chart-section"><div class="chart-title">🎯 各科专注时间占比</div>';
+  html += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center">';
+  html += '<canvas id="pieChart" width="180" height="180" style="flex-shrink:0"></canvas>';
+  html += '<div class="pie-legend" id="pieLegend">';
+  for(var pk = 0; pk < subjKeys.length; pk++){
+    var hue = subjKeys[pk] === '暂无数据' ? 0 : (pk * 360 / Math.max(1, subjKeys.length));
+    var color = subjKeys[pk] === '暂无数据' ? 'var(--text3)' : 'hsl('+hue+',55%,55%)';
+    html += '<div class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+esc(subjKeys[pk])+'</div>';
+  }
+  html += '</div></div></div>';
+
+  // ── ③ Burn-down chart (real data if ledger exists, else task completions placeholder) ──
+  var burnTitle = ledger.length > 0 ? '📉 燃尽图：总剩余 vs 匀速线' : '📉 每日完成趋势（录入总账后自动切换为燃尽图）';
+  html += '<div class="chart-section"><div class="chart-title">'+burnTitle+'</div>';
+  html += '<canvas id="burnChart" width="600" height="200" style="width:100%;max-width:600px;height:200px"></canvas>';
+  html += '</div>';
+
+  // ── View toggle ──
+  html += '<div style="display:flex;justify-content:center;margin:14px 0">'+
+    '<div class="view-toggle">'+
+      '<button class="'+(summaryView==='list'?'active':'')+'" data-action="summary-view-list">📋 列表</button>'+
+      '<button class="'+(summaryView==='calendar'?'active':'')+'" data-action="summary-view-cal">📅 日历</button>'+
+    '</div>'+
+    '</div>';
+
+  container.innerHTML = html;
+
+  // Draw pie chart
+  setTimeout(function(){
+    var pieCanvas = document.getElementById('pieChart');
+    if(pieCanvas && subjKeys[0] !== '暂无数据'){
+      var ctx = pieCanvas.getContext('2d');
+      var cx = 90, cy = 90, r = 70;
+      var totalMin = 0;
+      for(var sk in subjectMin) totalMin += subjectMin[sk];
+      var angle = -Math.PI/2;
+      var colors = [];
+      for(var pk2 = 0; pk2 < subjKeys.length; pk2++){
+        colors.push('hsl('+(pk2 * 360 / subjKeys.length)+',55%,55%)');
+      }
+      for(var j = 0; j < subjKeys.length; j++){
+        var slice = (subjectMin[subjKeys[j]] / totalMin) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, angle, angle + slice);
+        ctx.fillStyle = colors[j];
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Label if slice is big enough (> 8%)
+        if(slice > 0.5){
+          var midAngle = angle + slice/2;
+          var lx = cx + Math.cos(midAngle) * (r * 0.65);
+          var ly = cy + Math.sin(midAngle) * (r * 0.65);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 11px system-ui';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(Math.round(subjectMin[subjKeys[j]]/totalMin*100)+'%', lx, ly);
+        }
+        angle += slice;
+      }
+    }
+    // Draw burn-down chart
+    var burnCanvas = document.getElementById('burnChart');
+    if(burnCanvas){
+      var bctx = burnCanvas.getContext('2d');
+      var cs2 = getComputedStyle(document.body);
+      var lineColor = cs2.getPropertyValue('--tab').trim() || '#6366f1';
+      var redColor = '#ef4444';
+      var greenColor = cs2.getPropertyValue('--good').trim() || '#10b981';
+      var textGray = cs2.getPropertyValue('--text3').trim() || '#9ca3af';
+      var gridColor = cs2.getPropertyValue('--border').trim() || '#e5e7eb';
+      var W = burnCanvas.width = burnCanvas.offsetWidth || 600;
+      var H = burnCanvas.height = 200;
+      var pad2 = { left: 44, right: 16, top: 16, bottom: 28 };
+      var pw = W - pad2.left - pad2.right;
+      var ph = H - pad2.top - pad2.bottom;
+      var useLedger = ledger.length > 0;
+
+      if(useLedger){
+        // ── Real burn-down: total remaining vs ideal line ──
+        var totalRemaining = 0;
+        for(var li2 = 0; li2 < ledger.length; li2++){
+          totalRemaining += Math.max(0, ledger[li2].totalUnits - ledger[li2].completedUnits);
+        }
+        var totalAll = 0;
+        for(var li3 = 0; li3 < ledger.length; li3++){ totalAll += ledger[li3].totalUnits; }
+        if(totalAll < 1) totalAll = 1;
+        var todayIdx = new Date().getDate() - 1; // 0-indexed day of month
+        if(todayIdx < 0) todayIdx = 0;
+        if(todayIdx >= daysInMonth) todayIdx = daysInMonth - 1;
+        var maxVal = totalAll;
+        if(maxVal < 10) maxVal = 10;
+        // Grid
+        bctx.strokeStyle = gridColor; bctx.lineWidth = 1;
+        for(var g2 = 0; g2 <= 4; g2++){
+          var gy2 = pad2.top + (ph * g2 / 4);
+          bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'right';
+          bctx.fillText(Math.round(maxVal * (1 - g2/4)), pad2.left - 6, gy2 + 3);
+          if(g2 > 0){ bctx.beginPath(); bctx.moveTo(pad2.left, gy2); bctx.lineTo(W - pad2.right, gy2); bctx.stroke(); }
+        }
+        // Ideal line: from (day1, totalRemaining) to (last-day, 0)
+        bctx.beginPath();
+        bctx.strokeStyle = textGray; bctx.lineWidth = 1.5; bctx.setLineDash([5,4]);
+        var idealStartX = pad2.left + (pw * todayIdx / Math.max(1, daysInMonth - 1));
+        var idealStartY = pad2.top + ph - (ph * totalRemaining / maxVal);
+        bctx.moveTo(idealStartX, idealStartY);
+        var idealEndX = pad2.left + pw;
+        var idealEndY = pad2.top + ph;
+        bctx.lineTo(idealEndX, idealEndY);
+        bctx.stroke();
+        bctx.setLineDash([]);
+        // Label "匀速线"
+        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'left';
+        bctx.fillText('← 理想线', idealEndX - 50, idealEndY - 6);
+        // Today's actual dot
+        var dotX = idealStartX;
+        var dotY = idealStartY;
+        bctx.beginPath(); bctx.arc(dotX, dotY, 7, 0, Math.PI*2);
+        bctx.fillStyle = totalRemaining > 0 ? redColor : greenColor; bctx.fill();
+        bctx.fillStyle = '#fff'; bctx.font = 'bold 9px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'middle';
+        bctx.fillText(totalRemaining, dotX, dotY);
+        // X-axis
+        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'alphabetic';
+        for(var xl2 = 0; xl2 < daysInMonth; xl2 += Math.max(1, Math.floor(daysInMonth/6))){
+          var lx2 = pad2.left + (pw * xl2 / Math.max(1, daysInMonth - 1));
+          bctx.fillText((xl2+1)+'日', lx2, H - pad2.bottom + 14);
+        }
+      }else{
+        // ── Placeholder: task completions per day ──
+        var maxCnt2 = 1;
+        for(var bc = 0; bc < dailyDone.length; bc++){ if(dailyDone[bc].count > maxCnt2) maxCnt2 = dailyDone[bc].count; }
+        if(maxCnt2 < 5) maxCnt2 = 5;
+        bctx.strokeStyle = gridColor; bctx.lineWidth = 1;
+        for(var g3 = 0; g3 <= 4; g3++){
+          var gy3 = pad2.top + (ph * g3 / 4);
+          bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'right';
+          bctx.fillText(Math.round(maxCnt2 * (1 - g3/4)), pad2.left - 6, gy3 + 3);
+          if(g3 > 0){ bctx.beginPath(); bctx.moveTo(pad2.left, gy3); bctx.lineTo(W - pad2.right, gy3); bctx.stroke(); }
+        }
+        bctx.beginPath();
+        bctx.strokeStyle = lineColor; bctx.lineWidth = 2.5; bctx.lineJoin = 'round';
+        var firstPoint2 = true;
+        for(var bp3 = 0; bp3 < dailyDone.length; bp3++){
+          var bx3 = pad2.left + (pw * bp3 / Math.max(1, dailyDone.length - 1));
+          var by3 = pad2.top + ph - (ph * dailyDone[bp3].count / maxCnt2);
+          if(firstPoint2){ bctx.moveTo(bx3, by3); firstPoint2 = false; }
+          else bctx.lineTo(bx3, by3);
+        }
+        bctx.stroke();
+        for(var bp4 = 0; bp4 < dailyDone.length; bp4++){
+          var bx4 = pad2.left + (pw * bp4 / Math.max(1, dailyDone.length - 1));
+          var by4 = pad2.top + ph - (ph * dailyDone[bp4].count / maxCnt2);
+          bctx.beginPath(); bctx.arc(bx4, by4, 3, 0, Math.PI*2);
+          bctx.fillStyle = lineColor; bctx.fill();
+        }
+        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'center';
+        for(var xl3 = 0; xl3 < dailyDone.length; xl3 += Math.max(1, Math.floor(dailyDone.length/6))){
+          var lx3 = pad2.left + (pw * xl3 / Math.max(1, dailyDone.length - 1));
+          bctx.fillText(dailyDone[xl3].date.slice(5), lx3, H - pad2.bottom + 14);
+        }
+      }
+    }
+  }, 50);
+
+  // ── List / Calendar view ──
   if(summaryView==='list'){
     renderSummaryList(container, year, month, daysInMonth, dayMap);
   }else{
     renderSummaryCalendar(container, year, month, daysInMonth, dayMap);
   }
 
-  // 已解锁里程碑
-  const ms = state.streakMilestones || [];
+  // ── Milestones ──
+  var ms = state.streakMilestones || [];
   if(ms.length){
-    const unlocked = STREAK_MILESTONES.filter(m => ms.includes(m.day));
+    var unlocked = STREAK_MILESTONES.filter(function(m){ return ms.includes(m.day); });
     if(unlocked.length){
-      const el = document.createElement('div');
+      var el = document.createElement('div');
       el.style.cssText = 'margin-top:16px;background:var(--card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)';
       el.innerHTML = '<div style="font-size:14px;font-weight:700;margin-bottom:10px">🏆 已解锁称号</div>'+
-        unlocked.map(m => '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:20px">'+m.icon+'</span><div><div style="font-weight:700;font-size:13px">'+m.title+'</div><div style="font-size:11px;color:var(--text3)">'+m.day+'天 · +'+m.gold+'🪙</div></div></div>').join('')+
+        unlocked.map(function(m){ return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:20px">'+m.icon+'</span><div><div style="font-weight:700;font-size:13px">'+m.title+'</div><div style="font-size:11px;color:var(--text3)">'+m.day+'天 · +'+m.gold+'🪙</div></div></div>'; }).join('')+
         '</div>';
       container.appendChild(el);
     }
   }
 
-  // 补救统计
-  const allMisses = state.pendingMisses || [];
-  const monthMisses = allMisses.filter(m => m.date >= monthStr+'-01' && m.date < nextY+'-'+pad(nextM)+'-01');
-  const claimed = monthMisses.filter(m => m.type === 'claimed');
+  // ── Remediation stats ──
+  var allMisses = state.pendingMisses || [];
+  var monthMisses = allMisses.filter(function(m){ return m.date >= monthStr+'-01' && m.date < nextY+'-'+pad(nextM)+'-01'; });
+  var claimed = monthMisses.filter(function(m){ return m.type === 'claimed'; });
   if(claimed.length){
-    // 最常见原因统计
-    const reasonCounts = {};
-    const reasonLabels = { forgot_app:'忘了打开 app', inconvenient:'当时不方便操作手机', too_late:'做完太晚 app 已切天', other:'其他' };
-    for(const m of claimed){
-      const r = m.reason || 'other';
-      reasonCounts[r] = (reasonCounts[r]||0) + 1;
+    var reasonCounts = {};
+    var reasonLabels = { forgot_app:'忘了打开 app', inconvenient:'当时不方便操作手机', too_late:'做完太晚 app 已切天', other:'其他' };
+    for(var ci = 0; ci < claimed.length; ci++){
+      var r2 = claimed[ci].reason || 'other';
+      reasonCounts[r2] = (reasonCounts[r2]||0) + 1;
     }
-    let topReason = '', topCount = 0;
-    for(const [k,v] of Object.entries(reasonCounts)){
-      if(v > topCount){ topReason = k; topCount = v; }
-    }
-    const suggestions = {
-      forgot_app: '试试设一个固定时间的提醒 📱',
-      inconvenient: '可以考虑把任务挪到方便记录的时段 ⏰',
-      too_late: '尝试提前到睡前完成 🌙',
-      other: '翻看记录找找规律 🔍'
-    };
-    const el = document.createElement('div');
-    el.style.cssText = 'margin-top:12px;background:var(--card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)';
-    el.innerHTML =
+    var topReason = '', topCount = 0;
+    for(var rk in reasonCounts){ if(reasonCounts[rk] > topCount){ topReason = rk; topCount = reasonCounts[rk]; } }
+    var suggestions = { forgot_app:'试试设一个固定时间的提醒 📱', inconvenient:'可以考虑把任务挪到方便记录的时段 ⏰', too_late:'尝试提前到睡前完成 🌙', other:'翻看记录找找规律 🔍' };
+    var el2 = document.createElement('div');
+    el2.style.cssText = 'margin-top:12px;background:var(--card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)';
+    el2.innerHTML =
       '<div style="font-size:14px;font-weight:700;margin-bottom:10px">📋 本月补充记录统计</div>'+
       '<div style="font-size:12px;color:var(--text2);line-height:1.7">'+
         '· 使用「我做过了」次数：<b>'+claimed.length+'</b> 次<br>'+
         '· 最常见原因：<b>'+(reasonLabels[topReason]||topReason)+'</b>（'+topCount+' 次）<br>'+
         '· 💡 建议：'+(suggestions[topReason]||suggestions.other)+
       '</div>';
-    container.appendChild(el);
+    container.appendChild(el2);
   }
 }
 
 function renderSummaryList(container, year, month, daysInMonth, dayMap){
-  const allDays=[];
-  for(let d=1;d<=daysInMonth;d++) allDays.push(year+'-'+pad(month)+'-'+pad(d));
+  var allDays=[];
+  for(var d=1;d<=daysInMonth;d++) allDays.push(year+'-'+pad(month)+'-'+pad(d));
 
-  const html = '<div class="day-list">'+
-    allDays.map(dayStr=>{
-      const entries=dayMap[dayStr]||[];
-      const d=new Date(dayStr+'T00:00:00');
-      const weekNames=['周日','周一','周二','周三','周四','周五','周六'];
-      const weekDay=weekNames[d.getDay()];
-      const lunar=formatLunarShort(d)||'';
+  // Add fold toggle
+  var toggleHtml = '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">'+
+    '<button class="fold-toggle" id="foldToggle" data-action="fold-all">📂 展开全部</button></div>';
 
-      let dayXp=0,dayGold=0,dayHp=0;
-      for(const e of entries){dayXp+=e.xp;dayGold+=e.gold;dayHp+=e.hp;}
-      let summaryTags=[];
+  var html = toggleHtml + '<div class="day-list">'+
+    allDays.map(function(dayStr){
+      var entries=dayMap[dayStr]||[];
+      var d2=new Date(dayStr+'T00:00:00');
+      var weekNames=['周日','周一','周二','周三','周四','周五','周六'];
+      var weekDay=weekNames[d2.getDay()];
+
+      var dayXp=0,dayGold=0,dayHp=0;
+      for(var ei2=0;ei2<entries.length;ei2++){dayXp+=entries[ei2].xp;dayGold+=entries[ei2].gold;dayHp+=entries[ei2].hp;}
+      var summaryTags=[];
       if(dayXp>0) summaryTags.push('<span class="stag stag-xp">⭐ +'+dayXp+'</span>');
       if(dayGold>0) summaryTags.push('<span class="stag stag-gold">🪙 +'+dayGold+'</span>');
       if(dayGold<0) summaryTags.push('<span class="stag stag-gold">🪙 '+dayGold+'</span>');
       if(dayHp<0) summaryTags.push('<span class="stag stag-hp">❤️ '+dayHp+'</span>');
 
-      let timelineHtml='';
+      var timelineHtml='';
       if(entries.length===0){
         timelineHtml='<div class="day-empty">这天没有记录</div>';
       }else{
         timelineHtml='<div class="day-timeline">'+
-          entries.map(e=>{
-            const effParts=[];
-            if(e.xp!==0) effParts.push((e.xp>0?'+':'')+e.xp+' XP');
-            if(e.gold!==0) effParts.push((e.gold>0?'+':'')+e.gold+' 🪙');
-            if(e.hp!==0) effParts.push((e.hp>0?'+':'')+e.hp+' HP');
-            const effClass=(e.xp>0||e.gold>0)?'gain':(e.hp<0||e.gold<0)?'loss':'neutral';
+          entries.map(function(e3){
+            var effParts=[];
+            if(e3.xp!==0) effParts.push((e3.xp>0?'+':'')+e3.xp+' XP');
+            if(e3.gold!==0) effParts.push((e3.gold>0?'+':'')+e3.gold+' 🪙');
+            if(e3.hp!==0) effParts.push((e3.hp>0?'+':'')+e3.hp+' HP');
+            var effClass=(e3.xp>0||e3.gold>0)?'gain':(e3.hp<0||e3.gold<0)?'loss':'neutral';
             return '<div class="timeline-entry">'+
-              '<span class="tl-time">'+fmtTime(e.ts)+'</span>'+
-              '<span class="tl-icon">'+(EVENT_ICONS[e.type]||'•')+'</span>'+
-              '<span class="tl-detail">'+esc(e.detail)+'</span>'+
+              '<span class="tl-time">'+fmtTime(e3.ts)+'</span>'+
+              '<span class="tl-icon">'+(EVENT_ICONS[e3.type]||'•')+'</span>'+
+              '<span class="tl-detail">'+esc(e3.detail)+'</span>'+
               '<span class="tl-effect '+effClass+'">'+effParts.join(' ')+'</span>'+
             '</div>';
           }).join('')+
         '</div>';
       }
 
-      return '<details class="day-item"'+(entries.length>0?'':'')+'>'+
+      return '<details class="day-item">'+
         '<summary>'+
-          '<span class="day-date">'+pad(d.getDate())+'日</span>'+
+          '<span class="day-date">'+pad(d2.getDate())+'日</span>'+
           '<span class="day-week">'+weekDay+'</span>'+
           '<span class="day-summary">'+summaryTags.join(' ')+'</span>'+
           '<span class="day-arrow">▼</span>'+
@@ -4274,11 +5166,95 @@ function renderSummaryList(container, year, month, daysInMonth, dayMap){
     }).join('')+
   '</div>';
 
-  const existing = container.querySelector('.day-list');
+  var existing = container.querySelector('.day-list');
   if(existing) existing.remove();
-  const cal = container.querySelector('.cal-wrap');
+  var cal = container.querySelector('.cal-wrap');
   if(cal) cal.remove();
   container.insertAdjacentHTML('beforeend', html);
+}
+
+function showLedgerForm(){
+  var ledger = state.ledger || [];
+  // Build a simple inline form: pick subject, set total, optional exam date
+  var subjects = state.subjects || [];
+  var existingSubjs = ledger.map(function(e){ return e.subject; });
+  // Merge: all known subjects + ledger subjects
+  var allSubjs = subjects.slice();
+  for(var esi = 0; esi < existingSubjs.length; esi++){
+    if(allSubjs.indexOf(existingSubjs[esi]) === -1) allSubjs.push(existingSubjs[esi]);
+  }
+  var options = allSubjs.map(function(s){
+    var sel = ledger.some(function(e){ return e.subject === s; }) ? '' : '';
+    return '<option value="'+esc(s)+'">'+esc(s)+'</option>';
+  }).join('');
+  if(!options) options = '<option value="">（无科目，请先在待办区创建）</option>';
+
+  var container = document.getElementById('summaryContainer');
+  var formHtml = '<div class="chart-section" id="ledgerForm" style="text-align:left">'+
+    '<div class="chart-title">📝 编辑复习总账</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<span style="font-size:12px;min-width:40px">科目</span>'+
+        '<select id="ledgerSubj" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+options+'</select>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<span style="font-size:12px;min-width:40px">总量</span>'+
+        '<input type="number" id="ledgerTotal" placeholder="如 186（块/节/页）" min="1" max="9999" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<span style="font-size:12px;min-width:40px">已完成</span>'+
+        '<input type="number" id="ledgerDone" placeholder="当前已完成数" min="0" max="9999" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:10px">'+
+      '<button id="ledgerSave" style="flex:1;padding:8px;border-radius:8px;border:none;background:var(--tab);color:#fff;font-weight:700;font-size:13px;cursor:pointer">保存</button>'+
+      '<button id="ledgerCancel" style="padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text3);font-size:13px;cursor:pointer">取消</button>'+
+    '</div>'+
+    '</div>';
+  var existing = document.getElementById('ledgerForm');
+  if(existing) existing.remove();
+  container.insertAdjacentHTML('beforeend', formHtml);
+
+  // Pre-fill if editing an existing subject
+  document.getElementById('ledgerSubj').addEventListener('change', function(){
+    var sel = this.value;
+    var ent = state.ledger.find(function(e){ return e.subject === sel; });
+    if(ent){
+      document.getElementById('ledgerTotal').value = ent.totalUnits;
+      document.getElementById('ledgerDone').value = ent.completedUnits;
+    }
+  });
+
+  document.getElementById('ledgerSave').addEventListener('click', function(){
+    var subj = document.getElementById('ledgerSubj').value;
+    var total = parseInt(document.getElementById('ledgerTotal').value) || 0;
+    var done = parseInt(document.getElementById('ledgerDone').value) || 0;
+    if(!subj || total <= 0) return;
+    var existingEntry = state.ledger.find(function(e){ return e.subject === subj; });
+    if(existingEntry){
+      existingEntry.totalUnits = total;
+      existingEntry.completedUnits = Math.min(done, total);
+      touch(existingEntry);
+    }else{
+      state.ledger.push({ id: uid(), subject: subj, totalUnits: total, completedUnits: Math.min(done, total), updatedAt: new Date().toISOString() });
+    }
+    saveState(); renderSummary();
+  });
+  document.getElementById('ledgerCancel').addEventListener('click', function(){
+    var f = document.getElementById('ledgerForm');
+    if(f) f.remove();
+    renderSummary();
+  });
+
+  // Trigger pre-fill on first subject
+  var firstOpt = document.getElementById('ledgerSubj').value;
+  if(firstOpt){
+    var ent2 = state.ledger.find(function(e){ return e.subject === firstOpt; });
+    if(ent2){
+      document.getElementById('ledgerTotal').value = ent2.totalUnits;
+      document.getElementById('ledgerDone').value = ent2.completedUnits;
+    }
+  }
 }
 
 function renderSummaryCalendar(container, year, month, daysInMonth, dayMap){
@@ -4357,17 +5333,27 @@ function esc(s){
 
 // ========== Stats helpers ==========
 function calcStreak(){
-  let streak = 0;
-  const d = new Date();
+  var streak = 0;
+  var d = new Date();
+  var restDays = state.restDays || [];
   while(true){
-    const ds = localDay(d);
-    const anyDone = state.dailies.some(daily =>
-      daily.completedDates && daily.completedDates.includes(ds)
-    );
+    var ds = localDay(d);
+    // Rest days: freeze streak (don't count but don't break)
+    if(restDays.includes(ds)){ d.setDate(d.getDate() - 1); continue; }
+    var anyDone = state.dailies.some(function(daily){
+      return daily.completedDates && daily.completedDates.includes(ds);
+    });
     if(!anyDone) break;
     streak++;
     d.setDate(d.getDate() - 1);
   }
+  // Apply grace period: if first miss was yesterday, treat streak as frozen (not broken)
+  var g = state._streakGrace;
+  if(g && g.missedDate === yesterday()){
+    streak = g.preMissStreak;
+  }
+  // Apply recovery base after tier drop
+  if(state._streakRecovery > streak) streak = state._streakRecovery;
   return streak;
 }
 function checkStreakMilestones(streak){
@@ -4575,9 +5561,11 @@ function showAddForm(tab){
   }else if(tab === 'dailies'){
     area.innerHTML = '<div class="add-form" style="flex-wrap:wrap;gap:8px"><input type="text" id="addInput" placeholder="任务名称..." maxlength="40" style="flex:1;min-width:120px"><input type="number" id="addTime" placeholder="分钟" min="0" max="480" style="max-width:64px;flex:0"><span style="font-size:11px;color:var(--text3)">分</span><div class="diff-toggle" id="diffToggle" style="flex-basis:100%"><button class="diff-opt e" data-diff="easy">⭐</button><button class="diff-opt m active" data-diff="medium">⭐⭐</button><button class="diff-opt h" data-diff="hard">⭐⭐⭐</button></div><div style="flex-basis:100%;display:flex;gap:8px"><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div></div>';
   }else if(tab === 'todos'){
+    _selectedTag = null;
     area.innerHTML =
       '<div class="add-form todo-add-form">'+
         '<input type="text" id="addInput" placeholder="试试：明天 复习数学 #数学 !! 困难 90分钟" maxlength="60" style="flex:1 1 100%">'+
+        '<div class="subject-chips" id="subjectChips">'+renderSubjectChips()+'</div>'+
         '<div class="todo-form-row">'+
           '<input type="date" id="addDate" style="flex:1;min-width:120px">'+
           '<select id="addPriority" style="flex:0 0 auto">'+
@@ -4609,12 +5597,16 @@ function showAddForm(tab){
 
   setTimeout(()=>{
     const inp = document.getElementById('addInput');
-    if(inp) inp.focus();
+    if(inp){
+      inp.focus();
+      if(currentAddTab === 'todos') setupSubjectAutocomplete(inp);
+    }
   },100);
 }
 
 function hideAddForm(){
   currentAddTab = null;
+  _selectedTag = null;
   document.getElementById('fab').classList.remove('spin');
   ['habits','dailies','todos','rewards'].forEach(t=>{
     const el = document.getElementById(t+'AddArea');
@@ -4631,13 +5623,13 @@ function confirmAdd(){
   if(currentAddTab === 'habits'){
     const activeDiff = document.querySelector('#diffToggle .diff-opt.active');
     const difficulty = activeDiff ? activeDiff.dataset.diff : 'medium';
-    state.habits.push({ id: uid(), name, type: habitType, difficulty, history: {} });
+    state.habits.push({ id: uid(), name, type: habitType, difficulty, history: {}, updatedAt: new Date().toISOString() });
   }else if(currentAddTab === 'dailies'){
     const timeInput = document.getElementById('addTime');
     const estMin = timeInput ? Math.max(0, parseInt(timeInput.value)||0) : 0;
     const activeDiff = document.querySelector('#diffToggle .diff-opt.active');
     const difficulty = activeDiff ? activeDiff.dataset.diff : 'medium';
-    state.dailies.push({ id: uid(), name, difficulty, completedDates: [], estimatedMinutes: estMin, accumulatedFocusMinutes: 0 });
+    state.dailies.push({ id: uid(), name, difficulty, completedDates: [], estimatedMinutes: estMin, accumulatedFocusMinutes: 0, updatedAt: new Date().toISOString() });
   }else if(currentAddTab === 'todos'){
     const parsed = parseQuickAdd(name);
     const cleanName = parsed.name || name;
@@ -4652,20 +5644,26 @@ function confirmAdd(){
     const priority = (prEl && prEl.value !== 'none') ? prEl.value : (parsed.priority || 'none');
     const estMin = (estEl && estEl.value) ? Math.max(0, parseInt(estEl.value)||0) : (parsed.estimatedMinutes||0);
     const reminderTime = (remChk && remChk.checked && remTime && remTime.value) ? remTime.value : null;
+    const finalTag = _selectedTag || parsed.tag || null;
     state.todos.push({
       id: uid(), name: cleanName, completed: false, createdAt: today(),
-      difficulty, dueDate: dueDate||null, priority, tag: parsed.tag||null,
+      difficulty, dueDate: dueDate||null, priority, tag: finalTag,
       subtasks: [], completedAt: null,
       estimatedMinutes: estMin, accumulatedFocusMinutes: 0,
-      reminderTime: reminderTime, reminded: false
+      reminderTime: reminderTime, reminded: false,
+      updatedAt: new Date().toISOString()
     });
   }else if(currentAddTab === 'rewards'){
     const priceInput = document.getElementById('addPrice');
     const price = priceInput ? Math.max(1, parseInt(priceInput.value)||100) : 100;
-    state.rewards.push({ id: uid(), name, price });
+    state.rewards.push({ id: uid(), name, price, updatedAt: new Date().toISOString() });
   }
   saveState();
-  hideAddForm();
+  // 连续录入：提交后不关表单，清空输入框，焦点保留
+  const inp = document.getElementById('addInput');
+  if(inp){ inp.value = ''; inp.focus(); }
+  _selectedTag = null;
+  if(currentAddTab === 'todos') renderSubjectChipsInline();
   render();
 }
 
@@ -4690,8 +5688,26 @@ document.getElementById('app').addEventListener('click', function(e){
 
   switch(action){
     case 'toggle-streak-info':{
-      const pop = document.getElementById('streakInfoPop');
-      if(pop){ pop.classList.toggle('show'); }
+      var pop2 = document.getElementById('streakInfoPop');
+      if(pop2){ pop2.classList.toggle('show'); }
+      break;
+    }
+    case 'toggle-rest-day':{
+      if(!state.restDays) state.restDays = [];
+      var t2 = today();
+      var idx = state.restDays.indexOf(t2);
+      var restBtn = document.getElementById('restDayBtn');
+      if(idx === -1){
+        state.restDays.push(t2);
+        if(restBtn) restBtn.classList.add('active');
+        toast('😴 今天设为休息日，连胜冻结不扣', 'info');
+      }else{
+        state.restDays.splice(idx, 1);
+        if(restBtn) restBtn.classList.remove('active');
+        toast('✅ 已取消休息日', 'info');
+      }
+      saveState();
+      render();
       break;
     }
     case 'trigger-habit':{
@@ -4709,19 +5725,19 @@ document.getElementById('app').addEventListener('click', function(e){
     }
     case 'edit-habit-diff':{
       const h = state.habits.find(x=>x.id===id);
-      if(h){ h.difficulty = btn.dataset.diff; saveState(); render(); }
+      if(h){ h.difficulty = btn.dataset.diff; touch(h); saveState(); render(); }
       break;
     }
     case 'edit-habit-type':{
       const h = state.habits.find(x=>x.id===id);
-      if(h){ h.type = btn.dataset.type; saveState(); render(); }
+      if(h){ h.type = btn.dataset.type; touch(h); saveState(); render(); }
       break;
     }
     case 'edit-habit-done':{
       const h = state.habits.find(x=>x.id===id);
       if(h){
         const nameInput = document.getElementById('editHabitName');
-        if(nameInput && nameInput.value.trim()) h.name = nameInput.value.trim();
+        if(nameInput && nameInput.value.trim()){ h.name = nameInput.value.trim(); touch(h); }
         saveState();
       }
       editingHabitId = null;
@@ -4743,14 +5759,14 @@ document.getElementById('app').addEventListener('click', function(e){
     }
     case 'edit-daily-diff':{
       const d = state.dailies.find(x=>x.id===id);
-      if(d){ d.difficulty = btn.dataset.diff; saveState(); render(); }
+      if(d){ d.difficulty = btn.dataset.diff; touch(d); saveState(); render(); }
       break;
     }
     case 'edit-daily-done':{
       const d = state.dailies.find(x=>x.id===id);
       if(d){
         const nameInput = document.getElementById('editDailyName');
-        if(nameInput && nameInput.value.trim()) d.name = nameInput.value.trim();
+        if(nameInput && nameInput.value.trim()){ d.name = nameInput.value.trim(); touch(d); }
         saveState();
       }
       editingDailyId = null;
@@ -4784,7 +5800,7 @@ document.getElementById('app').addEventListener('click', function(e){
       const t = state.todos.find(x=>x.id===id);
       if(t && t.subtasks){
         const s = t.subtasks.find(x=>x.id===btn.dataset.sub);
-        if(s){ s.done = !s.done; saveState(); render(); }
+        if(s){ s.done = !s.done; touch(t); saveState(); render(); }
       }
       break;
     }
@@ -4795,7 +5811,7 @@ document.getElementById('app').addEventListener('click', function(e){
         if(name && name.trim()){
           if(!Array.isArray(t.subtasks)) t.subtasks = [];
           t.subtasks.push({ id: uid(), name: name.trim(), done: false });
-          saveState(); render();
+          touch(t); saveState(); render();
         }
       }
       break;
@@ -4808,7 +5824,7 @@ document.getElementById('app').addEventListener('click', function(e){
     }
     case 'edit-diff':{
       const t = state.todos.find(x=>x.id===id);
-      if(t){ t.difficulty = btn.dataset.diff; saveState(); render(); }
+      if(t){ t.difficulty = btn.dataset.diff; touch(t); saveState(); render(); }
       break;
     }
     case 'edit-done':{
@@ -4821,13 +5837,62 @@ document.getElementById('app').addEventListener('click', function(e){
       if(t){
         if(t.customReward) t.customReward = null;
         else t.customReward = { xp: null, gold: null, hp: null };
-        saveState(); render();
+        touch(t); saveState(); render();
       }
       break;
     }
     case 'clear-custom-reward':{
       const t = state.todos.find(x=>x.id===id);
-      if(t){ t.customReward = null; saveState(); render(); }
+      if(t){ t.customReward = null; touch(t); saveState(); render(); }
+      break;
+    }
+    case 'pick-subject':{
+      const subj = btn.dataset.subject;
+      _selectedTag = _selectedTag === subj ? null : subj;
+      renderSubjectChipsInline();
+      // Also update autocomplete hidden input if exists
+      const inp = document.getElementById('addInput');
+      if(inp && _selectedTag){
+        // Replace or append the #tag in the input
+        const val = inp.value;
+        const hIdx = val.lastIndexOf('#');
+        if(hIdx >= 0){
+          inp.value = val.slice(0, hIdx) + '#' + _selectedTag + ' ';
+        }
+      }
+      break;
+    }
+    case 'add-subject':{
+      const name = prompt('输入新科目名称：');
+      if(name && name.trim()){
+        const clean = name.trim();
+        if(!state.subjects.includes(clean)){
+          state.subjects.push(clean);
+          saveState();
+          renderSubjectChipsInline();
+        }
+      }
+      break;
+    }
+    case 'edit-subject':{
+      const t = state.todos.find(x=>x.id===id);
+      if(t){
+        t.tag = t.tag === btn.dataset.subject ? null : btn.dataset.subject;
+        touch(t); saveState(); render();
+      }
+      break;
+    }
+    case 'postpone-all-overdue':{
+      const todayStr = today();
+      let count = 0;
+      for(const t of state.todos){
+        if(!t.completed && t.dueDate && t.dueDate < todayStr){
+          t.dueDate = todayStr;
+          touch(t);
+          count++;
+        }
+      }
+      if(count > 0){ saveState(); render(); }
       break;
     }
     case 'edit-stop':{
@@ -4836,6 +5901,28 @@ document.getElementById('app').addEventListener('click', function(e){
     case 'buy-reward':{
       const r = state.rewards.find(x=>x.id===id);
       if(r) buyReward(r);
+      break;
+    }
+    // Companion bind select change
+    case 'companion-bind':{
+      const selId = e.target.value;
+      if(!companionSession) break;
+      if(selId){
+        const t = state.todos.find(x=>x.id===selId);
+        if(t){
+          companionSession.taskId = t.id;
+          companionSession.taskName = t.name;
+          companionSession.subject = t.tag || null;
+          if(state._activeCompanion){
+            state._activeCompanion.taskId = t.id;
+            state._activeCompanion.taskName = t.name;
+            state._activeCompanion.subject = t.tag || null;
+          }
+          saveState();
+          updateCompanionSubtitle();
+          updateBindUI();
+        }
+      }
       break;
     }
     // Remediation actions
@@ -4882,11 +5969,36 @@ document.getElementById('app').addEventListener('click', function(e){
         toast('时长需在 5–180 分钟之间', 'bad');
         break;
       }
-      startCompanionSession(selectedStudyDuration);
+      startCompanionSession(selectedStudyDuration, _pendingTaskFocus || undefined);
+      break;
+    }
+    case 'focus-todo':{
+      if(companionSession){ toast('已在专注中，请先完成当前会话', 'warn'); break; }
+      const t = state.todos.find(x=>x.id===id);
+      if(t){
+        _pendingTaskFocus = { taskId: t.id, taskName: t.name, subject: t.tag || null };
+        switchTab('study');
+      }
       break;
     }
     case 'go-study':{
       switchTab('study');
+      break;
+    }
+    case 'unbind-companion':{
+      if(companionSession){
+        companionSession.taskId = null;
+        companionSession.taskName = null;
+        companionSession.subject = null;
+        if(state._activeCompanion){
+          state._activeCompanion.taskId = null;
+          state._activeCompanion.taskName = null;
+          state._activeCompanion.subject = null;
+        }
+        saveState();
+        updateCompanionSubtitle();
+        updateBindUI();
+      }
       break;
     }
     case 'go-summary':{
@@ -4915,6 +6027,38 @@ document.getElementById('app').addEventListener('click', function(e){
     }
     case 'summary-view-cal':{
       summaryView='calendar';renderSummary();break;
+    }
+    case 'fold-all':{
+      var items = document.querySelectorAll('.day-item');
+      var btn2 = document.getElementById('foldToggle');
+      var allOpen = true;
+      for(var fi = 0; fi < items.length; fi++){ if(!items[fi].hasAttribute('open')){ allOpen = false; break; } }
+      for(var fi2 = 0; fi2 < items.length; fi2++){
+        if(allOpen) items[fi2].removeAttribute('open');
+        else items[fi2].setAttribute('open','');
+      }
+      if(btn2) btn2.textContent = allOpen ? '📂 展开全部' : '📁 收起全部';
+      break;
+    }
+    // ── Ledger actions ──
+    case 'ledger-plus':{
+      var ent = state.ledger.find(function(x){ return x.id === id; });
+      if(ent){ ent.completedUnits = Math.min(ent.totalUnits, ent.completedUnits + 1); touch(ent); saveState(); renderSummary(); }
+      break;
+    }
+    case 'ledger-minus':{
+      var ent2 = state.ledger.find(function(x){ return x.id === id; });
+      if(ent2){ ent2.completedUnits = Math.max(0, ent2.completedUnits - 1); touch(ent2); saveState(); renderSummary(); }
+      break;
+    }
+    case 'ledger-del':{
+      state.ledger = state.ledger.filter(function(x){ return x.id !== id; });
+      saveState(); renderSummary();
+      break;
+    }
+    case 'ledger-add':{
+      showLedgerForm();
+      break;
     }
     case 'cal-day':{
       const dateStr = btn.dataset.date;
@@ -5000,8 +6144,12 @@ if(entries.length===0 && claimz.length===0){
     }
     case 'sync-now':{
       document.getElementById('headerUser').classList.remove('open');
-      if(cloudUser){ toast('🔄 正在同步...', 'info'); scheduleCloudPush(); }
-      else{ toast('请先登录', 'warn'); }
+      if(cloudUser && !cloudSyncing){
+        toast('🔄 正在同步...', 'info');
+        pushToCloud().then(() => toast('☁️ 已同步', 'info')).catch(() => {});
+      }else if(cloudUser){
+        toast('正在同步中...', 'info');
+      }else{ toast('请先登录', 'warn'); }
       break;
     }
     case 'change-password':{
@@ -5088,12 +6236,12 @@ document.getElementById('app').addEventListener('change', function(e){
   // 待办内联编辑：日期/优先级
   if(e.target.classList.contains('edit-date')){
     const t = state.todos.find(x=>x.id===e.target.dataset.id);
-    if(t){ t.dueDate = e.target.value || null; saveState(); render(); }
+    if(t){ t.dueDate = e.target.value || null; touch(t); saveState(); render(); }
     return;
   }
   if(e.target.classList.contains('edit-prio')){
     const t = state.todos.find(x=>x.id===e.target.dataset.id);
-    if(t){ t.priority = e.target.value; saveState(); render(); }
+    if(t){ t.priority = e.target.value; touch(t); saveState(); render(); }
     return;
   }
   if(e.target.classList.contains('edit-custom-xp') || e.target.classList.contains('edit-custom-gold') || e.target.classList.contains('edit-custom-hp')){
@@ -5103,7 +6251,7 @@ document.getElementById('app').addEventListener('change', function(e){
       if(e.target.classList.contains('edit-custom-xp')) t.customReward.xp = val;
       else if(e.target.classList.contains('edit-custom-gold')) t.customReward.gold = val;
       else if(e.target.classList.contains('edit-custom-hp')) t.customReward.hp = val;
-      saveState();
+      touch(t); saveState();
     }
     return;
   }
@@ -5217,6 +6365,7 @@ function switchTab(tab){
   });
 
   hideAddForm();
+  if(tab !== 'study') _pendingTaskFocus = null;
   updateFab();
   render();
 }
@@ -5266,6 +6415,7 @@ function checkReminders(){
     if(isNaN(when.getTime())) continue;
     if(now >= when){
       t.reminded = true;
+      touch(t);
       changed = true;
       if(typeof Notification!=='undefined' && Notification.permission==='granted'){
         try{ new Notification('⏰ 待办提醒', { body: t.name }); }catch(err){}
@@ -5350,21 +6500,46 @@ const AI_TOOLS = [
       description: '查看今日进度。当用户问"今天怎么样"、"进度"、"还有多少任务"、"完成情况"时调用。',
       parameters: { type: 'object', properties: {}, required: [] }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_task_overview',
+      description: '获取任务全景+7天趋势，用于梳理、排优先级、发现异常。当用户说"今天干啥"、"帮我梳理"、"我有点乱"、"看看我最近"、"最近状态"、"最近怎么样"、"整理一下"、"安排"、"计划今天"、"有什么要做的"、"分析一下"时调用。普通闲聊不要调用。',
+      parameters: { type: 'object', properties: {}, required: [] }
+    }
   }
 ];
 
 function getSystemPrompt(){
-  return '你是由 DeepSeek 驱动的习惯养成助理，名叫"小狐"。用户会说中文。'
+  return '你是由 DeepSeek 驱动的习惯养成教练，名叫"小狐"。用户是正在备考的学生，你是他的陪伴型教练——支持者，不是监工。'
     + '千万不要说自己是 GPT、ChatGPT 或 OpenAI 的产品。被问到模型时，回答"我是 DeepSeek 驱动的 AI 助理"。'
-    + '你可以通过函数调用来帮助用户在页面中创建习惯、每日任务、待办和奖励。'
-    + '规则：\n'
-    + '- 用中文回复，语气温暖、鼓励，像朋友一样\n'
-    + '- 回复简洁（1-3句话），不要啰嗦\n'
+    + '你可以通过函数调用来帮助用户创建习惯、每日任务、待办和奖励，也可以用 get_task_overview 查看全局来帮用户梳理。\n'
+    + '教练规则：\n'
+    + '1. 先诊断、再开方：发现异常（某科连续多天没碰、完成率明显下滑、习惯断签）时，先问原因，不要劈头就排任务。\n'
+    + '2. 一次只问一个问题（漏斗式），不要一口气抛好几个问题。根据回答再深入。\n'
+    + '3. 按用户回答分叉调整：\n'
+    + '   - 答"太难" → 建议拆小步骤 / 降低难度\n'
+    + '   - 答"没时间" → 今天只建议最小的一步\n'
+    + '   - 答"不想学 / 累" → 给轻量选项，不硬逼\n'
+    + '4. 梳理建议时：一次最多推荐 3 件，并明确标出「如果只做一件，先做这个」。\n'
+    + '5. 大任务（困难/史诗）主动建议拆成几步，先做第一步。\n'
+    + '6. 不愧疚轰炸：绝不让用户产生"我太差了"的挫败感。用户漏了一天、没完成——这不是失败，是数据。帮用户找原因、调策略，不责备。\n'
+    + '7. 排序优先级：逾期 > 今天到期 > 高优先级 > 其它。\n'
+    + '8. 调度规则（底座 + 增强 + 只增不减）：\n'
+    + '   - 底座：如果 get_task_overview 返回了总账数据，先算出每天匀速量（总剩余 ÷ 剩余天数），这是最低线，不能低于它。\n'
+    + '   - 增强：在底座之上，根据最近哪科弱（本周时长短）、哪科逾期多，做微调——给弱科多排一点、给强科少排一点。\n'
+    + '   - 只增不减：当天建议的任务量只能比底座多、不能比底座少。用户说"累/不想学"时，可以调整具体做什么（换轻量的），但不能把总量砍到匀速线以下。\n'
+    + '   - 你可以用 create_todo 直接帮用户建任务。建议时把每个任务和总账里的科目关联起来（设 #科目）。\n'
+    + '回复风格：\n'
+    + '- 用中文，温暖鼓励，像朋友一样\n'
+    + '- 回复简洁（2-4句话比较合适），不要长篇大论\n'
     + '- 当用户想创建习惯/任务/奖励时，主动调用对应函数\n'
     + '- 不要猜测缺失的参数，先和用户确认\n'
     + '- 调用函数后等待结果，然后简短告知用户已完成\n'
     + '- 如果用户只是想聊天提问，正常回复即可\n'
     + '- 难度默认 medium，正向习惯不需要惩罚参数\n'
+    + '- get_task_overview 返回的数据用于帮你分析，回复时要翻译成"小狐"的温暖口吻，不要干念数据列表\n'
     + '用户统计：' + '等级'+state.stats.level+'，🔥连续'+calcStreak()+'天，🪙金币'+state.stats.gold+'，❤️生命'+state.stats.hp;
 }
 
@@ -5375,6 +6550,7 @@ function executeToolCall(toolName, args){
     case 'create_todo': return createTodoTool(args);
     case 'create_reward': return createRewardTool(args);
     case 'get_today_status': return getTodayStatusTool();
+    case 'get_task_overview': return getTaskOverviewTool();
     default: return { success: false, message: '未知工具: ' + toolName };
   }
 }
@@ -5385,7 +6561,8 @@ function createHabitTool(args){
     id, name: args.name, type: args.type || 'positive',
     difficulty: args.difficulty || 'medium',
     customReward: null, penalty: null, history: {},
-    streak: 0, best_streak: 0, archived: false
+    streak: 0, best_streak: 0, archived: false,
+    updatedAt: new Date().toISOString()
   };
   state.habits.push(habit);
   saveState(); render(); initAllSwipes();
@@ -5400,7 +6577,8 @@ function createDailyTool(args){
     customReward: null, completedDates: [],
     estimatedMinutes: args.estimatedMinutes || 0,
     accumulatedFocusMinutes: 0,
-    streak: 0, best_streak: 0, archived: false, penalty: null
+    streak: 0, best_streak: 0, archived: false, penalty: null,
+    updatedAt: new Date().toISOString()
   };
   state.dailies.push(daily);
   saveState(); render(); initAllSwipes();
@@ -5416,7 +6594,8 @@ function createTodoTool(args){
     priority: args.priority || 'medium', tag: null, subtasks: [],
     completedAt: null, estimatedMinutes: args.estimatedMinutes || 0,
     accumulatedFocusMinutes: 0, reminderTime: null, reminded: false,
-    customReward: null, penalty: null
+    customReward: null, penalty: null,
+    updatedAt: new Date().toISOString()
   };
   state.todos.push(todo);
   saveState(); render(); initAllSwipes();
@@ -5425,7 +6604,7 @@ function createTodoTool(args){
 
 function createRewardTool(args){
   const id = uid();
-  const reward = { id, name: args.name, price: args.price || 100, createdAt: new Date().toISOString() };
+  const reward = { id, name: args.name, price: args.price || 100, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   state.rewards.push(reward);
   saveState(); render(); initAllSwipes();
   return { success: true, message: '已创建奖励：' + args.name + '（' + (args.price||100) + '🪙）' };
@@ -5441,6 +6620,162 @@ function getTodayStatusTool(){
       +' | ❤️'+state.stats.hp+' | 🪙'+state.stats.gold
       +' | 习惯'+active+'个，每日未完成'+dailiesLeft+'个，待办'+todosLeft+'个'
   };
+}
+
+function getTaskOverviewTool(){
+  var t = today();
+  var y = yesterday();
+  var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 6);
+  var weekAgoStr = localDay(weekAgo);
+
+  // ── 逾期 / 今明待办 ──
+  var overdueTodos = []; var todayTodos = []; var tomorrowTodos = [];
+  var tomorrowStr = localDay(new Date(Date.now() + 86400000));
+  var allTodos = state.todos || [];
+  for(var i = 0; i < allTodos.length; i++){
+    var td = allTodos[i];
+    if(td.completed) continue;
+    var item = { name: td.name, dueDate: td.dueDate || null, subject: td.tag || null, priority: td.priority || 'none', estimatedMinutes: td.estimatedMinutes || 0, difficulty: td.difficulty || 'medium', id: td.id };
+    if(td.dueDate && td.dueDate < t) overdueTodos.push(item);
+    else if(td.dueDate === t) todayTodos.push(item);
+    else if(td.dueDate === tomorrowStr) tomorrowTodos.push(item);
+  }
+  // Sort: high priority first, then by date
+  var prioRank = { high:0, medium:1, low:2, none:3 };
+  overdueTodos.sort(function(a,b){ return prioRank[a.priority] - prioRank[b.priority] || (a.dueDate||'').localeCompare(b.dueDate||''); });
+  todayTodos.sort(function(a,b){ return prioRank[a.priority] - prioRank[b.priority]; });
+  tomorrowTodos.sort(function(a,b){ return prioRank[a.priority] - prioRank[b.priority]; });
+
+  // ── 未打卡习惯 ──
+  var uncheckedHabits = [];
+  var allHabits = state.habits || [];
+  for(var i = 0; i < allHabits.length; i++){
+    var h = allHabits[i];
+    if(h.archived) continue;
+    if(!h.history) h.history = {};
+    if(!h.history[t]) uncheckedHabits.push({ name: h.name, streak: h.streak || 0, type: h.type, difficulty: h.difficulty || 'medium' });
+  }
+
+  // ── 未完成每日 ──
+  var uncompletedDailies = [];
+  var allDailies = state.dailies || [];
+  for(var i = 0; i < allDailies.length; i++){
+    var d = allDailies[i];
+    if(d.archived) continue;
+    if(!d.completedDates) d.completedDates = [];
+    if(!d.completedDates.includes(t)) uncompletedDailies.push({ name: d.name, difficulty: d.difficulty || 'medium', estimatedMinutes: d.estimatedMinutes || 0 });
+  }
+
+  // ── 各科本周累计专注分钟 ──
+  var subjectMinutes = {};
+  var allSessions = state.focusSessions || [];
+  for(var i = 0; i < allSessions.length; i++){
+    var s = allSessions[i];
+    if(s.date >= weekAgoStr && s.date <= t){
+      var subj = s.subject || '未分类';
+      subjectMinutes[subj] = (subjectMinutes[subj] || 0) + (s.settledMin || 0);
+    }
+  }
+
+  // ── 连胜状态 ──
+  var streak = calcStreak();
+  var atRisk = false;
+  // At risk: no completed dailies today yet, and streak > 0
+  var anyDailyDoneToday = allDailies.some(function(d){ return d.completedDates && d.completedDates.includes(t); });
+  if(streak > 0 && !anyDailyDoneToday) atRisk = true;
+
+  // ── 7 天趋势 ──
+  var trendDays = [];
+  var dailyCompletions = []; // {date, todoCount, dailyCount, habitCount, total}
+  var subjectTrend = {}; // {subject: [day1, day2, ...]}
+  var streakCurve = [];
+  var brokenHabits7d = [];
+
+  for(var d2 = 0; d2 < 7; d2++){
+    var dt = new Date(); dt.setDate(dt.getDate() - (6 - d2));
+    var ds = localDay(dt);
+    trendDays.push(ds);
+
+    // Daily completions
+    var todoCnt = allTodos.filter(function(td2){ return td2.completed && td2.completedAt === ds; }).length;
+    var dailyCnt = allDailies.filter(function(dd){ return dd.completedDates && dd.completedDates.includes(ds); }).length;
+    var habitCnt = allHabits.filter(function(hh){ return hh.history && hh.history[ds]; }).length;
+    dailyCompletions.push({ date: ds, todoCount: todoCnt, dailyCount: dailyCnt, habitCount: habitCnt, total: todoCnt + dailyCnt + habitCnt });
+
+    // Subject trend
+    for(var i2 = 0; i2 < allSessions.length; i2++){
+      var s2 = allSessions[i2];
+      if(s2.date === ds){
+        var subj2 = s2.subject || '未分类';
+        if(!subjectTrend[subj2]) subjectTrend[subj2] = [0,0,0,0,0,0,0];
+        subjectTrend[subj2][d2] = (subjectTrend[subj2][d2] || 0) + (s2.settledMin || 0);
+      }
+    }
+
+    // Streak curve: compute streak as of each day
+    var streakOnDay = 0;
+    var cursor = new Date(dt);
+    while(true){
+      var cds = localDay(cursor);
+      var anyDone = allDailies.some(function(dd2){ return dd2.completedDates && dd2.completedDates.includes(cds); });
+      if(!anyDone) break;
+      streakOnDay++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    streakCurve.push({ date: ds, streak: streakOnDay });
+  }
+
+  // Broken habits (7d): habits that had a streak break in last 7 days
+  for(var i3 = 0; i3 < allHabits.length; i3++){
+    var h3 = allHabits[i3];
+    if(h3.archived || !h3.history) continue;
+    var hist = h3.history;
+    for(var d3 = 0; d3 < trendDays.length - 1; d3++){
+      if(hist[trendDays[d3]] && !hist[trendDays[d3 + 1]]){
+        brokenHabits7d.push({ name: h3.name, missedDate: trendDays[d3 + 1], wasStreak: h3.streak || 0 });
+        break; // one entry per habit
+      }
+    }
+  }
+
+  // ── Build message ──
+  var subjKeys = Object.keys(subjectMinutes).sort(function(a,b){ return subjectMinutes[b] - subjectMinutes[a]; });
+  var msg = '📋 逾期'+overdueTodos.length+'个 · 今天到期'+todayTodos.length+'个 · 明天到期'+tomorrowTodos.length+'个\n';
+  msg += '🔁 未打卡习惯'+uncheckedHabits.length+'个 · 每日未完成'+uncompletedDailies.length+'个\n';
+  msg += '🔥 连续'+streak+'天' + (atRisk ? ' ⚠️ 今天还没打卡！' : ' ✅ 已打卡') + '\n';
+  msg += '📊 本周各科：';
+  if(subjKeys.length === 0) msg += '暂无记录';
+  for(var i9 = 0; i9 < subjKeys.length; i9++){
+    if(i9 > 0) msg += ' · ';
+    msg += subjKeys[i9] + ' ' + subjectMinutes[subjKeys[i9]] + '分';
+  }
+  msg += '\n📈 近7天完成趋势：' + dailyCompletions.map(function(dc){ return dc.date.slice(5)+':'+dc.total+'项'; }).join(' ');
+
+  // ── Ledger data ──
+  var ledger = state.ledger || [];
+  if(ledger.length > 0){
+    msg += '\n\n=== 复习总账 ===';
+    var totalRemainingAll = 0;
+    for(var il = 0; il < ledger.length; il++){
+      var le = ledger[il];
+      var rem = Math.max(0, le.totalUnits - le.completedUnits);
+      totalRemainingAll += rem;
+      msg += '\n'+le.subject + '：' + le.completedUnits + '/' + le.totalUnits + ' · 剩余' + rem;
+    }
+    msg += '\n总剩余：' + totalRemainingAll;
+    // Even pace suggestion: remaining / days left in month
+    var daysLeft = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate() + 1;
+    if(daysLeft < 1) daysLeft = 1;
+    msg += ' · 每天至少' + Math.ceil(totalRemainingAll / daysLeft) + '块才能匀速完成';
+  }
+
+  return { success: true, message: msg, data: {
+    overdueTodos: overdueTodos, todayTodos: todayTodos, tomorrowTodos: tomorrowTodos,
+    uncheckedHabits: uncheckedHabits, uncompletedDailies: uncompletedDailies,
+    subjectMinutes: subjectMinutes, streak: streak, atRisk: atRisk,
+    trend: { dailyCompletions: dailyCompletions, subjectTrend: subjectTrend, streakCurve: streakCurve, brokenHabits7d: brokenHabits7d },
+    ledger: ledger
+  }};
 }
 
 const AI_SYSTEM_MSG = { role: 'system', content: '' };
@@ -5488,7 +6823,7 @@ async function sendAiMessage(userText){
   // Add user message
   addAiBubble('user', userText);
   state.aiChatHistory.push({ role: 'user', content: userText });
-  if(state.aiChatHistory.length > 50) state.aiChatHistory = state.aiChatHistory.slice(-50);
+  if(state.aiChatHistory.length > 500) state.aiChatHistory = state.aiChatHistory.slice(-500);
   saveState();
 
   // Add typing indicator
@@ -5561,7 +6896,7 @@ async function sendAiMessage(userText){
     typingEl?.remove();
     addAiBubble('assistant', '😥 出错了：' + e.message);
   }
-  if(state.aiChatHistory.length > 50) state.aiChatHistory = state.aiChatHistory.slice(-50);
+  if(state.aiChatHistory.length > 500) state.aiChatHistory = state.aiChatHistory.slice(-500);
   saveState();
 }
 
@@ -5575,6 +6910,38 @@ function addAiBubble(role, text){
     div.textContent = text;
   }
   messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function renderAiHistory(){
+  var messagesEl = document.getElementById('aiMessages');
+  var history = state.aiChatHistory || [];
+  // Clear existing bubbles (keep empty state if present, will decide below)
+  var bubbles = messagesEl.querySelectorAll('.ai-msg');
+  for(var i = 0; i < bubbles.length; i++){ bubbles[i].remove(); }
+  var emptyEl = messagesEl.querySelector('.ai-empty');
+  if(emptyEl) emptyEl.remove();
+
+  if(!history.length){
+    // Show empty state welcome
+    var div = document.createElement('div');
+    div.className = 'ai-empty';
+    div.innerHTML = '<span class="ai-empty-icon">🤖</span>你好！我是你的习惯养成教练。<br>试试说：<em>"帮我创建一个每天跑步的习惯"</em>';
+    messagesEl.appendChild(div);
+    return;
+  }
+
+  // Render visible messages only (user + assistant; skip tool/tool_calls)
+  for(var i = 0; i < history.length; i++){
+    var m = history[i];
+    if(m.role === 'user'){
+      addAiBubble('user', m.content || '');
+    }else if(m.role === 'assistant' && m.content && !m.tool_calls){
+      // Only render assistant messages with text content, not tool_calls intermediates
+      addAiBubble('assistant', m.content);
+    }
+    // Skip: role==='tool', assistant with tool_calls but no content
+  }
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
@@ -5621,6 +6988,7 @@ function toggleAiPanel(){
   if(hidden){
     panel.classList.remove('hidden');
     fab.classList.add('hidden');
+    renderAiHistory();
     setTimeout(() => input.focus(), 100);
   }else{
     panel.classList.add('hidden');
@@ -5670,7 +7038,8 @@ async function init(){
           pullFromCloud().then(cd => ({ok:true, cd})),
           new Promise(r => setTimeout(() => r({ok:false}), 3000))
         ]);
-        if(result.ok && result.cd){ mergeCloudIntoState(result.cd); }
+        if(result.ok && result.cd){ mergeCloudIntoState(result.cd); _pullDone = true; updateSyncStatus('ok'); }
+        else if(!result.ok){ updateSyncStatus('fail'); }
       }catch(e){ console.warn('Init cloud pull failed:', e.message); }
     }
     updateUserUI();
@@ -5686,27 +7055,71 @@ async function init(){
         durationMin: saved.durationMin,
         startedAt: saved.startedAt,
         timerId: null,
-        microTimerId: null
+        microTimerId: null,
+        taskId: saved.taskId || null,
+        taskName: saved.taskName || null,
+        subject: saved.subject || null
       };
       startCompanionUI();
       companionSession.timerId = setInterval(companionTick, 500);
       scheduleCompanionMicro();
       updateCompanionTimerDisplay();
+      updateCompanionSubtitle();
+      updateBindUI();
       updateCompanionTitle();
     } else {
+      // Session expired while page was closed — can't verify actual study time.
+      // Discard gracefully: record elapsed (capped at planned) as abandoned.
+      const elapsedMin = Math.floor(elapsed / 60000);
+      const cappedMin = Math.min(elapsedMin, saved.durationMin);
       companionSession = {
         durationMin: saved.durationMin,
         startedAt: saved.startedAt,
         timerId: null,
-        microTimerId: null
+        microTimerId: null,
+        taskId: saved.taskId || null,
+        taskName: saved.taskName || null,
+        subject: saved.subject || null
       };
       document.getElementById('companionOverlay').classList.remove('hidden');
-      completeCompanion();
+      // Use executeAbandon logic inline: record capped time, half rewards
+      const settleMin = Math.floor(cappedMin * 0.5);
+      const m = getStreakMultiplier();
+      const xp = Math.round(settleMin * REWARDS.companionXPPerMin * m);
+      const gold = Math.round(settleMin * REWARDS.companionGoldPerMin * m);
+      const intimacy = Math.round(settleMin * REWARDS.companionIntimacyPerMin * 10) / 10;
+      gainXp(xp, '专注超时自动结算');
+      gainGold(gold, '专注超时自动结算');
+      state.intimacy = (state.intimacy || 0) + intimacy;
+      state.totalCompanionMinutes = (state.totalCompanionMinutes || 0) + cappedMin;
+      recordFocusSession(false);
+      if(companionSession.taskId){
+        const todo = state.todos.find(t => t.id === companionSession.taskId);
+        if(todo){
+          todo.accumulatedFocusMinutes = (todo.accumulatedFocusMinutes || 0) + cappedMin;
+          touch(todo);
+        }
+      }
+      logActivity('focus-timeout', '专注超时自动结算 ('+cappedMin+'分钟)', xp, gold, 0);
+      const boundSubj = companionSession.subject || null;
+      const boundTaskId = companionSession.taskId;
+      companionSession = null;
+      delete state._activeCompanion;
+      document.title = '习惯养成';
+      saveState();
+      render();
+      setTimeout(() => {
+        document.getElementById('companionOverlay').classList.add('hidden');
+        const foxWrap = document.getElementById('companionFoxWrap');
+        if(foxWrap) foxWrap.classList.remove('hop','stand-up');
+        showSettlementPanel(cappedMin, xp, gold, intimacy, false, boundSubj, boundTaskId);
+      }, 800);
     }
   }
 
   saveState();
   render();
+  renderAiHistory();
   initAllSwipes();
   checkReminders();
   setInterval(checkReminders, 30000);
