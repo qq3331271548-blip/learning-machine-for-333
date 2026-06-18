@@ -1026,15 +1026,19 @@ body{
   font-family:var(--font);-webkit-tap-highlight-color:transparent;
 }
 .streak-info-btn:hover,.streak-info-btn:active{opacity:1;color:var(--text);border-color:var(--text)}
-.rest-day-btn{
-  font-size:9px;font-weight:600;padding:2px 6px;border-radius:6px;
-  border:1.5px solid var(--border);background:transparent;color:var(--text3);
-  cursor:pointer;white-space:nowrap;flex-shrink:0;
-  font-family:var(--font);-webkit-tap-highlight-color:transparent;
-  transition:all .2s;
+.rest-day-hint{
+  font-size:9px;color:var(--text3);white-space:nowrap;flex-shrink:0;
+  font-family:var(--font);
 }
-.rest-day-btn:hover,.rest-day-btn:active{opacity:1;color:var(--focus);border-color:var(--focus);background:var(--focus-bg)}
-.rest-day-btn.active{background:var(--focus-bg);color:var(--focus);border-color:var(--focus)}
+.rest-day-section{text-align:left}
+.rest-day-quota{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);margin-bottom:4px}
+.rest-quota-btn{width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font);line-height:1;transition:all .15s}
+.rest-quota-btn:hover{border-color:var(--tab);color:var(--tab)}
+.rest-quota-val{font-weight:700;font-size:13px;color:var(--text);min-width:16px;text-align:center}
+.rest-quota-unit{font-size:10px;color:var(--text3)}
+.rest-day-toggle-btn{width:100%;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.rest-day-toggle-btn:hover{border-color:var(--focus);color:var(--focus)}
+.rest-day-toggle-btn.active{background:var(--focus-bg);color:var(--focus);border-color:var(--focus)}
 .streak-info-popover{
   display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);
   margin-top:6px;background:var(--card);border-radius:14px;
@@ -1158,6 +1162,9 @@ body{
 }
 .help-btn:hover{background:var(--tab-bg);border-color:var(--tab)}
 .help-btn:active{transform:scale(.94)}
+.section-help{display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:10px;font-family:var(--font);padding:0;line-height:1;transition:all .15s;flex-shrink:0}
+.section-help:hover{color:var(--text);border-color:var(--text2)}
+.companion-help-btn{position:absolute;top:12px;right:12px;z-index:10}
 
 /* ===== Help Overlay ===== */
 .help-overlay{
@@ -1349,9 +1356,9 @@ body{
 .ai-key-toggle:hover{color:var(--text)}
 .ai-model-select{background:var(--bg);color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:var(--font);padding:3px 4px;cursor:pointer;outline:none;min-width:0}
 .ai-model-select:focus{border-color:var(--tab)}
-.ai-think-toggle{background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;padding:2px 5px;transition:all .15s;line-height:1;opacity:.4}
-.ai-think-toggle:hover{opacity:.7}
-.ai-think-toggle.on{opacity:1;border-color:var(--tab);background:rgba(99,102,241,.1)}
+.ai-think-toggle{background:none;border:1px solid var(--border);border-radius:6px;font-size:10px;cursor:pointer;padding:3px 6px;transition:all .15s;line-height:1;color:var(--text3);font-family:var(--font);white-space:nowrap}
+.ai-think-toggle:hover{border-color:var(--tab);color:var(--tab)}
+.ai-think-toggle.on{background:var(--tab);color:#fff;border-color:var(--tab);font-weight:600}
 .ai-think-box{margin:4px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px}
 .ai-think-summary{display:flex;align-items:center;gap:4px;padding:6px 10px;cursor:pointer;color:var(--text3);user-select:none;font-size:10px}
 .ai-think-summary:hover{color:var(--text2)}
@@ -1472,7 +1479,7 @@ body{
         <span class="stat-mini-sub" id="streakMult" style="display:none"></span>
       </div>
       <button class="streak-info-btn" data-action="toggle-streak-info" title="奖励机制">!</button>
-      <button class="rest-day-btn" id="restDayBtn" data-action="toggle-rest-day" title="休息日：连胜冻结，不扣不罚">😴 休息日</button>
+      <span class="rest-day-hint" id="restDayHint" style="display:none"></span>
       <div class="sep"></div>
       <div class="stat-mini" id="todayBadge">
         <span class="stat-mini-sub">✅今日</span>
@@ -1503,6 +1510,19 @@ body{
       </table>
       <div class="pop-note"><strong>✦ 经验</strong> 和 <strong>🪙 金币</strong> 享受倍率加成<br><strong>❤️ 生命</strong> 不受倍率影响</div>
       <div class="pop-note" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><strong>🎯 里程碑奖励：</strong>连续 7 天 +500💰 | 21 天 +2000💰 | 30 天 +5000💰 | 66 天 +20000💰 | 100 天 +50000💰</div>
+      <!-- 休息日区块 -->
+      <div class="rest-day-section" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div class="pop-note" style="margin-bottom:8px">😴 <strong>休息日</strong>：连胜冻结不扣不罚，到期自动恢复</div>
+        <div class="rest-day-quota">
+          <span>每周配额</span>
+          <button class="rest-quota-btn" data-action="rest-quota-minus">−</button>
+          <span class="rest-quota-val" id="restQuotaVal">0</span>
+          <button class="rest-quota-btn" data-action="rest-quota-plus">+</button>
+          <span class="rest-quota-unit">天</span>
+        </div>
+        <div class="rest-day-used" id="restDayUsed" style="font-size:11px;color:var(--text3);margin:4px 0 6px"></div>
+        <button class="rest-day-toggle-btn" id="restDayToggleBtn" data-action="toggle-rest-day">设为休息日</button>
+      </div>
     </div>
   </div>
 
@@ -1517,22 +1537,25 @@ body{
   <!-- Tab Contents -->
   <div class="tab-stage">
   <div class="tab-content active" id="tab-habits">
+    <div class="todos-head"><span class="todos-title">🔄 习惯打卡</span><button class="section-help" data-help="habits" title="教程">?</button></div>
     <div class="card-list" id="habitsList"></div>
     <div id="habitsAddArea"></div>
   </div>
   <div class="tab-content" id="tab-dailies">
+    <div class="todos-head"><span class="todos-title">📅 每日任务</span><button class="section-help" data-help="dailies" title="教程">?</button></div>
     <div class="card-list" id="dailiesList"></div>
     <div id="dailiesAddArea"></div>
   </div>
   <div class="tab-content" id="tab-todos">
     <div class="todos-head">
       <span class="todos-title">📋 我的待办</span>
-      <button class="help-btn" id="todoHelpBtn" title="使用教程">❓ 教程</button>
+      <button class="section-help" data-help="todos" title="教程">?</button>
     </div>
     <div class="card-list" id="todosList"></div>
     <div id="todosAddArea"></div>
   </div>
   <div class="tab-content" id="tab-rewards">
+    <div class="todos-head"><span class="todos-title">🎁 奖励商店</span><button class="section-help" data-help="rewards" title="教程">?</button></div>
     <div class="card-list" id="rewardsList"></div>
     <div id="rewardsAddArea"></div>
   </div>
@@ -1585,6 +1608,7 @@ body{
 <div class="companion-overlay hidden" id="companionOverlay">
   <div class="companion-bg">
     <button class="companion-abandon-btn" id="companionAbandon" title="放弃">放弃</button>
+    <button class="section-help companion-help-btn" data-help="study" title="教程">?</button>
     <div class="companion-center">
       <div class="companion-timer" id="companionTimer">25:00</div>
       <div class="companion-fox-wrap" id="companionFoxWrap">
@@ -1621,7 +1645,7 @@ body{
 <div class="help-overlay hidden" id="helpOverlay">
   <div class="help-sheet">
     <div class="help-header">
-      <span class="help-title">📋 待办使用教程</span>
+      <span class="help-title" id="helpTitle">📋 使用教程</span>
       <button class="help-close" id="helpClose" aria-label="关闭">✕</button>
     </div>
     <div class="help-body">
@@ -1854,6 +1878,7 @@ body{
 <div class="ai-panel hidden" id="aiPanel">
   <div class="ai-panel-header">
     <span>🤖 AI 助理</span>
+    <button class="section-help" data-help="ai" title="教程" style="margin-right:auto">?</button>
     <button id="aiPanelClose">✕</button>
   </div>
   <div class="ai-panel-messages" id="aiMessages">
@@ -1871,7 +1896,7 @@ body{
         <option value="deepseek-reasoner">🧠 v4pro</option>
         <option value="deepseek-chat">⚡ flash</option>
       </select>
-      <button class="ai-think-toggle" id="aiThinkToggle" title="深度思考">💭</button>
+      <button class="ai-think-toggle" id="aiThinkToggle" title="开启后 AI 会展示思考过程">💭 深度思考</button>
     </div>
     <div class="ai-key-form" id="aiKeyForm">
       <input type="password" id="aiKeyInput" placeholder="sk-... 输入 DeepSeek API Key" autocomplete="off">
@@ -2721,6 +2746,12 @@ const STREAK_MILESTONES = [
   { day: 30,  gold: 5000,  icon:'🌳', title: '三十而立 🌳',  msg: '一个月风雨无阻，你太强了！' },
   { day: 66,  gold: 20000, icon:'⭐', title: '习惯成自然 ⭐', msg: '六十六天锻造了真正的习惯！' },
   { day: 100, gold: 50000, icon:'👑', title: '百日筑基 👑',  msg: '百天筑基，未来可期！你是传奇！' },
+  // 维持期 · 身份长青（永不闭合）
+  { day: 150, gold: 3000,  icon:'🌅', title: '晨光常客 🌅',  msg: '百五十日，习惯已是生活的一部分。' },
+  { day: 200, gold: 5000,  icon:'🏛', title: '长期主义者 🏛',  msg: '两百日如一日，你是长期主义的践行者。' },
+  { day: 300, gold: 8000,  icon:'🦊', title: '习惯化身 🦊',  msg: '三百天——你已经成了别人眼中的"那个自律的人"。' },
+  { day: 365, gold: 15000, icon:'🏆', title: '一年之约 🏆',  msg: '整整一年！从今天起，你再也不是原来的你了。' },
+  // 之后每100天自动处理（见 checkStreakMilestones）
 ];
 
 // 待办优先级 → 排序权重 + 左侧色条
@@ -2955,6 +2986,13 @@ function defaultState(){
     aiDeepThink: false,
     aiChatHistory: [],
     restDays: [],
+    restDaysPerWeek: 0,
+    bestStreak: 0,
+    settings: { sfxEnabled: true },
+    _nodeFiredToday: { subjectFocus: {}, taskCount5: false },
+    _prevStreak: 0,
+    _surpriseCounter: 0,
+    _surpriseThreshold: Math.floor(Math.random() * 7) + 4, // [4,10]
     _streakGrace: null,
     _streakRecovery: 0,
     ledger: []
@@ -3083,6 +3121,15 @@ function loadState(){
       if(!Array.isArray(s.streakMilestones)) s.streakMilestones = [];
       if(!Array.isArray(s.pendingMisses)) s.pendingMisses = [];
       if(!Array.isArray(s.restDays)) s.restDays = [];
+      if(s.restDaysPerWeek == null) s.restDaysPerWeek = 0;
+      if(s.bestStreak == null) s.bestStreak = 0;
+      if(!s.settings){ s.settings = { sfxEnabled: true }; }
+      if(s.settings.sfxEnabled == null) s.settings.sfxEnabled = true;
+      if(!s._nodeFiredToday){ s._nodeFiredToday = { subjectFocus: {}, taskCount5: false }; }
+      if(s._prevStreak == null) s._prevStreak = 0;
+      if(s._graceFired == null) s._graceFired = false;
+      if(s._surpriseCounter == null) s._surpriseCounter = 0;
+      if(s._surpriseThreshold == null) s._surpriseThreshold = Math.floor(Math.random() * 7) + 4;
       if(s._streakGrace === undefined) s._streakGrace = null;
       if(s._streakRecovery === undefined) s._streakRecovery = 0;
       if(!Array.isArray(s.subjects)) s.subjects = ['数学','物理','英语'];
@@ -3981,6 +4028,8 @@ function checkDailyReset(){
   }
 
   state.lastResetDate = t;
+  // 重置每日闸门
+  state._nodeFiredToday = { subjectFocus: {}, taskCount5: false };
   saveState();
 }
 
@@ -4130,6 +4179,40 @@ function triggerPositiveHabit(habit){
   const xpText = r.mult > 1 ? '+'+baseR.xp+'×'+r.mult.toFixed(2)+'='+r.xp+' XP' : '+'+r.xp+' XP';
   const goldText = r.mult > 1 ? '+'+baseR.gold+'×'+r.mult.toFixed(2)+'='+r.gold+' 🪙' : '+'+r.gold+' 🪙';
   flyReward(bar, [{text:xpText,color:'var(--xp)',cls:'xp'},{text:goldText,color:'#92400e',cls:'gold'}], {hard:isHard});
+  // 维持期 VR 掉落检测
+  checkMaintenanceDrop(habit);
+}
+
+// ── 维持期 VR 掉落系统 ──
+function checkMaintenanceDrop(habit){
+  if(!habit || (habit.streak || 0) < 66) return; // 仅维持期
+  if(!state._surpriseCounter) state._surpriseCounter = 0;
+  if(!state._surpriseThreshold) state._surpriseThreshold = Math.floor(Math.random() * 7) + 4;
+  state._surpriseCounter = (state._surpriseCounter || 0) + 1;
+  if(state._surpriseCounter < state._surpriseThreshold) return;
+  // 触发掉落！
+  state._surpriseCounter = 0;
+  state._surpriseThreshold = Math.floor(Math.random() * 7) + 4; // [4,10]
+  var roll = Math.random();
+  var droppedGold = 0;
+  var dropMsg = '';
+  if(roll < 0.70){
+    droppedGold = Math.floor(Math.random() * 21) + 10;
+    state.stats.gold += droppedGold;
+    dropMsg = '🪙 意外惊喜 +'+droppedGold;
+  }else if(roll < 0.95){
+    if(!state.rareItems) state.rareItems = [];
+    state.rareItems.push('🦊·小装饰');
+    dropMsg = '✨ 获得稀有道具：狐狸小装饰';
+  }else{
+    dropMsg = '🦊 狐狸有话对你说…';
+  }
+  saveState();
+  if(droppedGold > 0){
+    document.getElementById('goldText').textContent = state.stats.gold;
+  }
+  toast(dropMsg, 'good');
+  triggerFeedback('streak_tier_up', {}); // 复用第二档动效
 }
 
 function triggerNegativeHabit(habit){
@@ -4383,12 +4466,31 @@ function render(){
   }else if(multEl){
     multEl.style.display = 'none';
   }
-  // Rest day button state
-  var restBtn = document.getElementById('restDayBtn');
-  if(restBtn){
-    var isRest = (state.restDays || []).includes(today());
-    restBtn.classList.toggle('active', isRest);
+  // ── 小节点检测：连胜跨档 ──
+  var streakTiers = [3, 7, 14, 21, 30, 42, 66];
+  var prevStreak = state._prevStreak || 0;
+  for(var sti = 0; sti < streakTiers.length; sti++){
+    if(streak >= streakTiers[sti] && prevStreak < streakTiers[sti]){
+      triggerFeedback('streak_tier_up', { streak: streak, tier: streakTiers[sti] });
+      digitBounce(document.getElementById('streakDays'));
+      break; // 只触发一次
+    }
   }
+  state._prevStreak = streak;
+
+  // ── 小节点检测：宽限/恢复生效 ──
+  var g2 = state._streakGrace;
+  if(g2 && g2.missedDate === yesterday() && !state._graceFired){
+    triggerFeedback('grace_saved', { preMissStreak: g2.preMissStreak });
+    state._graceFired = true;
+  }
+  if(g2 && g2.missedDate !== yesterday()){ state._graceFired = false; }
+
+  // ── 小节点检测：科目60min + 任务数5 ──
+  checkNodeTriggers();
+
+  // Rest day hint & popover UI
+  updateRestDayUI();
   // 更新弹窗当前档位高亮
   const popRows = document.querySelectorAll('#streakInfoPop tbody tr');
   let bestTier = -1;
@@ -4879,6 +4981,7 @@ function renderSummary(){
     '<button data-action="summary-prev">◀</button>'+
     '<div class="month-title">📊 '+year+'年'+month+'月</div>'+
     '<button data-action="summary-next"'+(isCurrentMonth?' disabled style="opacity:.3"':'')+'>▶</button>'+
+    '<button class="section-help" data-help="summary" title="教程">?</button>'+
     '</div>';
 
   // ── ① Four learning stat cards ──
@@ -4887,6 +4990,18 @@ function renderSummary(){
     '<div class="summary-card"><div class="sc-val" style="color:var(--xp)">'+completedTasks+'</div><div class="sc-label">完成任务</div></div>'+
     '<div class="summary-card"><div class="sc-val" style="color:var(--good)">'+studyDayCount+'</div><div class="sc-label">学习天数</div></div>'+
     '<div class="summary-card"><div class="sc-val">'+bestDayMin+'分</div><div class="sc-label">最猛一天</div></div>'+
+    '</div>';
+
+  // ── 当日完成率 ──
+  var todayRate = calcTodayCompletionRate();
+  html += '<div class="chart-section" id="completionRateTop">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'+
+      '<span style="font-size:12px;font-weight:600">📋 今日完成度</span>'+
+      '<span style="font-size:12px;color:var(--text2)">'+todayRate.done+'/'+todayRate.total+' · '+(todayRate.total>0?Math.round(todayRate.done/todayRate.total*100):0)+'%</span>'+
+    '</div>'+
+    '<div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden">'+
+      '<div style="height:100%;width:'+(todayRate.total>0?Math.round(todayRate.done/todayRate.total*100):0)+'%;background:var(--tab);border-radius:4px;transition:width .3s"></div>'+
+    '</div>'+
     '</div>';
 
   // ── Ledger: 总账（各科复习进度）──
@@ -4916,6 +5031,10 @@ function renderSummary(){
   html += '<button class="ledger-add-btn" data-action="ledger-add">＋ 新增/编辑科目总账</button>';
   html += '</div>';
 
+  // ── Charts container (visible only in chart view, or always for list/calendar) ──
+  var showCharts = (summaryView === 'chart');
+  html += '<div id="summaryCharts" style="'+(summaryView==='chart'?'':'display:none')+'">';
+
   // ── ② Pie chart: subject focus time ──
   var subjKeys = Object.keys(subjectMin).sort(function(a,b){ return subjectMin[b] - subjectMin[a]; });
   if(subjKeys.length === 0) subjKeys = ['暂无数据'];
@@ -4936,11 +5055,14 @@ function renderSummary(){
   html += '<canvas id="burnChart" width="600" height="200" style="width:100%;max-width:600px;height:200px"></canvas>';
   html += '</div>';
 
+  html += '</div>'; // close #summaryCharts
+
   // ── View toggle ──
   html += '<div style="display:flex;justify-content:center;margin:14px 0">'+
     '<div class="view-toggle">'+
       '<button class="'+(summaryView==='list'?'active':'')+'" data-action="summary-view-list">📋 列表</button>'+
       '<button class="'+(summaryView==='calendar'?'active':'')+'" data-action="summary-view-cal">📅 日历</button>'+
+      '<button class="'+(summaryView==='chart'?'active':'')+'" data-action="summary-view-chart">📊 图表</button>'+
     '</div>'+
     '</div>';
 
@@ -5089,9 +5211,10 @@ function renderSummary(){
   // ── List / Calendar view ──
   if(summaryView==='list'){
     renderSummaryList(container, year, month, daysInMonth, dayMap);
-  }else{
+  }else if(summaryView==='calendar'){
     renderSummaryCalendar(container, year, month, daysInMonth, dayMap);
   }
+  // chart view: no list/calendar, charts already shown above
 
   // ── Milestones ──
   var ms = state.streakMilestones || [];
@@ -5346,6 +5469,18 @@ function renderSummaryCalendar(container, year, month, daysInMonth, dayMap){
   const exCal = container.querySelector('.cal-wrap');
   if(exCal) exCal.remove();
   container.insertAdjacentHTML('beforeend', html);
+  // 日历下方追加完成度
+  var rate2 = calcTodayCompletionRate();
+  var rateHtml = '<div class="chart-section" id="completionRateCal" style="margin-top:12px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'+
+      '<span style="font-size:12px;font-weight:600">📋 今日完成度</span>'+
+      '<span style="font-size:12px;color:var(--text2)">'+rate2.done+'/'+rate2.total+' · '+(rate2.total>0?Math.round(rate2.done/rate2.total*100):0)+'%</span>'+
+    '</div>'+
+    '<div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden">'+
+      '<div style="height:100%;width:'+(rate2.total>0?Math.round(rate2.done/rate2.total*100):0)+'%;background:var(--tab);border-radius:4px;transition:width .3s"></div>'+
+    '</div>'+
+    '</div>';
+  container.insertAdjacentHTML('beforeend', rateHtml);
 }
 
 function esc(s){
@@ -5379,15 +5514,113 @@ function calcStreak(){
   if(state._streakRecovery > streak) streak = state._streakRecovery;
   return streak;
 }
+// 获取本周（周一到周日）的休息日列表
+function getWeekRestDays(){
+  var now = new Date();
+  var day = now.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  var monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  var restDays = state.restDays || [];
+  var weekDays = [];
+  for(var i = 0; i < 7; i++){
+    var d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDays.push(localDay(d));
+  }
+  return restDays.filter(function(rd){ return weekDays.includes(rd); });
+}
+// 检查今天能否设为休息日（配额检查）
+function canAddRestDay(){
+  var perWeek = state.restDaysPerWeek || 0;
+  if(perWeek === 0) return true; // 无限制
+  var td = today();
+  var isRest = (state.restDays || []).includes(td);
+  if(isRest) return true; // 取消不算超额
+  var thisWeek = getWeekRestDays();
+  return thisWeek.length < perWeek;
+}
+// 更新休息日相关 UI（统计栏提示 + 弹窗内）
+function updateRestDayUI(){
+  var td = today();
+  var isRest = (state.restDays || []).includes(td);
+  var perWeek = state.restDaysPerWeek || 0;
+  var thisWeek = getWeekRestDays();
+  // 统计栏提示
+  var hint = document.getElementById('restDayHint');
+  if(hint){
+    if(perWeek > 0 || isRest){
+      var used = thisWeek.length;
+      hint.textContent = '😴 本周已休 ' + used + '/' + perWeek + ' 天' + (isRest ? ' · 今日休息' : '');
+      hint.style.display = '';
+    }else{
+      hint.style.display = 'none';
+    }
+  }
+  // 弹窗内配额显示
+  var qv = document.getElementById('restQuotaVal');
+  if(qv){ qv.textContent = perWeek; }
+  // 弹窗内已用显示
+  var usedEl = document.getElementById('restDayUsed');
+  if(usedEl){
+    if(perWeek > 0 && thisWeek.length > 0){
+      var dayNames = ['日','一','二','三','四','五','六'];
+      var usedDays = thisWeek.map(function(ds){
+        var p = new Date(ds + 'T00:00:00');
+        return '周' + dayNames[p.getDay()];
+      }).join(', ');
+      usedEl.textContent = '本周已休：' + usedDays + '（' + thisWeek.length + '/' + perWeek + '）';
+      usedEl.style.display = '';
+    }else if(perWeek > 0){
+      usedEl.textContent = '本周已休：0/' + perWeek;
+      usedEl.style.display = '';
+    }else{
+      usedEl.textContent = '不限配额，自由设置';
+      usedEl.style.display = '';
+    }
+  }
+  // 弹窗内按钮状态
+  var toggleBtn = document.getElementById('restDayToggleBtn');
+  if(toggleBtn){
+    toggleBtn.textContent = isRest ? '取消休息日' : '设为休息日';
+    toggleBtn.classList.toggle('active', isRest);
+  }
+}
 function checkStreakMilestones(streak){
   if(!state.streakMilestones) state.streakMilestones = [];
-  for(const ms of STREAK_MILESTONES){
+  for(var mi = 0; mi < STREAK_MILESTONES.length; mi++){
+    var ms = STREAK_MILESTONES[mi];
     if(streak >= ms.day && !state.streakMilestones.includes(ms.day)){
       state.streakMilestones.push(ms.day);
       state.stats.gold += ms.gold;
+      // 更新最佳连胜
+      if(streak > (state.bestStreak || 0)) state.bestStreak = streak;
       saveState();
-      showAchievement(ms);
+      // 使用新的统一庆祝系统
+      triggerFeedback('milestone', {
+        day: ms.day, icon: ms.icon, title: ms.title, msg: ms.msg, gold: ms.gold
+      });
       break; // 一次只弹一个
+    }
+  }
+  // 维持期·超越365天：每100天自动生成新里程碑
+  if(streak > 365 && (streak % 100 === 0) && !state.streakMilestones.includes(streak)){
+    state.streakMilestones.push(streak);
+    state.stats.gold += 3000;
+    saveState();
+    triggerFeedback('milestone', {
+      day: streak, icon: '🌟', title: streak+'天修行者 🌟', msg: '又一个百日的坚持！', gold: 3000
+    });
+  }
+  // 打破历史纪录也触发（独立于固定里程碑）
+  if(streak > (state.bestStreak || 0) && streak > 0){
+    state.bestStreak = streak;
+    saveState();
+    // 只在不是固定里程碑天数时额外触发（避免重复）
+    var isFixedMilestone = STREAK_MILESTONES.some(function(m){ return m.day === streak && state.streakMilestones.includes(m.day); });
+    if(!isFixedMilestone){
+      triggerFeedback('milestone', {
+        day: streak, icon: '🏆', title: '新纪录！', msg: '打破了自己的最长连胜纪录！', gold: streak * 100
+      });
     }
   }
 }
@@ -5418,6 +5651,65 @@ document.getElementById('achiClose').addEventListener('click', function(){
   render();
 });
 
+// 小节点事件检测（科目60min + 任务数5）
+function checkNodeTriggers(){
+  var t = today();
+  var nft = state._nodeFiredToday;
+  if(!nft){ nft = { subjectFocus: {}, taskCount5: false }; state._nodeFiredToday = nft; }
+
+  // 科目60min
+  var allSessions = state.focusSessions || [];
+  var todaySubjMin = {};
+  for(var i = 0; i < allSessions.length; i++){
+    var s = allSessions[i];
+    if(s.date === t){
+      var subj = s.subject || '未分类';
+      todaySubjMin[subj] = (todaySubjMin[subj] || 0) + (s.settledMin || 0);
+    }
+  }
+  for(var subj in todaySubjMin){
+    if(todaySubjMin[subj] >= 60 && !nft.subjectFocus[subj]){
+      nft.subjectFocus[subj] = true;
+      triggerFeedback('subject_60min', { subject: subj, minutes: todaySubjMin[subj] });
+      // 弹跳科目时长相关数字（如有）
+      var subjectEl = document.querySelector('.sc-val[data-subject="'+subj+'"]');
+      if(subjectEl) digitBounce(subjectEl);
+    }
+  }
+
+  // 任务数5
+  var todayCount = calcTodayCount();
+  if(todayCount >= 5 && !nft.taskCount5){
+    nft.taskCount5 = true;
+    triggerFeedback('task_count_5', { count: todayCount });
+    digitBounce(document.getElementById('todayCount'));
+  }
+}
+
+// 数字弹跳动效（320ms，transform + color）
+function digitBounce(el){
+  if(!el) return;
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(prefersReduced){
+    el.style.opacity = '0.5';
+    setTimeout(function(){ el.style.opacity = ''; }, 200);
+    return;
+  }
+  el.style.transition = 'transform .32s cubic-bezier(.34,1.56,.64,1), color .32s ease';
+  el.style.transform = 'scale(1.25)';
+  var origColor = el.style.color || '';
+  el.style.color = 'var(--tab)';
+  setTimeout(function(){
+    el.style.transform = 'scale(1)';
+    el.style.color = origColor;
+    setTimeout(function(){
+      el.style.transition = '';
+      el.style.transform = '';
+      el.style.color = '';
+    }, 320);
+  }, 150);
+}
+
 function calcTodayCount(){
   const t = today();
   let count = 0;
@@ -5435,6 +5727,43 @@ function calcTodayCount(){
     (e.type==='pomodoro-complete'||e.type==='focus-complete') && tsDay(e.ts)===t
   ).length;
   return count + pomos;
+}
+
+// 今日完成率：已完成 / (已完成+未完成)
+function calcTodayCompletionRate(){
+  var t = today();
+  var done = 0, total = 0;
+  // Dailies: all active dailies are "total", those completed today are "done"
+  for(var di = 0; di < state.dailies.length; di++){
+    var d = state.dailies[di];
+    if(d.deleted) continue;
+    total++;
+    if(d.completedDates && d.completedDates.includes(t)) done++;
+  }
+  // Todos: due today or overdue = total; completed = done
+  for(var ti = 0; ti < state.todos.length; ti++){
+    var td = state.todos[ti];
+    if(td.deleted) continue;
+    if(td.completed) continue; // already counted? No - if completed today, count as done+total
+    // Count todos due today or overdue as "total"
+    if(td.dueDate){
+      var dueDay = new Date(td.dueDate + 'T00:00:00');
+      var todayDay = new Date(t + 'T00:00:00');
+      if(dueDay <= todayDay){ total++; /* not done */ }
+    }else{
+      total++; // no due date = can be done today
+    }
+  }
+  // Count already-completed todos that were done today
+  for(var tj = 0; tj < state.todos.length; tj++){
+    var td2 = state.todos[tj];
+    if(td2.deleted) continue;
+    if(td2.completed && td2.completedAt){
+      var compDay = tsDay(td2.completedAt);
+      if(compDay === t){ done++; total++; }
+    }
+  }
+  return { done: done, total: total };
 }
 
 // ========== FAB Visibility ==========
@@ -5458,7 +5787,7 @@ function updateFab(){
 // ========== Summary State ==========
 let summaryYear = new Date().getFullYear();
 let summaryMonth = new Date().getMonth() + 1;
-let summaryView = 'list'; // 'list' | 'calendar'
+let summaryView = 'list'; // 'list' | 'calendar' | 'chart'
 
 // ========== Add Forms ==========
 let currentAddTab = null;
@@ -5719,18 +6048,29 @@ document.getElementById('app').addEventListener('click', function(e){
       if(!state.restDays) state.restDays = [];
       var t2 = today();
       var idx = state.restDays.indexOf(t2);
-      var restBtn = document.getElementById('restDayBtn');
       if(idx === -1){
+        if(!canAddRestDay()){
+          toast('⚠️ 本周休息日配额已用完', 'warn');
+          return;
+        }
         state.restDays.push(t2);
-        if(restBtn) restBtn.classList.add('active');
         toast('😴 今天设为休息日，连胜冻结不扣', 'info');
       }else{
         state.restDays.splice(idx, 1);
-        if(restBtn) restBtn.classList.remove('active');
         toast('✅ 已取消休息日', 'info');
       }
       saveState();
       render();
+      break;
+    }
+    case 'rest-quota-minus':{
+      var cur = state.restDaysPerWeek || 0;
+      if(cur > 0){ state.restDaysPerWeek = cur - 1; saveState(); updateRestDayUI(); }
+      break;
+    }
+    case 'rest-quota-plus':{
+      var cur2 = state.restDaysPerWeek || 0;
+      if(cur2 < 7){ state.restDaysPerWeek = cur2 + 1; saveState(); updateRestDayUI(); }
       break;
     }
     case 'trigger-habit':{
@@ -6050,6 +6390,9 @@ document.getElementById('app').addEventListener('click', function(e){
     }
     case 'summary-view-cal':{
       summaryView='calendar';renderSummary();break;
+    }
+    case 'summary-view-chart':{
+      summaryView='chart';renderSummary();break;
     }
     case 'fold-all':{
       var items = document.querySelectorAll('.day-item');
@@ -6429,17 +6772,256 @@ document.getElementById('fab').addEventListener('click', function(){
 
 // ========== Help / Tutorial ==========
 (function(){
-  const overlay = document.getElementById('helpOverlay');
-  function openHelp(){ overlay.classList.remove('hidden'); }
+  var overlay = document.getElementById('helpOverlay');
+  var titleEl = document.getElementById('helpTitle');
+  var bodyEl = overlay.querySelector('.help-body');
+  var defaultContent = bodyEl ? bodyEl.innerHTML : ''; // 保留待办教程为默认
+
+  function openHelp(sectionId){
+    titleEl.textContent = HELP_TITLES[sectionId] || '📋 使用教程';
+    bodyEl.innerHTML = HELP_CONTENT[sectionId] || defaultContent;
+    overlay.classList.remove('hidden');
+  }
   function closeHelp(){ overlay.classList.add('hidden'); }
-  document.getElementById('todoHelpBtn').addEventListener('click', openHelp);
   document.getElementById('helpClose').addEventListener('click', closeHelp);
   document.getElementById('helpGotIt').addEventListener('click', closeHelp);
-  // 点击遮罩空白处关闭
   overlay.addEventListener('click', function(e){
     if(e.target === overlay) closeHelp();
   });
+  // 委托：所有 .section-help 点击
+  document.getElementById('app').addEventListener('click', function(e){
+    var btn = e.target.closest('.section-help');
+    if(btn){
+      var sectionId = btn.dataset.help;
+      if(sectionId) openHelp(sectionId);
+    }
+  });
+  // 保留旧的 todoHelpBtn 兼容
+  var oldBtn = document.getElementById('todoHelpBtn');
+  if(oldBtn){ oldBtn.addEventListener('click', function(){ openHelp('todos'); }); }
 })();
+
+// ========== 狐狸激励：音效引擎 + 反馈调度器 ==========
+// 音效引擎（Web Audio，惰性初始化，零音频文件）
+var sfx = (function(){
+  var ctx = null;
+  function ensureCtx(){
+    if(!ctx){
+      try{
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }catch(e){ ctx = null; }
+    }
+    if(ctx && ctx.state === 'suspended'){
+      ctx.resume().catch(function(){});
+    }
+    return ctx;
+  }
+  function canPlay(){
+    if(!state.settings.sfxEnabled) return false;
+    // 自习/专注模式中不发声
+    if(!!companionSession) return false;
+    return true;
+  }
+  function ding(){
+    if(!canPlay()) return;
+    var c = ensureCtx(); if(!c) return;
+    try{
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880; // A5
+      gain.gain.setValueAtTime(0.15, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.12);
+      osc.connect(gain); gain.connect(c.destination);
+      osc.start(c.currentTime); osc.stop(c.currentTime + 0.12);
+    }catch(e){ /* silent */ }
+  }
+  function achievement(){
+    if(!canPlay()) return;
+    var c = ensureCtx(); if(!c) return;
+    try{
+      var notes = [523, 659, 784]; // C5, E5, G5
+      for(var i = 0; i < notes.length; i++){
+        var osc = c.createOscillator();
+        var gain = c.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = notes[i];
+        var t0 = c.currentTime + i * 0.09;
+        gain.gain.setValueAtTime(0.18, t0);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.09);
+        osc.connect(gain); gain.connect(c.destination);
+        osc.start(t0); osc.stop(t0 + 0.09);
+      }
+    }catch(e){ /* silent */ }
+  }
+  return { ding: ding, achievement: achievement };
+})();
+
+// 统一反馈调度器（三档：日常静默 / 小节点 / 大里程碑）
+// 原则：反应的"音量"匹配事件的"分量"——小事小响、大事大响、日常不响
+var _feedbackLock = false;
+function triggerFeedback(eventType, payload){
+  // 防重入：同一帧内多次触发合并为一次
+  if(_feedbackLock) return;
+  _feedbackLock = true;
+  setTimeout(function(){ _feedbackLock = false; }, 50);
+
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hidden = document.hidden;
+
+  switch(eventType){
+    // 第二档：小节点
+    case 'streak_tier_up':
+    case 'grace_saved':
+    case 'subject_60min':
+    case 'task_count_5':
+      // 动效：数字弹跳（320ms ease-out），由各触发点自行处理
+      // 狐狸小跳+1心 + 轻叮
+      if(!hidden && !prefersReduced){
+        foxLittleJump();
+      }
+      sfx.ding();
+      break;
+    // 第三档：大里程碑
+    case 'milestone':
+      // 居中庆祝弹层 + 成就音 + AI台词（阶段四实现）
+      if(!hidden){
+        showMilestoneCelebration(payload);
+      }
+      sfx.achievement();
+      break;
+    default:
+      // 第一档：日常静默，不经过此函数
+      break;
+  }
+}
+
+// 狐狸小跳（第二档动效）
+function foxLittleJump(){
+  var fox = document.querySelector('#foxFloat img');
+  if(!fox) return;
+  fox.style.transition = 'transform .4s cubic-bezier(.34,1.56,.64,1)';
+  fox.style.transform = 'translateY(-8px)';
+  setTimeout(function(){
+    fox.style.transform = 'translateY(0)';
+    setTimeout(function(){ fox.style.transition = ''; fox.style.transform = ''; }, 400);
+  }, 200);
+}
+
+// 第三档：大里程碑庆祝弹层（骨架，阶段四填充 AI 台词）
+function showMilestoneCelebration(payload){
+  var existing = document.getElementById('milestoneOverlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'milestoneOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9999;display:flex;align-items:flex-start;justify-content:center';
+  var card = document.createElement('div');
+  card.style.cssText = 'position:relative;top:38%;transform:scale(.8);opacity:0;background:var(--card);border-radius:18px;padding:28px 24px 20px;max-width:min(90vw,360px);width:100%;text-align:center;box-shadow:0 12px 48px rgba(0,0,0,.2);transition:transform .45s cubic-bezier(.34,1.56,.64,1),opacity .45s ease';
+  card.innerHTML =
+    '<div style="font-size:36px;margin-bottom:8px">'+(payload.icon||'🎉')+'</div>'+
+    '<div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px">'+(payload.title||'')+'</div>'+
+    '<div style="font-size:14px;color:var(--text2);margin-bottom:4px">'+'连续'+(payload.day||'?')+'天'+(payload.gold?' · +'+payload.gold+'💰':'')+'</div>'+
+    '<div id="milestoneAiLine" style="font-size:13px;color:var(--text3);margin-bottom:16px;min-height:20px;line-height:1.4"></div>'+
+    '<button style="padding:8px 32px;border:none;border-radius:10px;background:var(--tab);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)" id="milestoneOkBtn">确认</button>';
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  // 进入动画
+  requestAnimationFrame(function(){
+    card.style.transform = 'scale(1)';
+    card.style.opacity = '1';
+  });
+  function closeMilestone(){
+    card.style.transform = 'scale(.95)';
+    card.style.opacity = '0';
+    setTimeout(function(){ overlay.remove(); }, 200);
+  }
+  overlay.addEventListener('click', function(e){
+    if(e.target === overlay) closeMilestone();
+  });
+  setTimeout(function(){
+    var okBtn = document.getElementById('milestoneOkBtn');
+    if(okBtn) okBtn.addEventListener('click', closeMilestone);
+  }, 50);
+
+  // ── AI 台词生成（2.5s 超时，失败静默）──
+  var aiLineEl = document.getElementById('milestoneAiLine');
+  if(aiLineEl && state.aiKey){
+    aiLineEl.textContent = '...';
+    var aiDone = false;
+    var timeoutId = setTimeout(function(){
+      if(!aiDone){ aiDone = true; aiLineEl.textContent = ''; }
+    }, 2500);
+    (async function(){
+      try{
+        var ctx = getRecentBehaviorContext();
+        if(!ctx || ctx.streak === 0 && ctx.last7days.length === 0){
+          // 全新用户，事实包为空
+          clearTimeout(timeoutId);
+          if(!aiDone){ aiDone = true; aiLineEl.textContent = ''; }
+          return;
+        }
+        var prompt = '你是用户的狐狸伙伴。现在用户达成了里程碑：连续'+(payload.day||'?')+'天打卡。'+
+          '以下是用户近期的真实数据：\n'+
+          '- 当前连胜：'+ctx.streak+'天（倍率'+ctx.tierLabel+'）\n'+
+          '- 今日完成：'+ctx.todayDone+'项\n'+
+          '- 最佳纪录：'+ctx.bestStreak+'天\n'+
+          '- 陪伴天数：'+ctx.companionDays+'天\n'+
+          (ctx.last7days.length > 0 ? '- 最近7天趋势：'+ctx.last7days.map(function(d){ return d.date.slice(5)+':'+d.done+'项'; }).join(', ')+'\n' : '')+
+          '\n请对它说一句话。要求：\n'+
+          '1. 必须引用上面至少一个具体数字\n'+
+          '2. 字数≤25字\n'+
+          '3. 温暖、像朋友、不肉麻\n'+
+          '4. 禁止说"加油""你真棒""继续努力"这类空话\n'+
+          '5. 只输出那句话，别加引号或前缀';
+        var msgs = [
+          { role: 'system', content: '你是用户的狐狸伙伴，说话温暖、简洁。' },
+          { role: 'user', content: prompt }
+        ];
+        // 优先用 flash（快），超时 2.5s
+        var controller = new AbortController();
+        var fetchTimeout = setTimeout(function(){ controller.abort(); }, 2500);
+        var res = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.aiKey },
+          body: JSON.stringify({ model: 'deepseek-chat', messages: msgs, max_tokens: 50, temperature: 0.9 }),
+          signal: controller.signal
+        });
+        clearTimeout(fetchTimeout);
+        clearTimeout(timeoutId);
+        if(aiDone) return;
+        aiDone = true;
+        if(!res.ok) throw new Error('API error');
+        var data = await res.json();
+        var line = (data.choices && data.choices[0] && data.choices[0].message.content || '').trim();
+        // 裁剪：最多25字
+        if(line.length > 25) line = line.slice(0, 25) + '…';
+        aiLineEl.textContent = line || '';
+      }catch(e){
+        clearTimeout(timeoutId);
+        if(!aiDone){ aiDone = true; aiLineEl.textContent = ''; }
+      }
+    })();
+  }
+}
+
+// ========== 教程内容 ==========
+var HELP_TITLES = {
+  habits: '🔄 习惯打卡教程',
+  dailies: '📅 每日任务教程',
+  todos: '📋 待办使用教程',
+  rewards: '🎁 奖励商店教程',
+  study: '📖 自习陪伴教程',
+  summary: '📊 月度回顾教程',
+  ai: '🤖 AI 助理教程'
+};
+var HELP_CONTENT = {
+  habits: '<div class="help-section"><div class="help-h">🔄 好习惯 vs 坏习惯</div><p>建习惯时可选<b>👍正向</b>（要做的事，如"背单词"）或<b>👎负向</b>（要避免的事，如"不吃零食"）。正向打卡加分，负向破戒扣分。</p></div><div class="help-section"><div class="help-h">🎯 自定义奖励</div><p>每个习惯可设<b>自定义奖励</b>（金币/XP），覆盖默认值。点击习惯卡片进入编辑。</p></div><div class="help-section"><div class="help-h">🔥 连胜与倍率</div><p>连续打卡天数越多，经验金币倍率越高。休息日可冻结连胜不扣。详见顶部 <b>!</b> 按钮。</p></div><div class="help-tip">💡 习惯打卡是维持期（66天后）VR掉落系统的核心数据源。</div>',
+  dailies: '<div class="help-section"><div class="help-h">📅 每日打卡</div><p>每天自动重置，完成即勾选。一次完成多项会累计<b>今日计数</b>。</p></div><div class="help-section"><div class="help-h">⏱ 预估时间与进度条</div><p>每项可设预估分钟，当天完成后进度条填满。用于衡量每日工作量。</p></div><div class="help-section"><div class="help-h">🔄 补做与申报</div><p>漏签后可<b>申报补录</b>（需说明原因）或<b>今天补做</b>（加倍工作量弥补昨日）。系统会判断合理性。</p></div><div class="help-section"><div class="help-h">🎯 自定义奖励</div><p>每项每日可设自定义奖励。在编辑面板里调整。</p></div><div class="help-tip">💡 每日任务是连胜计算的核心——每天至少完成一项才能延续连胜。</div>',
+  rewards: '<div class="help-section"><div class="help-h">🎁 奖励商店是什么</div><p>用赚到的<b>金币 🪙</b> 兑换自己设定的奖励。把"花钱买享受"变成"努力换享受"——延迟满足训练。</p></div><div class="help-section"><div class="help-h">💰 定价逻辑</div><p>自己给奖励定价（金币数）。建议：小奖励（一杯奶茶）≈ 2-3天金币收入，大奖励（新游戏）≈ 2-4周。</p></div><div class="help-section"><div class="help-h">✅ 兑换</div><p>攒够金币后点"兑换"，金币扣除，奖励标记为已兑换。可以重复购买同一奖励。</p></div><div class="help-section"><div class="help-h">➕ 自定义奖励</div><p>右下角 + 新建自定义奖励：名称 + 价格 + 可选描述。</p></div><div class="help-tip">💡 奖励商店是"外部动机"的最后一道防线——维持期后，内部动机（身份认同）会逐步接棒。</div>',
+  study: '<div class="help-section"><div class="help-h">📖 时长选择</div><p>点击 📖 按钮或待办卡片上的 ▶ 进入自习。可选 25/45/60 分钟或自定义。</p></div><div class="help-section"><div class="help-h">🔗 绑定任务</div><p>从待办卡片 ▶ 进入→自动绑定该任务。通用入口进入→可在 overlay 内下拉绑定。绑定后专注时间计入该任务和科目。</p></div><div class="help-section"><div class="help-h">⚠️ 放弃惩罚</div><p>中途放弃：有效专注时间按 50% 结算。放弃前不足 2 分钟不记时间也不扣任何东西。</p></div><div class="help-section"><div class="help-h">🔥 倍率加成</div><p>完成时的经验金币享受当前连胜倍率。结算面板会展示计算过程。</p></div><div class="help-section"><div class="help-h">🦊 狐狸陪伴</div><p>计时中狐狸会动，完成后弹出结算面板。刷新页面不会丢失进行中的专注（有恢复机制）。</p></div><div class="help-tip">💡 专注中强制静音（包括音效），避免打扰。</div>',
+  summary: '<div class="help-section"><div class="help-h">📊 月度总览</div><p>回顾页展示当月数据：专注时长、完成任务数、学习天数、最猛一天。</p></div><div class="help-section"><div class="help-h">🎯 扇形图</div><p>按科目拆分专注时间占比。颜色由科目名自动生成（同一科永远同色）。</p></div><div class="help-section"><div class="help-h">📉 燃尽图</div><p>双模式：有总账数据时→显示"剩余 vs 理想进度"的燃尽曲线；无数据时→显示每日任务完成趋势。</p></div><div class="help-section"><div class="help-h">📚 复习总账</div><p>给科目设"总任务量/已完成量"，追踪复习进度。点 ± 增减完成量。这是燃尽图的数据来源。</p></div><div class="help-section"><div class="help-h">📋 列表 vs 📅 日历 vs 📊 图表</div><p>三种视图切换。日历上的色点：绿=全勤、金=部分、红=缺勤、橙=补录。点击日期看详情。</p></div><div class="help-tip">💡 在待办里给任务标 #科目，回顾页才能看到分科统计。</div>',
+  ai: '<div class="help-section"><div class="help-h">🔑 API Key</div><p>点击 ⚙️ 按钮展开设置，填入 DeepSeek API Key（从 platform.deepseek.com 获取）。Key 只存本地，不上传。</p></div><div class="help-section"><div class="help-h">🤖 模型选择</div><p><b>自动</b>：日常对话用 flash（快），复杂分析（含"分析/安排/规划"等词）自动切 v4pro。<br><b>flash</b>：deepseek-chat，快速便宜。<br><b>v4pro</b>：deepseek-reasoner，深度推理。</p></div><div class="help-section"><div class="help-h">💭 深度思考</div><p>开启后 AI 回复会展示思考过程（可折叠）。对 flash 模型会传 thinking 参数强制输出推理链。</p></div><div class="help-section"><div class="help-h">🛠 AI 能做什么</div><p>查看任务、创建任务、分析进度、推荐安排、回答习惯养成问题。AI 会读取你的真实数据给个性化建议。</p></div><div class="help-tip">💡 对 AI 说"帮我分析最近的进度"或"给我安排明天的任务"会自动切到 v4pro。</div>'
+};
 
 // ========== Init ==========
 // ========== 待办提醒 ==========
@@ -6548,6 +7130,14 @@ const AI_TOOLS = [
       description: '获取任务全景+7天趋势，用于梳理、排优先级、发现异常。当用户说"今天干啥"、"帮我梳理"、"我有点乱"、"看看我最近"、"最近状态"、"最近怎么样"、"整理一下"、"安排"、"计划今天"、"有什么要做的"、"分析一下"时调用。普通闲聊不要调用。',
       parameters: { type: 'object', properties: {}, required: [] }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_recent_behavior',
+      description: '获取近期行为事实包（连胜/倍率/宽限状态/今日完成/各科时长/7天趋势/最佳纪录/陪伴天数），用于生成个性化台词和深度分析。狐狸需要引用具体数据时才调用。',
+      parameters: { type: 'object', properties: {}, required: [] }
+    }
   }
 ];
 
@@ -6630,6 +7220,7 @@ function executeToolCall(toolName, args){
     case 'create_reward': return createRewardTool(args);
     case 'get_today_status': return getTodayStatusTool();
     case 'get_task_overview': return getTaskOverviewTool();
+    case 'get_recent_behavior': return getRecentBehaviorTool();
     default: return { success: false, message: '未知工具: ' + toolName };
   }
 }
@@ -6699,6 +7290,133 @@ function getTodayStatusTool(){
       +' | ❤️'+state.stats.hp+' | 🪙'+state.stats.gold
       +' | 习惯'+active+'个，每日未完成'+dailiesLeft+'个，待办'+todosLeft+'个'
   };
+}
+
+// ── 阶段一：近期行为上下文（喂给 AI 的事实包）──
+function getRecentBehaviorContext(){
+  var t = today();
+  var y = yesterday();
+  var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 6);
+  var weekAgoStr = localDay(weekAgo);
+  var ctx = {};
+
+  // 1. 连胜 + 倍率
+  try{
+    ctx.streak = calcStreak();
+    ctx.tier = getStreakMultiplier();
+    ctx.tierLabel = '×' + ctx.tier.toFixed(2);
+  }catch(e){ ctx.streak = 0; ctx.tier = 1; ctx.tierLabel = '×1.00'; }
+
+  // 2. 宽限/恢复状态
+  try{
+    var g = state._streakGrace;
+    ctx.inGrace = !!(g && g.missedDate === y);
+    ctx.inRecovery = !!(state._streakRecovery > 0);
+    ctx.preMissStreak = ctx.inGrace ? (g.preMissStreak || 0) : 0;
+    ctx.recoveryBase = state._streakRecovery || 0;
+  }catch(e){ ctx.inGrace = false; ctx.inRecovery = false; }
+
+  // 3. 今日完成数 + 各科专注分钟
+  try{
+    ctx.todayDone = calcTodayCount();
+    var todaySubjectMin = {};
+    var allSessions = state.focusSessions || [];
+    for(var i = 0; i < allSessions.length; i++){
+      var s = allSessions[i];
+      if(s.date === t){
+        var subj = s.subject || '未分类';
+        todaySubjectMin[subj] = (todaySubjectMin[subj] || 0) + (s.settledMin || 0);
+      }
+    }
+    ctx.todayFocusBySubject = todaySubjectMin;
+  }catch(e){ ctx.todayDone = 0; ctx.todayFocusBySubject = {}; }
+
+  // 4. 最近7天逐日数据
+  try{
+    var last7 = [];
+    var allTodos = state.todos || [];
+    var allDailies = state.dailies || [];
+    var allHabits = state.habits || [];
+    for(var d2 = 0; d2 < 7; d2++){
+      var dt = new Date(); dt.setDate(dt.getDate() - (6 - d2));
+      var ds = localDay(dt);
+      var dayFocus = 0;
+      for(var j = 0; j < allSessions.length; j++){
+        if(allSessions[j].date === ds) dayFocus += (allSessions[j].settledMin || 0);
+      }
+      var dayDone = 0;
+      for(var k = 0; k < allDailies.length; k++){
+        if(allDailies[k].completedDates && allDailies[k].completedDates.includes(ds)) dayDone++;
+      }
+      for(var l = 0; l < allTodos.length; l++){
+        if(allTodos[l].completed && allTodos[l].completedAt === ds) dayDone++;
+      }
+      for(var m = 0; m < allHabits.length; m++){
+        if(allHabits[m].history && allHabits[m].history[ds]) dayDone += allHabits[m].history[ds];
+      }
+      // Streak as of that day
+      var dayStreak = 0;
+      var cursor = new Date(dt);
+      while(true){
+        var cds = localDay(cursor);
+        var anyDone = allDailies.some(function(dd){ return dd.completedDates && dd.completedDates.includes(cds); });
+        if(!anyDone) break;
+        dayStreak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      last7.push({ date: ds, done: dayDone, focusMin: dayFocus, streak: dayStreak });
+    }
+    ctx.last7days = last7;
+  }catch(e){ ctx.last7days = []; }
+
+  // 5. 最佳连胜 + 最近里程碑
+  try{
+    ctx.bestStreak = state.bestStreak || 0;
+    var ms = state.streakMilestones || [];
+    ctx.lastMilestone = ms.length > 0 ? ms[ms.length - 1] : 0;
+  }catch(e){ ctx.bestStreak = 0; ctx.lastMilestone = 0; }
+
+  // 6. 累计陪伴
+  try{
+    ctx.totalCompanionMinutes = state.totalCompanionMinutes || 0;
+    var firstDay = null;
+    if((state.activityLog||[]).length > 0){
+      var logs = state.activityLog;
+      for(var n = 0; n < logs.length; n++){
+        var d = logs[n].ts ? tsDay(logs[n].ts) : null;
+        if(d && (!firstDay || d < firstDay)) firstDay = d;
+      }
+    }
+    if(firstDay){
+      var daysDiff = Math.floor((Date.now() - new Date(firstDay + 'T00:00:00').getTime()) / 86400000);
+      ctx.companionDays = Math.max(1, daysDiff);
+    }else{
+      ctx.companionDays = 0;
+    }
+  }catch(e){ ctx.companionDays = 0; ctx.totalCompanionMinutes = 0; }
+
+  return ctx;
+}
+
+function getRecentBehaviorTool(){
+  var ctx = getRecentBehaviorContext();
+  var subjKeys = Object.keys(ctx.todayFocusBySubject || {}).sort(function(a,b){ return ctx.todayFocusBySubject[b] - ctx.todayFocusBySubject[a]; });
+  var msg = '🔥 连续'+ctx.streak+'天（'+ctx.tierLabel+'）';
+  if(ctx.inGrace) msg += ' · ⚠️ 宽限中（昨天漏签，今天补上不掉）';
+  if(ctx.inRecovery) msg += ' · 🔄 从'+ctx.recoveryBase+'天恢复中';
+  msg += '\n✅ 今日已完成 '+ctx.todayDone+' 项';
+  if(subjKeys.length > 0){
+    msg += '\n📊 今日各科：';
+    for(var i = 0; i < subjKeys.length; i++){
+      if(i > 0) msg += ' · ';
+      msg += subjKeys[i] + ' ' + ctx.todayFocusBySubject[subjKeys[i]] + '分';
+    }
+  }
+  if(ctx.last7days.length > 0){
+    msg += '\n📈 最近7天：' + ctx.last7days.map(function(d){ return d.date.slice(5)+':'+d.done+'项'+d.focusMin+'分'; }).join(' ');
+  }
+  msg += '\n🏆 最佳连胜：'+ctx.bestStreak+'天 · 最近里程碑：'+ctx.lastMilestone+'天 · 陪伴'+ctx.companionDays+'天共'+ctx.totalCompanionMinutes+'分钟';
+  return { success: true, message: msg, data: ctx };
 }
 
 function getTaskOverviewTool(){
