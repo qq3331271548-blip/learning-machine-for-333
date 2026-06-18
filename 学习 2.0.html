@@ -3763,7 +3763,7 @@ function renderRemedAll(){
 let currentClaimId = null;
 function showClaimForm(miss){
   currentClaimId = miss.id;
-  const ov = document.getElementById('remedOverlay');
+  var ov = document.getElementById('remedOverlay');
   document.getElementById('remedForm').innerHTML =
     '<h3>📝 申报补录 · '+esc(miss.dailyName)+'</h3>'+
     '<label>简短说明 <span style="color:var(--bad)">*</span></label>'+
@@ -3786,33 +3786,42 @@ function showClaimForm(miss){
     '<button class="remed-cancel" id="claimCancel">取消</button>';
   ov.classList.remove('hidden');
 
-  // Enable "其他" text inputs
-  document.querySelectorAll('input[name="claimReason"]').forEach(r=>{
-    r.addEventListener('change', function(){
-      document.getElementById('claimReasonOther').disabled = this.value !== 'other';
-    });
-  });
-  document.querySelectorAll('input[name="claimPrev"]').forEach(r=>{
-    r.addEventListener('change', function(){
-      document.getElementById('claimPrevOther').disabled = this.value !== 'other';
-    });
-  });
+  // 清理旧监听器（用 onclick 替换 addEventListener 防止累积）
+  var reasonRadios = document.querySelectorAll('input[name="claimReason"]');
+  for(var ri = 0; ri < reasonRadios.length; ri++){
+    reasonRadios[ri].onchange = function(){
+      var otherEl = document.getElementById('claimReasonOther');
+      if(otherEl) otherEl.disabled = this.value !== 'other';
+      validateClaim();
+    };
+  }
+  var prevRadios = document.querySelectorAll('input[name="claimPrev"]');
+  for(var pi = 0; pi < prevRadios.length; pi++){
+    prevRadios[pi].onchange = function(){
+      var otherEl = document.getElementById('claimPrevOther');
+      if(otherEl) otherEl.disabled = this.value !== 'other';
+      validateClaim();
+    };
+  }
   // Validate form
   function validateClaim(){
-    const note = document.getElementById('claimNote').value.trim();
-    const reason = document.querySelector('input[name="claimReason"]:checked');
-    const prev = document.querySelector('input[name="claimPrev"]:checked');
-    const reasonOk = reason && (reason.value !== 'other' || document.getElementById('claimReasonOther').value.trim());
-    const prevOk = prev && (prev.value !== 'other' || document.getElementById('claimPrevOther').value.trim());
-    document.getElementById('claimSubmit').disabled = !(note && reasonOk && prevOk);
+    var note = document.getElementById('claimNote');
+    var reason = document.querySelector('input[name="claimReason"]:checked');
+    var prev = document.querySelector('input[name="claimPrev"]:checked');
+    var reasonOk = reason && (reason.value !== 'other' || (document.getElementById('claimReasonOther').value||'').trim());
+    var prevOk = prev && (prev.value !== 'other' || (document.getElementById('claimPrevOther').value||'').trim());
+    document.getElementById('claimSubmit').disabled = !(note && note.value.trim() && reasonOk && prevOk);
   }
-  document.getElementById('claimNote').addEventListener('input', validateClaim);
-  document.querySelectorAll('input[name="claimReason"], input[name="claimPrev"]').forEach(r=>r.addEventListener('change', validateClaim));
-  document.getElementById('claimReasonOther').addEventListener('input', validateClaim);
-  document.getElementById('claimPrevOther').addEventListener('input', validateClaim);
+  var claimNoteEl = document.getElementById('claimNote');
+  if(claimNoteEl) claimNoteEl.oninput = validateClaim;
+  var claimReasonOtherEl = document.getElementById('claimReasonOther');
+  if(claimReasonOtherEl) claimReasonOtherEl.oninput = validateClaim;
+  var claimPrevOtherEl = document.getElementById('claimPrevOther');
+  if(claimPrevOtherEl) claimPrevOtherEl.oninput = validateClaim;
 
-  document.getElementById('claimSubmit').addEventListener('click', function(){
-    const m = state.pendingMisses.find(x=>x.id===currentClaimId);
+  var submitBtn = document.getElementById('claimSubmit');
+  if(submitBtn) submitBtn.onclick = function(){
+    var m = state.pendingMisses.find(function(x){ return x.id===currentClaimId; });
     if(!m) return;
     const note = document.getElementById('claimNote').value.trim();
     const reason = document.querySelector('input[name="claimReason"]:checked');
@@ -3833,10 +3842,11 @@ function showClaimForm(miss){
     }
     document.getElementById('remedOverlay').classList.add('hidden');
     saveState(); renderRemedAll(); render();
-  });
-  document.getElementById('claimCancel').addEventListener('click', function(){
+  };
+  var cancelBtn = document.getElementById('claimCancel');
+  if(cancelBtn) cancelBtn.onclick = function(){
     document.getElementById('remedOverlay').classList.add('hidden');
-  });
+  };
 }
 
 function doMakeup(miss){
@@ -6283,26 +6293,31 @@ document.getElementById('app').addEventListener('click', function(e){
       break;
     }
     case 'claim-miss':{
-      const m = (state.pendingMisses||[]).find(x=>x.id===id);
-      if(m) showClaimForm(m);
+      var cm = (state.pendingMisses||[]).find(function(x){ return x.id===id; });
+      if(cm){
+        try{ showClaimForm(cm); }catch(e){ toast('申报表单打开失败: '+e.message, 'warn'); }
+      }else{
+        toast('未找到该条漏签记录', 'warn');
+      }
       break;
     }
     case 'makeup-miss':{
       var m2 = (state.pendingMisses||[]).find(function(x){ return x.id===id; });
-      if(!m2 || m2.resolved) return;
+      if(!m2 || m2.resolved){ toast('该记录已处理', 'info'); return; }
       // 如果今天已经手动完成了该每日 → 打开申报补录表单
       var t3 = today();
       var d2 = state.dailies.find(function(d){ return d.id===m2.dailyId; });
       if(d2 && d2.completedDates && d2.completedDates.includes(t3)){
-        showClaimForm(m2);
+        try{ showClaimForm(m2); }catch(e){ toast('申报表单打开失败: '+e.message, 'warn'); }
       }else{
         doMakeup(m2);
       }
       break;
     }
     case 'abandon-miss':{
-      const m = (state.pendingMisses||[]).find(x=>x.id===id);
-      if(m && !m.resolved) doAbandon(m);
+      var am = (state.pendingMisses||[]).find(function(x){ return x.id===id; });
+      if(am && !am.resolved){ doAbandon(am); }
+      else{ toast('该记录已处理', 'info'); }
       break;
     }
     case 'delete-reward':{
