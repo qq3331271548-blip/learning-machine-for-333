@@ -2997,7 +2997,8 @@ function defaultState(){
     _surpriseThreshold: Math.floor(Math.random() * 7) + 4, // [4,10]
     _streakGrace: null,
     _streakRecovery: 0,
-    ledger: []
+    ledger: [],
+    _trash: []
   };
 }
 
@@ -3136,6 +3137,7 @@ function loadState(){
       if(s._streakRecovery === undefined) s._streakRecovery = 0;
       if(!Array.isArray(s.subjects)) s.subjects = ['数学','物理','英语'];
       if(!Array.isArray(s.ledger)) s.ledger = [];
+      if(!Array.isArray(s._trash)) s._trash = [];
       // 迁移：为老数据的待办补齐新字段
       if(Array.isArray(s.todos)){
         for(const t of s.todos){
@@ -7148,6 +7150,43 @@ const AI_TOOLS = [
       description: '获取近期行为事实包（连胜/倍率/宽限状态/今日完成/各科时长/7天趋势/最佳纪录/陪伴天数），用于生成个性化台词和深度分析。狐狸需要引用具体数据时才调用。',
       parameters: { type: 'object', properties: {}, required: [] }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_todo',
+      description: '删除待办事项。id 传 "all" 删除全部未完成待办，传具体 id 删除单个。首次调用不带 confirmed 或 confirmed=false，系统会返回确认清单；用户确认后再带 confirmed=true 调用真正删除。删除的待办会进入回收站（state._trash），可通过 restore_todo 恢复。',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: '待办 ID，或 "all" 删除全部未完成待办' },
+          confirmed: { type: 'boolean', description: '是否已确认删除。首次调用传 false 或不传，确认后传 true' }
+        },
+        required: ['id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'restore_todo',
+      description: '从回收站恢复被删除的待办。id 传 "all" 恢复全部，传 "last" 恢复最近删除的一条，传具体 id 恢复指定待办。',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: '待办 ID，或 "all" 恢复全部，或 "last" 恢复最近删除的一条' }
+        },
+        required: ['id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_trash',
+      description: '查看回收站中待恢复的待办列表。当用户问"刚才删了什么"、"能恢复哪些"、"回收站有什么"时调用。',
+      parameters: { type: 'object', properties: {}, required: [] }
+    }
   }
 ];
 
@@ -7164,7 +7203,9 @@ function getSystemPrompt(){
     + '- 任务卡片：按"已逾期/今天/即将到来/无日期"自动分组，组内按优先级排序。左侧竖条=优先级，色点=科目，右侧▶=带任务去自习。\n'
     + '- 编辑面板：点文字区展开，可改日期/优先级/难度/科目，可拆成子步骤。子步骤打勾显示进度（1/3），完成整个任务才结算全额 XP。\n'
     + '- 逾期一键推迟：逾期分组标题旁有"全部推迟到今天"按钮。\n'
-    + '- 删除方式：点卡片右侧✕，或左滑卡片露🗑。\n'
+    + '- 删除方式：点卡片右侧✕，或左滑卡片露🗑。你也可以帮用户删除：调用 delete_todo。\n'
+    + '- AI 删除待办需确认：首次调用不带 confirmed，展示清单等用户说"确认"后再带 confirmed=true 执行。\n'
+    + '- AI 可恢复误删：调用 restore_todo 从回收站找回（id 传 "all"/"last"/具体id）。用户问回收站内容时用 list_trash。\n'
     + '- 大任务策略：困难/史诗级任务建议拆步骤+填估算时长+去自习专注完成。\n'
     + '\n'
     + '【习惯系统】每日打卡，连胜成长。\n'
@@ -7231,6 +7272,9 @@ function executeToolCall(toolName, args){
     case 'get_today_status': return getTodayStatusTool();
     case 'get_task_overview': return getTaskOverviewTool();
     case 'get_recent_behavior': return getRecentBehaviorTool();
+    case 'delete_todo': return deleteTodoTool(args);
+    case 'restore_todo': return restoreTodoTool(args);
+    case 'list_trash': return listTrashTool();
     default: return { success: false, message: '未知工具: ' + toolName };
   }
 }
@@ -7427,6 +7471,103 @@ function getRecentBehaviorTool(){
   }
   msg += '\n🏆 最佳连胜：'+ctx.bestStreak+'天 · 最近里程碑：'+ctx.lastMilestone+'天 · 陪伴'+ctx.companionDays+'天共'+ctx.totalCompanionMinutes+'分钟';
   return { success: true, message: msg, data: ctx };
+}
+
+// ========== AI 删除/恢复待办工具 ==========
+function deleteTodoTool(args){
+  args = args || {};
+  var id = args.id;
+  var confirmed = args.confirmed === true;
+  var targets;
+
+  if(id === 'all'){
+    targets = state.todos.filter(function(t){ return !t.completed; });
+  } else {
+    targets = state.todos.filter(function(t){ return t.id === id; });
+  }
+
+  if(targets.length === 0){
+    return { success: false, message: '没有找到可删除的待办。' + (id === 'all' ? '所有待办都已完成！' : 'ID: ' + id + ' 不存在或已完成。') };
+  }
+
+  // 未确认 → 返回确认清单
+  if(!confirmed){
+    var lines = targets.map(function(t, i){ return (i+1) + '. ' + t.name + (t.dueDate ? ' 📅' + t.dueDate : ''); });
+    return {
+      success: true,
+      needConfirm: true,
+      message: '⚠️ **确认删除**\n以下 ' + targets.length + ' 个待办将被移入回收站：\n\n' + lines.join('\n') + '\n\n删除后可随时通过"恢复"找回。回复"确认"来执行。',
+      count: targets.length
+    };
+  }
+
+  // 已确认 → 移入回收站
+  var now = new Date().toISOString();
+  for(var i = 0; i < targets.length; i++){
+    var t = targets[i];
+    state.todos = state.todos.filter(function(x){ return x.id !== t.id; });
+    state._trash.push({ item: t, deletedAt: now, type: 'todo' });
+  }
+  saveState(); render(); initAllSwipes();
+  return {
+    success: true,
+    message: '✅ 已删除 ' + targets.length + ' 个待办，已移入回收站。输入"恢复"可以找回。',
+    count: targets.length,
+    deletedIds: targets.map(function(t){ return t.id; })
+  };
+}
+
+function restoreTodoTool(args){
+  args = args || {};
+  var id = args.id;
+  if(state._trash.length === 0){
+    return { success: false, message: '回收站是空的，没有可恢复的待办。' };
+  }
+
+  var todoEntries = state._trash.filter(function(e){ return e.type === 'todo'; });
+  if(todoEntries.length === 0){
+    return { success: false, message: '回收站没有待办类型的条目。' };
+  }
+
+  var toRestore = [];
+  if(id === 'all'){
+    toRestore = todoEntries.slice();
+  } else if(id === 'last'){
+    toRestore = [todoEntries[todoEntries.length - 1]];
+  } else {
+    toRestore = todoEntries.filter(function(e){ return e.item.id === id; });
+  }
+
+  if(toRestore.length === 0){
+    return { success: false, message: '回收站中未找到 ID: ' + id + ' 的待办。试试 list_trash 查看回收站内容。' };
+  }
+
+  for(var i = 0; i < toRestore.length; i++){
+    var entry = toRestore[i];
+    state.todos.push(entry.item);
+    state._trash = state._trash.filter(function(e){ return e.item.id !== entry.item.id; });
+  }
+  saveState(); render(); initAllSwipes();
+  return {
+    success: true,
+    message: '✅ 已恢复 ' + toRestore.length + ' 个待办。',
+    restored: toRestore.map(function(e){ return e.item.name; })
+  };
+}
+
+function listTrashTool(){
+  var todoEntries = state._trash.filter(function(e){ return e.type === 'todo'; });
+  if(todoEntries.length === 0){
+    return { success: true, message: '🗑 回收站为空。', items: [] };
+  }
+  var lines = todoEntries.map(function(e, i){
+    return (i+1) + '. ' + e.item.name + ' · 删除于 ' + new Date(e.deletedAt).toLocaleString('zh-CN');
+  });
+  return {
+    success: true,
+    message: '🗑 回收站（' + todoEntries.length + ' 条待办）：\n\n' + lines.join('\n') + '\n\n说"恢复全部"或"恢复最近一条"来找回。',
+    items: todoEntries.map(function(e){ return { id: e.item.id, name: e.item.name, deletedAt: e.deletedAt }; })
+  };
 }
 
 function getTaskOverviewTool(){
