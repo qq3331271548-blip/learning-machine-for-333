@@ -3742,18 +3742,15 @@ function renderRemedDetail(){
   el.innerHTML = unresolved.map(m => {
     const mr = getReward('dailyMiss', m.difficulty);
     const hpLoss = Math.abs(mr.hp);
+    var makeupNote = (m.type==='makeup' && !m.makeupCompleted) ? '<div style="font-size:12px;color:var(--focus);margin-bottom:6px">⏳ 已加入今日补做队列，完成每日即视为补做</div>' : '';
     return '<div class="remed-item" data-miss-id="'+m.id+'">'+
       '<div class="ri-name">📅 '+m.date+' · '+esc(m.dailyName)+' <span style="color:var(--bad);font-weight:600">(-'+hpLoss+' HP)</span></div>'+
-      (m.type==='makeup' && !m.makeupCompleted ?
-        '<div style="font-size:12px;color:var(--focus);margin-bottom:6px">⏳ 已加入今日补做队列，完成每日即视为补做</div>'+
-        '<div class="ri-actions"><button class="remed-btn abandon" data-action="abandon-miss" data-id="'+m.id+'">放弃</button></div>'
-      :
-        '<div class="ri-actions">'+
-          '<button class="remed-btn claim" data-action="claim-miss" data-id="'+m.id+'">✅ 我昨天做过了</button>'+
-          '<button class="remed-btn makeup" data-action="makeup-miss" data-id="'+m.id+'">📋 今天补做</button>'+
-          '<button class="remed-btn abandon" data-action="abandon-miss" data-id="'+m.id+'">✕ 放弃</button>'+
-        '</div>'
-      )+
+      makeupNote+
+      '<div class="ri-actions">'+
+        '<button class="remed-btn claim" data-action="claim-miss" data-id="'+m.id+'">✅ 我昨天做过了</button>'+
+        '<button class="remed-btn makeup" data-action="makeup-miss" data-id="'+m.id+'">📋 今天补做</button>'+
+        '<button class="remed-btn abandon" data-action="abandon-miss" data-id="'+m.id+'">✕ 放弃</button>'+
+      '</div>'+
     '</div>';
   }).join('');
 }
@@ -6291,8 +6288,16 @@ document.getElementById('app').addEventListener('click', function(e){
       break;
     }
     case 'makeup-miss':{
-      const m = (state.pendingMisses||[]).find(x=>x.id===id);
-      if(m && !m.resolved) doMakeup(m);
+      var m2 = (state.pendingMisses||[]).find(function(x){ return x.id===id; });
+      if(!m2 || m2.resolved) return;
+      // 如果今天已经手动完成了该每日 → 打开申报补录表单
+      var t3 = today();
+      var d2 = state.dailies.find(function(d){ return d.id===m2.dailyId; });
+      if(d2 && d2.completedDates && d2.completedDates.includes(t3)){
+        showClaimForm(m2);
+      }else{
+        doMakeup(m2);
+      }
       break;
     }
     case 'abandon-miss':{
