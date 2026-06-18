@@ -6817,7 +6817,7 @@ var sfx = (function(){
     return ctx;
   }
   function canPlay(){
-    if(!state.settings.sfxEnabled) return false;
+    if(!(state.settings && state.settings.sfxEnabled)) return false;
     // 自习/专注模式中不发声
     if(!!companionSession) return false;
     return true;
