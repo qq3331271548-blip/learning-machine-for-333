@@ -2436,8 +2436,10 @@ function updateUserUI(){
   const emailShort = document.getElementById('userEmailShort');
   const overlay = document.getElementById('authOverlay');
   if(cloudUser){
-    const em = cloudUser.email || '';
-    emailShort.textContent = em.length > 14 ? em.slice(0,12)+'…' : em;
+    var em = cloudUser.email || '';
+    // 取@前的前缀，限制5字符，防止手机端溢出
+    var prefix = em.split('@')[0] || em;
+    emailShort.textContent = prefix.length > 5 ? prefix.slice(0,5)+'…' : prefix;
     avatar.textContent = em.charAt(0).toUpperCase();
     pill.title = em;
     pill.style.cursor = 'pointer';
