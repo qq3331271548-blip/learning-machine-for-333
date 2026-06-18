@@ -1344,8 +1344,11 @@ body{
 @keyframes syncPulse{0%,100%{opacity:.4}50%{opacity:1}}
 /* ===== AI Key Area (inside chat panel) ===== */
 .ai-key-area{border-top:1px solid var(--border);padding:6px 8px}
-.ai-key-toggle{display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);font-family:var(--font);padding:4px 8px;width:100%;transition:all .15s}
+.ai-key-row{display:flex;align-items:center;gap:4px}
+.ai-key-toggle{display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);font-family:var(--font);padding:4px 8px;flex:1;transition:all .15s}
 .ai-key-toggle:hover{color:var(--text)}
+.ai-model-select{background:var(--bg);color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:var(--font);padding:3px 4px;cursor:pointer;outline:none;min-width:0}
+.ai-model-select:focus{border-color:var(--tab)}
 .ai-key-form{display:none;padding:6px 4px 4px;animation:fadeIn .15s ease}
 .ai-key-form.show{display:block}
 .ai-key-form input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font);outline:none;margin-bottom:6px}
@@ -1851,7 +1854,14 @@ body{
     <button id="aiSend">➤</button>
   </div>
   <div class="ai-key-area">
-    <button class="ai-key-toggle" id="aiKeyToggle">⚙️ API Key</button>
+    <div class="ai-key-row">
+      <button class="ai-key-toggle" id="aiKeyToggle">⚙️ API Key</button>
+      <select class="ai-model-select" id="aiModelSelect">
+        <option value="auto">🤖 自动</option>
+        <option value="deepseek-reasoner">🧠 v4pro</option>
+        <option value="deepseek-chat">⚡ flash</option>
+      </select>
+    </div>
     <div class="ai-key-form" id="aiKeyForm">
       <input type="password" id="aiKeyInput" placeholder="sk-... 输入 DeepSeek API Key" autocomplete="off">
       <button class="ai-save-btn" id="aiSaveKey">保存</button>
@@ -2930,6 +2940,7 @@ function defaultState(){
     pomodoro: null, // 保留键但不再使用（旧数据迁移用）
     subjects: ['数学','物理','英语'],
     aiKey: '',
+    aiModel: 'auto',
     aiChatHistory: [],
     restDays: [],
     _streakGrace: null,
@@ -6208,7 +6219,13 @@ document.getElementById('aiSaveKey').addEventListener('click', function(){
 // Pre-fill key input after state is loaded (called from init)
 function loadAiSettings(){
   if(state.aiKey){ document.getElementById('aiKeyInput').value = state.aiKey; }
+  var sel = document.getElementById('aiModelSelect');
+  if(sel && state.aiModel){ sel.value = state.aiModel; }
 }
+document.getElementById('aiModelSelect').addEventListener('change', function(){
+  state.aiModel = this.value;
+  saveState();
+});
 
 // AI chat events
 document.getElementById('aiFab').addEventListener('click', toggleAiPanel);
@@ -6512,10 +6529,54 @@ const AI_TOOLS = [
 ];
 
 function getSystemPrompt(){
-  return '你是由 DeepSeek 驱动的习惯养成教练，名叫"小狐"。用户是正在备考的学生，你是他的陪伴型教练——支持者，不是监工。'
-    + '千万不要说自己是 GPT、ChatGPT 或 OpenAI 的产品。被问到模型时，回答"我是 DeepSeek 驱动的 AI 助理"。'
-    + '你可以通过函数调用来帮助用户创建习惯、每日任务、待办和奖励，也可以用 get_task_overview 查看全局来帮用户梳理。\n'
-    + '教练规则：\n'
+  var statsLine = '等级'+state.stats.level+'，🔥连续'+calcStreak()+'天，🪙金币'+state.stats.gold+'，❤️生命'+state.stats.hp;
+  return '你是由 DeepSeek 驱动的学习教练，名叫"小狐"。用户是正在备考的学生。你是他的陪伴型教练——支持者，不是监工。'
+    + '千万不要说自己是 GPT、ChatGPT 或 OpenAI 的产品。被问到模型时，回答"我是 DeepSeek 驱动的 AI 助理"。\n'
+    + '\n'
+    + '=== 网站功能全览（你必须在用户需要时主动推荐最合适的功能） ===\n'
+    + '\n'
+    + '【待办系统】核心任务管理。\n'
+    + '- 一行话快速添加：支持"明天 复习数学 #数学 !! 困难 90分钟"自然语言解析，自动识别日期/优先级/科目/难度/时长。\n'
+    + '- 科目标签：输入 # 弹出科目下拉，或点 chip 选。给任务标上科目（数学/物理…），回顾页才能按科目统计时间。\n'
+    + '- 任务卡片：按"已逾期/今天/即将到来/无日期"自动分组，组内按优先级排序。左侧竖条=优先级，色点=科目，右侧▶=带任务去自习。\n'
+    + '- 编辑面板：点文字区展开，可改日期/优先级/难度/科目，可拆成子步骤。子步骤打勾显示进度（1/3），完成整个任务才结算全额 XP。\n'
+    + '- 逾期一键推迟：逾期分组标题旁有"全部推迟到今天"按钮。\n'
+    + '- 删除方式：点卡片右侧✕，或左滑卡片露🗑。\n'
+    + '- 大任务策略：困难/史诗级任务建议拆步骤+填估算时长+去自习专注完成。\n'
+    + '\n'
+    + '【习惯系统】每日打卡，连胜成长。\n'
+    + '- 正向习惯（👍要做的事）和负向习惯（👎要避免的事）两种。\n'
+    + '- 每天打卡维持连胜，漏签有补救机制（申报补录/今天补做/放弃）。\n'
+    + '- 休息日：点"😴休息日"按钮，当天连胜冻结不扣。漏第一天亮黄灯提醒，连漏第二天才掉档（退一档不归零）。\n'
+    + '- 连胜倍率：3天×1.10→7天×1.25→14天×1.45→21天×1.65→30天×1.80→42天×1.95→66天×2.00，所有经验金币受倍率加成。\n'
+    + '\n'
+    + '【自习陪伴】番茄钟专注，绑定任务。\n'
+    + '- 自习 tab：选时长（25/45/60分钟或自定义），全屏专注，小狐狸陪着。按分钟结算经验金币。\n'
+    + '- 绑定任务：从待办卡片点▶直接带任务进自习，或在 overlay 下拉选任务绑定。专注结束后时间自动计入该任务和该科目。\n'
+    + '- 中途放弃：实际坐多久记多久（学习时间诚实），经验金币按 50% 结算（奖励打折防滥用）。\n'
+    + '- 完成后结算面板显示：专注时长/连胜加成/经验/金币/亲密度。绑了任务还会显示"已计入「数学」·本次XX分·累计XX分"。\n'
+    + '- 科目时间统计：每段专注记录的科目名冗余存储，任务删了科目归属不丢。\n'
+    + '\n'
+    + '【回顾层】学习成果可视化。\n'
+    + '- 四张指标卡：本月专注时长/完成任务数/学习天数/最猛一天。\n'
+    + '- 扇形图：各科专注时间占比，一眼看出哪科花最多时间。\n'
+    + '- 燃尽图：录入总账后自动显示"总剩余 vs 理想匀速线"，蓝线在虚线上方=落后、下方=超前。\n'
+    + '- 日历/列表双视图：日历看热力分布，列表按天展开活动流水。\n'
+    + '\n'
+    + '【总账系统】复习进度追踪。\n'
+    + '- 在总结 tab 录入各科复习总量（如"数学 186 块"）和当前进度，有进度条+±1按钮。\n'
+    + '- 录入后燃尽图自动切换为真数据：总剩余 vs 距月底的理想线。\n'
+    + '- 每天该推进多少：总剩余÷剩余天数=匀速量。\n'
+    + '\n'
+    + '【AI 调度】帮你切分每天的学习任务。\n'
+    + '- 底座+增强+只增不减：先算匀速最低线，再根据弱科微调，建议只加不砍。\n'
+    + '- 可以调用 create_todo 直接帮你把任务建进板子，标好科目。\n'
+    + '\n'
+    + '【奖励商店】用金币兑换自己设的奖励。\n'
+    + '\n'
+    + '【云同步】登录后数据自动同步到 Supabase，换设备不丢。\n'
+    + '\n'
+    + '=== 教练规则 ===\n'
     + '1. 先诊断、再开方：发现异常（某科连续多天没碰、完成率明显下滑、习惯断签）时，先问原因，不要劈头就排任务。\n'
     + '2. 一次只问一个问题（漏斗式），不要一口气抛好几个问题。根据回答再深入。\n'
     + '3. 按用户回答分叉调整：\n'
@@ -6523,24 +6584,19 @@ function getSystemPrompt(){
     + '   - 答"没时间" → 今天只建议最小的一步\n'
     + '   - 答"不想学 / 累" → 给轻量选项，不硬逼\n'
     + '4. 梳理建议时：一次最多推荐 3 件，并明确标出「如果只做一件，先做这个」。\n'
-    + '5. 大任务（困难/史诗）主动建议拆成几步，先做第一步。\n'
-    + '6. 不愧疚轰炸：绝不让用户产生"我太差了"的挫败感。用户漏了一天、没完成——这不是失败，是数据。帮用户找原因、调策略，不责备。\n'
+    + '5. 大任务（困难/史诗）主动建议拆成几步、第一步先做最小的。\n'
+    + '6. 不愧疚轰炸：绝不让用户产生"我太差了"的挫败感。漏签不是失败是数据，帮用户找原因、调策略，不责备。\n'
     + '7. 排序优先级：逾期 > 今天到期 > 高优先级 > 其它。\n'
-    + '8. 调度规则（底座 + 增强 + 只增不减）：\n'
-    + '   - 底座：如果 get_task_overview 返回了总账数据，先算出每天匀速量（总剩余 ÷ 剩余天数），这是最低线，不能低于它。\n'
-    + '   - 增强：在底座之上，根据最近哪科弱（本周时长短）、哪科逾期多，做微调——给弱科多排一点、给强科少排一点。\n'
-    + '   - 只增不减：当天建议的任务量只能比底座多、不能比底座少。用户说"累/不想学"时，可以调整具体做什么（换轻量的），但不能把总量砍到匀速线以下。\n'
-    + '   - 你可以用 create_todo 直接帮用户建任务。建议时把每个任务和总账里的科目关联起来（设 #科目）。\n'
-    + '回复风格：\n'
-    + '- 用中文，温暖鼓励，像朋友一样\n'
-    + '- 回复简洁（2-4句话比较合适），不要长篇大论\n'
-    + '- 当用户想创建习惯/任务/奖励时，主动调用对应函数\n'
-    + '- 不要猜测缺失的参数，先和用户确认\n'
-    + '- 调用函数后等待结果，然后简短告知用户已完成\n'
-    + '- 如果用户只是想聊天提问，正常回复即可\n'
-    + '- 难度默认 medium，正向习惯不需要惩罚参数\n'
-    + '- get_task_overview 返回的数据用于帮你分析，回复时要翻译成"小狐"的温暖口吻，不要干念数据列表\n'
-    + '用户统计：' + '等级'+state.stats.level+'，🔥连续'+calcStreak()+'天，🪙金币'+state.stats.gold+'，❤️生命'+state.stats.hp;
+    + '8. 调度规则（底座+增强+只增不减）：\n'
+    + '   - 底座：总剩余÷剩余天数=每天匀速量，这是最低线。\n'
+    + '   - 增强：根据最近哪科弱（本周时长短）、哪科逾期多，微调分配。\n'
+    + '   - 只增不减：建议量只能≥底座。用户说累时可以换轻量的，但不能砍到匀速线以下。\n'
+    + '   - 用 create_todo 直接建任务，关联科目 #标签。\n'
+    + '9. 功能推荐：当用户描述困难/需求时，主动推荐上面最合适的功能。比如"今天不想学"→推荐自习陪伴最小档25分钟+休息日功能；"任务太多了"→推荐 AI 梳理+拆步骤；"不知道学了啥"→推荐去看总结 tab 扇形图。\n'
+    + '\n'
+    + '回复风格：用中文，温暖鼓励像朋友。简洁2-4句话。调用函数后简短告知结果。难度默认 medium。\n'
+    + 'get_task_overview 数据用于分析，回复时翻译成温暖口吻，不干念数据。\n'
+    + '用户统计：' + statsLine;
 }
 
 function executeToolCall(toolName, args){
@@ -6789,14 +6845,34 @@ function buildAiMessages(userText){
   return msgs;
 }
 
-async function callDeepSeek(messages){
+// 根据用户消息复杂度自动选模型：简单→flash(deepseek-chat)，复杂→v4pro(deepseek-reasoner)
+// 手动选择（aiModel != 'auto'）时跳过自动判断
+function pickModel(userText){
+  if(state.aiModel && state.aiModel !== 'auto') return state.aiModel;
+  if(!userText) return 'deepseek-chat';
+  // 复杂分析关键词：触发 v4pro 深度推理
+  var complexPatterns = [
+    '分析', '梳理', '安排', '计划', '调度', '建议', '怎么', '为什么',
+    '帮我排', '帮我规划', '帮我定', '帮我设计', '帮我看看', '诊断',
+    '策略', '方案', '推荐', '优化', '调整', '复盘', '总结',
+    '最近状态', '最近怎么样', '我有点乱', '太多', '不知道先',
+    '哪科', '先做哪个', '怎么分配', '怎么拆', '如何'
+  ];
+  for(var i = 0; i < complexPatterns.length; i++){
+    if(userText.indexOf(complexPatterns[i]) !== -1) return 'deepseek-reasoner';
+  }
+  return 'deepseek-chat'; // 默认 flash
+}
+
+async function callDeepSeek(messages, model){
+  var useModel = model || 'deepseek-chat';
   const key = state.aiKey;
   if(!key) return { error: '请先配置 DeepSeek API Key（点击 ⚙️ AI 设置）' };
   try{
     const res = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: 'deepseek-chat', messages, tools: AI_TOOLS, tool_choice: 'auto' })
+      body: JSON.stringify({ model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: 'auto' })
     });
     if(!res.ok){
       const errText = await res.text();
@@ -6836,7 +6912,8 @@ async function sendAiMessage(userText){
 
   try{
     const msgs = buildAiMessages(userText);
-    let response = await callDeepSeek(msgs);
+    var chosenModel = pickModel(userText);
+    let response = await callDeepSeek(msgs, chosenModel);
     if(response.error){
       typingEl.remove();
       addAiBubble('assistant', '😥 ' + response.error);
@@ -6872,7 +6949,7 @@ async function sendAiMessage(userText){
       followUp.id = 'aiTyping';
       messagesEl.appendChild(followUp);
       messagesEl.scrollTop = messagesEl.scrollHeight;
-      const response2 = await callDeepSeek(followMsgs);
+      const response2 = await callDeepSeek(followMsgs, chosenModel);
       document.getElementById('aiTyping')?.remove();
       if(response2.error){
         addAiBubble('assistant', '✅ 已完成操作！（AI 跟进回复失败：' + response2.error + '）');
