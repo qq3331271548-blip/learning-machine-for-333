@@ -1349,6 +1349,16 @@ body{
 .ai-key-toggle:hover{color:var(--text)}
 .ai-model-select{background:var(--bg);color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:var(--font);padding:3px 4px;cursor:pointer;outline:none;min-width:0}
 .ai-model-select:focus{border-color:var(--tab)}
+.ai-think-toggle{background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;cursor:pointer;padding:2px 5px;transition:all .15s;line-height:1;opacity:.4}
+.ai-think-toggle:hover{opacity:.7}
+.ai-think-toggle.on{opacity:1;border-color:var(--tab);background:rgba(99,102,241,.1)}
+.ai-think-box{margin:4px 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11px}
+.ai-think-summary{display:flex;align-items:center;gap:4px;padding:6px 10px;cursor:pointer;color:var(--text3);user-select:none;font-size:10px}
+.ai-think-summary:hover{color:var(--text2)}
+.ai-think-summary::after{content:'▸';font-size:8px;transition:transform .15s;margin-left:auto}
+.ai-think-box.open .ai-think-summary::after{transform:rotate(90deg)}
+.ai-think-body{display:none;padding:6px 10px;border-top:1px solid var(--border);color:var(--text3);white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;line-height:1.5}
+.ai-think-box.open .ai-think-body{display:block}
 .ai-key-form{display:none;padding:6px 4px 4px;animation:fadeIn .15s ease}
 .ai-key-form.show{display:block}
 .ai-key-form input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font);outline:none;margin-bottom:6px}
@@ -1861,6 +1871,7 @@ body{
         <option value="deepseek-reasoner">🧠 v4pro</option>
         <option value="deepseek-chat">⚡ flash</option>
       </select>
+      <button class="ai-think-toggle" id="aiThinkToggle" title="深度思考">💭</button>
     </div>
     <div class="ai-key-form" id="aiKeyForm">
       <input type="password" id="aiKeyInput" placeholder="sk-... 输入 DeepSeek API Key" autocomplete="off">
@@ -2941,6 +2952,7 @@ function defaultState(){
     subjects: ['数学','物理','英语'],
     aiKey: '',
     aiModel: 'auto',
+    aiDeepThink: false,
     aiChatHistory: [],
     restDays: [],
     _streakGrace: null,
@@ -6221,9 +6233,20 @@ function loadAiSettings(){
   if(state.aiKey){ document.getElementById('aiKeyInput').value = state.aiKey; }
   var sel = document.getElementById('aiModelSelect');
   if(sel && state.aiModel){ sel.value = state.aiModel; }
+  var thinkBtn = document.getElementById('aiThinkToggle');
+  if(thinkBtn && state.aiDeepThink){ thinkBtn.classList.add('on'); }
 }
 document.getElementById('aiModelSelect').addEventListener('change', function(){
   state.aiModel = this.value;
+  saveState();
+});
+document.getElementById('aiThinkToggle').addEventListener('click', function(){
+  state.aiDeepThink = !state.aiDeepThink;
+  if(state.aiDeepThink){
+    this.classList.add('on');
+  }else{
+    this.classList.remove('on');
+  }
   saveState();
 });
 
@@ -6869,10 +6892,15 @@ async function callDeepSeek(messages, model){
   const key = state.aiKey;
   if(!key) return { error: '请先配置 DeepSeek API Key（点击 ⚙️ AI 设置）' };
   try{
+    var body = { model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: 'auto' };
+    // deepseek-chat 需要显式开启 thinking；deepseek-reasoner 自带深度思考，不需要传
+    if(state.aiDeepThink && useModel === 'deepseek-chat'){
+      body.thinking = { type: 'enabled' };
+    }
     const res = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: 'auto' })
+      body: JSON.stringify(body)
     });
     if(!res.ok){
       const errText = await res.text();
@@ -6923,6 +6951,9 @@ async function sendAiMessage(userText){
     const choice = response.choices[0];
     const msg = choice.message;
 
+    // 深度思考：展示 reasoning_content
+    showAiThinking(msg.reasoning_content);
+
     // Handle tool calls
     if(msg.tool_calls && msg.tool_calls.length > 0){
       typingEl.remove();
@@ -6954,7 +6985,9 @@ async function sendAiMessage(userText){
       if(response2.error){
         addAiBubble('assistant', '✅ 已完成操作！（AI 跟进回复失败：' + response2.error + '）');
       }else if(response2.choices && response2.choices[0]){
-        const text2 = response2.choices[0].message.content;
+        var msg2 = response2.choices[0].message;
+        showAiThinking(msg2.reasoning_content);
+        var text2 = msg2.content;
         if(text2){
           addAiBubble('assistant', text2);
           state.aiChatHistory.push({ role: 'assistant', content: text2 });
@@ -6987,6 +7020,21 @@ function addAiBubble(role, text){
     div.textContent = text;
   }
   messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// 深度思考：展示模型的 reasoning_content，可折叠
+function showAiThinking(reasoningText){
+  if(!reasoningText || !state.aiDeepThink) return;
+  var messagesEl = document.getElementById('aiMessages');
+  var box = document.createElement('div');
+  box.className = 'ai-think-box open';
+  box.innerHTML = '<div class="ai-think-summary">💭 思考过程</div><div class="ai-think-body"></div>';
+  box.querySelector('.ai-think-body').textContent = reasoningText;
+  box.querySelector('.ai-think-summary').addEventListener('click', function(){
+    box.classList.toggle('open');
+  });
+  messagesEl.appendChild(box);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
