@@ -7098,7 +7098,7 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'create_todo',
-      description: '创建一个待办事项。当用户说"待办"、"需要做XX"、"任务"时调用。',
+      description: '创建一个待办事项。当用户说"待办"、"需要做XX"、"任务"时调用。支持设置科目标签(tag)以便按科目统计。',
       parameters: {
         type: 'object',
         properties: {
@@ -7106,7 +7106,8 @@ const AI_TOOLS = [
           difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'], description: '难度等级' },
           dueDate: { type: 'string', description: '截止日期 YYYY-MM-DD' },
           priority: { type: 'string', enum: ['high', 'medium', 'low', 'none'], description: '优先级' },
-          estimatedMinutes: { type: 'number', description: '预估耗时（分钟）' }
+          estimatedMinutes: { type: 'number', description: '预估耗时（分钟）' },
+          tag: { type: 'string', description: '科目标签，如"数学""物理""英语"。匹配用户已有的科目列表。' }
         },
         required: ['name']
       }
@@ -7187,6 +7188,22 @@ const AI_TOOLS = [
       description: '查看回收站中待恢复的待办列表。当用户问"刚才删了什么"、"能恢复哪些"、"回收站有什么"时调用。',
       parameters: { type: 'object', properties: {}, required: [] }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_ledger',
+      description: '修改复习总账中某科目的已完成数或总量。**仅在用户明确下令修改总账，或用户确认了你提出的扣减提议后才能调用。** 绝不能擅自调用。',
+      parameters: {
+        type: 'object',
+        properties: {
+          subject: { type: 'string', description: '科目名称，如"数学""物理"' },
+          field: { type: 'string', enum: ['completedUnits', 'totalUnits'], description: '要修改的字段：completedUnits=已完成数，totalUnits=总量' },
+          value: { type: 'number', description: '目标值（整数）' }
+        },
+        required: ['subject', 'field', 'value']
+      }
+    }
   }
 ];
 
@@ -7232,9 +7249,15 @@ function getSystemPrompt(){
     + '- 录入后燃尽图自动切换为真数据：总剩余 vs 距月底的理想线。\n'
     + '- 每天该推进多少：总剩余÷剩余天数=匀速量。\n'
     + '\n'
+    + '=== 总账控制权规则（AI 必须遵守）===\n'
+    + '默认：AI 只建议，不直接修改总账。帮用户规划时，通过 create_todo 把任务建进待办，不要去改总账数字。\n'
+    + '例外①（用户明确下令）：用户明确说"把数学总账已完成改成30""把物理总量调成200"时，调用 update_ledger 执行。\n'
+    + '例外②（完成待办后提议扣减）：用户完成某科相关待办后，你可以提议"要不要把【物理】总账−8？"——必须先问、用户确认后才调用 update_ledger。绝不允许自动直接扣减。\n'
+    + '红线：绝不能主动巡查总账、自作主张重排或批量修改。用户无相关动作时不碰总账。仅例外①②可调用 update_ledger。\n'
+    + '\n'
     + '【AI 调度】帮你切分每天的学习任务。\n'
     + '- 底座+增强+只增不减：先算匀速最低线，再根据弱科微调，建议只加不砍。\n'
-    + '- 可以调用 create_todo 直接帮你把任务建进板子，标好科目。\n'
+    + '- 可以调用 create_todo 直接帮你把任务建进板子，务必带上 tag 参数标好科目。\n'
     + '\n'
     + '【奖励商店】用金币兑换自己设的奖励。\n'
     + '\n'
@@ -7257,6 +7280,11 @@ function getSystemPrompt(){
     + '   - 只增不减：建议量只能≥底座。用户说累时可以换轻量的，但不能砍到匀速线以下。\n'
     + '   - 用 create_todo 直接建任务，关联科目 #标签。\n'
     + '9. 功能推荐：当用户描述困难/需求时，主动推荐上面最合适的功能。比如"今天不想学"→推荐自习陪伴最小档25分钟+休息日功能；"任务太多了"→推荐 AI 梳理+拆步骤；"不知道学了啥"→推荐去看总结 tab 扇形图。\n'
+    + '10. 总账控制权（强约束）：\n'
+    + '   - 默认只建议，不直接改总账。帮用户规划时用 create_todo 建待办，别碰总账数字。\n'
+    + '   - 例外①：用户明确说"把数学总账改成XX"→ 调用 update_ledger 执行。\n'
+    + '   - 例外②：用户完成某科相关待办后，可以提议扣减总账（"要不要−8？"），用户确认后再调 update_ledger。绝不自动直接扣。\n'
+    + '   - 红线：绝不主动巡查、重排或批量修改总账。除例外①②外不调用 update_ledger。\n'
     + '\n'
     + '回复风格：用中文，温暖鼓励像朋友。简洁2-4句话。调用函数后简短告知结果。难度默认 medium。\n'
     + 'get_task_overview 数据用于分析，回复时翻译成温暖口吻，不干念数据。\n'
@@ -7275,6 +7303,7 @@ function executeToolCall(toolName, args){
     case 'delete_todo': return deleteTodoTool(args);
     case 'restore_todo': return restoreTodoTool(args);
     case 'list_trash': return listTrashTool();
+    case 'update_ledger': return updateLedgerTool(args);
     default: return { success: false, message: '未知工具: ' + toolName };
   }
 }
@@ -7315,7 +7344,7 @@ function createTodoTool(args){
     id, name: args.name, completed: false, createdAt: today(),
     difficulty: args.difficulty || 'medium',
     dueDate: args.dueDate || today(),
-    priority: args.priority || 'medium', tag: null, subtasks: [],
+    priority: args.priority || 'medium', tag: args.tag || null, subtasks: [],
     completedAt: null, estimatedMinutes: args.estimatedMinutes || 0,
     accumulatedFocusMinutes: 0, reminderTime: null, reminded: false,
     customReward: null, penalty: null,
@@ -7570,6 +7599,52 @@ function listTrashTool(){
   };
 }
 
+// ========== AI 修改总账工具 ==========
+function updateLedgerTool(args){
+  args = args || {};
+  var subject = (args.subject || '').trim();
+  var field = args.field;
+  var value = args.value;
+
+  if(!subject){ return { success: false, message: '请指定科目名称。' }; }
+  if(field !== 'completedUnits' && field !== 'totalUnits'){
+    return { success: false, message: 'field 必须是 completedUnits 或 totalUnits。' };
+  }
+  if(typeof value !== 'number' || !Number.isInteger(value) || value < 0){
+    return { success: false, message: 'value 必须是非负整数。' };
+  }
+
+  var ledger = state.ledger || [];
+  var entry = ledger.find(function(e){ return e.subject === subject; });
+
+  if(!entry){
+    return { success: false, message: '未找到科目「' + subject + '」的总账记录。请先在总结页添加该科目。' };
+  }
+
+  // 边界保护
+  if(field === 'completedUnits'){
+    if(value > entry.totalUnits){
+      return { success: false, message: '已完成数（' + value + '）不能超过总量（' + entry.totalUnits + '）。' };
+    }
+    entry.completedUnits = value;
+  } else {
+    // totalUnits
+    if(value < entry.completedUnits){
+      return { success: false, message: '总量（' + value + '）不能小于已完成数（' + entry.completedUnits + '）。' };
+    }
+    if(value === 0){
+      return { success: false, message: '总量不能设为 0。如需删除该科目，请在总结页操作。' };
+    }
+    entry.totalUnits = value;
+  }
+
+  touch(entry); saveState(); renderSummary();
+  return {
+    success: true,
+    message: '✅ 已更新「' + subject + '」总账：' + (field === 'completedUnits' ? '已完成' : '总量') + ' → ' + value + '（' + entry.completedUnits + '/' + entry.totalUnits + '）'
+  };
+}
+
 function getTaskOverviewTool(){
   var t = today();
   var y = yesterday();
@@ -7717,12 +7792,49 @@ function getTaskOverviewTool(){
     msg += ' · 每天至少' + Math.ceil(totalRemainingAll / daysLeft) + '块才能匀速完成';
   }
 
+  // ── Rest days data ──
+  var restDaysList = state.restDays || [];
+  var restDaysPerWeek = state.restDaysPerWeek || 0;
+  var thisWeekRestDays = getWeekRestDays();
+  var isTodayRest = restDaysList.includes(t);
+  var restInfo = {
+    todayIsRest: isTodayRest,
+    perWeekQuota: restDaysPerWeek,
+    usedThisWeek: thisWeekRestDays.length,
+    quotaRemaining: restDaysPerWeek === 0 ? Infinity : Math.max(0, restDaysPerWeek - thisWeekRestDays.length),
+    thisWeekDates: thisWeekRestDays
+  };
+  if(restInfo.quotaRemaining > 0 || restDaysPerWeek === 0){
+    msg += '\n😴 休息日：本周' + restInfo.usedThisWeek + '/' + (restDaysPerWeek || '∞') + '天' + (isTodayRest ? ' · 今天休息' : '');
+  }
+
+  // ── Per-subject 7-day rolling daily average (B2 data source) ──
+  var subjectDailyAvg7d = {};
+  var allSessions2 = state.focusSessions || [];
+  if(allSessions2.length > 0){
+    var subjTotals7d = {};
+    for(var ia = 0; ia < allSessions2.length; ia++){
+      var sa = allSessions2[ia];
+      if(sa.date >= weekAgoStr && sa.date <= t){
+        var subj2 = sa.subject || '未分类';
+        subjTotals7d[subj2] = (subjTotals7d[subj2] || 0) + (sa.settledMin || 0);
+      }
+    }
+    var subjKeys2 = Object.keys(subjTotals7d);
+    for(var ib = 0; ib < subjKeys2.length; ib++){
+      var sk = subjKeys2[ib];
+      subjectDailyAvg7d[sk] = Math.round(subjTotals7d[sk] / 7); // ÷7 not ÷可用天数——没学的日子也是真实速度
+    }
+  }
+
   return { success: true, message: msg, data: {
     overdueTodos: overdueTodos, todayTodos: todayTodos, tomorrowTodos: tomorrowTodos,
     uncheckedHabits: uncheckedHabits, uncompletedDailies: uncompletedDailies,
     subjectMinutes: subjectMinutes, streak: streak, atRisk: atRisk,
     trend: { dailyCompletions: dailyCompletions, subjectTrend: subjectTrend, streakCurve: streakCurve, brokenHabits7d: brokenHabits7d },
-    ledger: ledger
+    ledger: ledger,
+    restDays: restInfo,
+    subjectDailyAvg7d: subjectDailyAvg7d
   }};
 }
 
