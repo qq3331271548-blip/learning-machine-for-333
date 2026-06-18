@@ -1162,8 +1162,8 @@ body{
 }
 .help-btn:hover{background:var(--tab-bg);border-color:var(--tab)}
 .help-btn:active{transform:scale(.94)}
-.section-help{display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:10px;font-family:var(--font);padding:0;line-height:1;transition:all .15s;flex-shrink:0}
-.section-help:hover{color:var(--text);border-color:var(--text2)}
+.section-help{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--text3);background:transparent;color:var(--text3);cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font);padding:0;line-height:18px;transition:all .15s;flex-shrink:0;text-align:center}
+.section-help:hover{color:#fff;border-color:var(--tab);background:var(--tab)}
 .companion-help-btn{position:absolute;top:12px;right:12px;z-index:10}
 
 /* ===== Help Overlay ===== */
@@ -6814,8 +6814,8 @@ document.getElementById('fab').addEventListener('click', function(){
   overlay.addEventListener('click', function(e){
     if(e.target === overlay) closeHelp();
   });
-  // 委托：所有 .section-help 点击
-  document.getElementById('app').addEventListener('click', function(e){
+  // 委托：所有 .section-help 点击（监听 document，覆盖 app 外的 AI 面板等）
+  document.addEventListener('click', function(e){
     var btn = e.target.closest('.section-help');
     if(btn){
       var sectionId = btn.dataset.help;
