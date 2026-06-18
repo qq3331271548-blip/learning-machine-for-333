@@ -4981,7 +4981,6 @@ function renderSummary(){
     '<button data-action="summary-prev">◀</button>'+
     '<div class="month-title">📊 '+year+'年'+month+'月</div>'+
     '<button data-action="summary-next"'+(isCurrentMonth?' disabled style="opacity:.3"':'')+'>▶</button>'+
-    '<button class="section-help" data-help="summary" title="教程">?</button>'+
     '</div>';
 
   // ── ① Four learning stat cards ──
@@ -4990,18 +4989,6 @@ function renderSummary(){
     '<div class="summary-card"><div class="sc-val" style="color:var(--xp)">'+completedTasks+'</div><div class="sc-label">完成任务</div></div>'+
     '<div class="summary-card"><div class="sc-val" style="color:var(--good)">'+studyDayCount+'</div><div class="sc-label">学习天数</div></div>'+
     '<div class="summary-card"><div class="sc-val">'+bestDayMin+'分</div><div class="sc-label">最猛一天</div></div>'+
-    '</div>';
-
-  // ── 当日完成率 ──
-  var todayRate = calcTodayCompletionRate();
-  html += '<div class="chart-section" id="completionRateTop">'+
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'+
-      '<span style="font-size:12px;font-weight:600">📋 今日完成度</span>'+
-      '<span style="font-size:12px;color:var(--text2)">'+todayRate.done+'/'+todayRate.total+' · '+(todayRate.total>0?Math.round(todayRate.done/todayRate.total*100):0)+'%</span>'+
-    '</div>'+
-    '<div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden">'+
-      '<div style="height:100%;width:'+(todayRate.total>0?Math.round(todayRate.done/todayRate.total*100):0)+'%;background:var(--tab);border-radius:4px;transition:width .3s"></div>'+
-    '</div>'+
     '</div>';
 
   // ── Ledger: 总账（各科复习进度）──
@@ -5058,12 +5045,13 @@ function renderSummary(){
   html += '</div>'; // close #summaryCharts
 
   // ── View toggle ──
-  html += '<div style="display:flex;justify-content:center;margin:14px 0">'+
+  html += '<div style="display:flex;justify-content:center;align-items:center;margin:14px 0;gap:6px">'+
     '<div class="view-toggle">'+
       '<button class="'+(summaryView==='list'?'active':'')+'" data-action="summary-view-list">📋 列表</button>'+
       '<button class="'+(summaryView==='calendar'?'active':'')+'" data-action="summary-view-cal">📅 日历</button>'+
       '<button class="'+(summaryView==='chart'?'active':'')+'" data-action="summary-view-chart">📊 图表</button>'+
     '</div>'+
+    '<button class="section-help" data-help="summary" title="教程">?</button>'+
     '</div>';
 
   container.innerHTML = html;
