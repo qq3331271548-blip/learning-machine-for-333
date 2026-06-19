@@ -7344,6 +7344,8 @@ function executeToolCall(toolName, args){
 }
 
 function createHabitTool(args){
+  args = args || {};
+  if(!Array.isArray(state.habits)) state.habits = [];
   const id = uid();
   const habit = {
     id, name: args.name, type: args.type || 'positive',
@@ -7358,6 +7360,8 @@ function createHabitTool(args){
 }
 
 function createDailyTool(args){
+  args = args || {};
+  if(!Array.isArray(state.dailies)) state.dailies = [];
   const id = uid();
   const daily = {
     id, name: args.name,
@@ -7374,6 +7378,8 @@ function createDailyTool(args){
 }
 
 function createTodoTool(args){
+  args = args || {};
+  if(!Array.isArray(state.todos)) state.todos = [];
   const id = uid();
   const todo = {
     id, name: args.name, completed: false, createdAt: today(),
@@ -7391,6 +7397,8 @@ function createTodoTool(args){
 }
 
 function createRewardTool(args){
+  args = args || {};
+  if(!Array.isArray(state.rewards)) state.rewards = [];
   const id = uid();
   const reward = { id, name: args.name, price: args.price || 100, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   state.rewards.push(reward);
@@ -7540,14 +7548,17 @@ function getRecentBehaviorTool(){
 // ========== AI 删除/恢复待办工具 ==========
 function deleteTodoTool(args){
   args = args || {};
+  if(!Array.isArray(state.todos)) state.todos = [];
+  if(!Array.isArray(state._trash)) state._trash = [];
   var id = args.id;
   var confirmed = args.confirmed === true;
   var targets;
+  var todos = state.todos;
 
   if(id === 'all'){
-    targets = state.todos.filter(function(t){ return !t.completed; });
+    targets = todos.filter(function(t){ return !t.completed; });
   } else {
-    targets = state.todos.filter(function(t){ return t.id === id; });
+    targets = todos.filter(function(t){ return t.id === id; });
   }
 
   if(targets.length === 0){
@@ -7583,6 +7594,8 @@ function deleteTodoTool(args){
 
 function restoreTodoTool(args){
   args = args || {};
+  if(!Array.isArray(state._trash)) state._trash = [];
+  if(!Array.isArray(state.todos)) state.todos = [];
   var id = args.id;
   if(state._trash.length === 0){
     return { success: false, message: '回收站是空的，没有可恢复的待办。' };
@@ -7620,6 +7633,7 @@ function restoreTodoTool(args){
 }
 
 function listTrashTool(){
+  if(!Array.isArray(state._trash)) state._trash = [];
   var todoEntries = state._trash.filter(function(e){ return e.type === 'todo'; });
   if(todoEntries.length === 0){
     return { success: true, message: '🗑 回收站为空。', items: [] };
