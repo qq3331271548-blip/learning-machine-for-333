@@ -7185,7 +7185,7 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'restore_todo',
-      description: '从回收站恢复被删除的待办。id 传 "all" 恢复全部，传 "last" 恢复最近删除的一条，传具体 id 恢复指定待办。',
+      description: '从回收站恢复被删除的待办。id 传 "all" 恢复全部，传 "last" 恢复最近删除的一条，传具体 id 恢复指定待办。用户说"恢复刚才删的""恢复全部"时直接用 id="all"，不需要先调 list_trash 查看。',
       parameters: {
         type: 'object',
         properties: {
@@ -7207,7 +7207,7 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'update_ledger',
-      description: '修改复习总账中某科目的已完成数或总量。**仅在用户明确下令修改总账，或用户确认了你提出的扣减提议后才能调用。** 绝不能擅自调用。',
+      description: '修改复习总账中某科目的已完成数或总量。**仅在用户明确下令修改总账，或用户确认了你提出的扣减提议后才能调用。** 绝不能擅自调用。用户明确说"把XX改成YY"时直接调用，不需要先查 get_task_overview。',
       parameters: {
         type: 'object',
         properties: {
@@ -7235,8 +7235,8 @@ function getSystemPrompt(){
     + '- 编辑面板：点文字区展开，可改日期/优先级/难度/科目，可拆成子步骤。子步骤打勾显示进度（1/3），完成整个任务才结算全额 XP。\n'
     + '- 逾期一键推迟：逾期分组标题旁有"全部推迟到今天"按钮。\n'
     + '- 删除方式：点卡片右侧✕，或左滑卡片露🗑。你也可以帮用户删除：调用 delete_todo。\n'
-    + '- AI 删除待办需确认：首次调用不带 confirmed，展示清单等用户说"确认"后再带 confirmed=true 执行。\n'
-    + '- AI 可恢复误删：调用 restore_todo 从回收站找回（id 传 "all"/"last"/具体id）。用户问回收站内容时用 list_trash。\n'
+    + '- AI 删除待办需确认：**必须调用 delete_todo 工具做确认，禁止仅口头确认。** 首次调用不带 confirmed（返回确认清单），用户说"确认"后再调一次带 confirmed=true 执行。不要只问"你确定吗"而不调工具——工具的 needConfirm 才是正式的确认机制。\n'
+    + '- AI 可恢复误删：调用 restore_todo 从回收站找回（id 传 "all"/"last"/具体id）。用户说"恢复刚才删的"直接用 restore_todo(id="all")，不用先查。用户问回收站有什么时用 list_trash。\n'
     + '- 大任务策略：困难/史诗级任务建议拆步骤+填估算时长+去自习专注完成。\n'
     + '\n'
     + '【习惯系统】每日打卡，连胜成长。\n'
@@ -7272,6 +7272,8 @@ function getSystemPrompt(){
     + '【AI 调度】帮你切分每天的学习任务。\n'
     + '- 底座+增强+只增不减：先算匀速最低线，再根据弱科微调，建议只加不砍。\n'
     + '- 可以调用 create_todo 直接帮你把任务建进板子，务必带上 tag 参数标好科目。\n'
+    + '- 调用 update_ledger 时必须传完整参数：subject(科目名), field("completedUnits"或"totalUnits"), value(整数)。**禁止自编参数名。**\n'
+    + '- 删除待办必须通过 delete_todo 工具，利用工具的 needConfirm 机制确认，不要口头确认。\n'
     + '\n'
     + '【调度规则补充 · 防规划谬误（B组·强约束）】\n'
     + 'B1·留缓冲，不排满：理论能做5件排3件。在匀速量基础上预留30–50%缓冲（乘0.6–0.7），给干扰、疲劳、返工留余地。不要按"理论上能做多少"排满。**排任务时必须在回复里明确说出缓冲率（如"按约30%缓冲，今天排3件"）。**\n'
