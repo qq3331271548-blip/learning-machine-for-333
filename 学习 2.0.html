@@ -1128,6 +1128,10 @@ body{
 .diff-opt.active.e{color:#f59e0b}
 .diff-opt.active.m{color:#f59e0b}
 .diff-opt.active.h{color:#f59e0b}
+/* 周几选择器 — 复用 diff-toggle 结构，但允许多选 */
+.weekday-toggle{display:flex;gap:3px;background:var(--border);border-radius:8px;padding:3px}
+.weekday-btn{padding:5px 10px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);background:transparent;color:var(--text3);transition:all .15s}
+.weekday-btn.active{background:#fff;box-shadow:var(--shadow);color:var(--tab)}
 
 /* Todo add form */
 .todo-add-form{flex-direction:column;align-items:stretch !important;gap:10px !important}
@@ -3245,12 +3249,15 @@ function maxHp(){ return HP_BASE + state.stats.level * HP_PER_LVL; }
 function xpToNext(){ return XP_BASE + (state.stats.level - 1) * XP_PER_LVL; }
 function getDailyStreak(daily){
   if(!daily.completedDates || daily.completedDates.length===0) return 0;
-  const dates = [...new Set(daily.completedDates)].sort().reverse();
-  let streak = 0;
-  const t = new Date();
-  for(let i=0; i<dates.length; i++){
-    const expected = new Date(t); expected.setDate(expected.getDate()-i);
-    if(dates[i] === localDay(expected)) streak++;
+  var streak = 0;
+  var d = new Date();
+  var restDays = state.restDays || [];
+  // Walk backwards; skip rest days and days this daily isn't scheduled
+  while(true){
+    var ds = localDay(d);
+    if(restDays.includes(ds)){ d.setDate(d.getDate() - 1); continue; }
+    if(!isDailyScheduledOn(daily, ds)){ d.setDate(d.getDate() - 1); continue; }
+    if(daily.completedDates.includes(ds)){ streak++; d.setDate(d.getDate() - 1); }
     else break;
   }
   return streak;
@@ -3991,7 +3998,7 @@ function checkDailyReset(){
   // Yesterday was a rest day → freeze streak (no misses generated)
   if(restDays.includes(y)){
     // Clear grace if user is back today with any daily done
-    var anyDoneToday = state.dailies.some(function(d3){ return d3.completedDates && d3.completedDates.includes(t); });
+    var anyDoneToday = didShowUp(t);
     if(anyDoneToday && state._streakGrace){
       state._streakGrace = null;
       state._streakRecovery = 0;
@@ -4014,7 +4021,7 @@ function checkDailyReset(){
     if(!d.completedDates) d.completedDates = [];
     if(d.accumulatedFocusMinutes === undefined) d.accumulatedFocusMinutes = 0;
     if(d.estimatedMinutes === undefined) d.estimatedMinutes = 0;
-    if(!d.completedDates.includes(y)){
+    if(isDailyScheduledOn(d, y) && !d.completedDates.includes(y)){
       missedYesterday = true;
       var alreadyPending = state.pendingMisses.some(function(m){ return m.dailyId === d.id && m.date === y; });
       if(!alreadyPending){
@@ -4030,7 +4037,7 @@ function checkDailyReset(){
   }
 
   // ── Streak grace / tier-drop logic ──
-  var anyDoneToday2 = state.dailies.some(function(d4){ return d4.completedDates && d4.completedDates.includes(t); });
+  var anyDoneToday2 = didShowUp(t);
 
   if(missedYesterday && !anyDoneToday2){
     // Yesterday missed AND today not yet done → at risk
@@ -4613,7 +4620,7 @@ function renderHabits(){
 function renderDailies(){
   const t = today();
   const list = document.getElementById('dailiesList');
-  const items = state.dailies;
+  const items = state.dailies.filter(function(d){ return isDailyScheduledOn(d, t); });
   if(!items.length){
     list.innerHTML = '<div class="empty"><span class="icon">📅</span><p>还没有每日任务，点击右下角 + 添加</p></div>';
     return;
@@ -4645,12 +4652,19 @@ function renderDailies(){
     let frontHTML;
     if(isEditingDaily){
       const eEasy=diff==='easy'?' active':'', eMed=diff==='medium'?' active':'', eHard=diff==='hard'?' active':'';
+      var wds2 = d.weekdays || [];
+      var allDays2 = wds2.length === 0;
+      var dayNames2 = ['日','一','二','三','四','五','六'];
+      var weekdayHTML2 = '<div class="weekday-toggle" id="editWeekdayToggle" style="margin-top:4px">';
+      for(var w2=0; w2<7; w2++){ weekdayHTML2 += '<button class="weekday-btn'+(allDays2||wds2.includes(w2)?' active':'')+'" data-wd="'+w2+'">'+dayNames2[w2]+'</button>'; }
+      weekdayHTML2 += '</div>';
       frontHTML = '<div class="card-edit-form">'+
         '<input type="text" id="editDailyName" value="'+esc(d.name)+'" maxlength="40" style="flex:1;min-width:0;border:2px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;font-family:var(--font);outline:none">'+
         '<div class="card-edit-row">'+
           '<div class="diff-toggle"><button class="diff-opt e'+eEasy+'" data-action="edit-daily-diff" data-id="'+d.id+'" data-diff="easy">⭐</button><button class="diff-opt m'+eMed+'" data-action="edit-daily-diff" data-id="'+d.id+'" data-diff="medium">⭐⭐</button><button class="diff-opt h'+eHard+'" data-action="edit-daily-diff" data-id="'+d.id+'" data-diff="hard">⭐⭐⭐</button></div>'+
           '<button class="btn btn-mini" data-action="edit-daily-done" data-id="'+d.id+'" style="flex-shrink:0">✓ 完成</button>'+
         '</div>'+
+        weekdayHTML2 +
       '</div>';
     }else{
       frontHTML = '<div class="card-body">'+
@@ -5503,6 +5517,23 @@ function esc(s){
 }
 
 // ========== Stats helpers ==========
+// 某条每日在指定日期 ds（'YYYY-MM-DD'）是否"该做"
+function isDailyScheduledOn(daily, ds){
+  if(!daily.weekdays || !daily.weekdays.length) return true; // 空=每天
+  var wd = new Date(ds + 'T12:00:00').getDay();              // 用 12:00 避免时区跨日
+  return daily.weekdays.includes(wd);
+}
+// 指定日期 ds，用户"有没有出现"（连胜口径：每日 或 代办，任一即可）
+function didShowUp(ds){
+  var dailyDone = state.dailies.some(function(d){
+    return d.completedDates && d.completedDates.includes(ds);
+  });
+  if(dailyDone) return true;
+  // 代办完成从 activityLog 读（因为 item 3 会清走旧的已完成代办，state.todos 不可靠）
+  return (state.activityLog || []).some(function(e){
+    return e.type === 'todo-complete' && localDay(new Date(e.ts)) === ds;
+  });
+}
 function calcStreak(){
   var streak = 0;
   var d = new Date();
@@ -5511,10 +5542,7 @@ function calcStreak(){
     var ds = localDay(d);
     // Rest days: freeze streak (don't count but don't break)
     if(restDays.includes(ds)){ d.setDate(d.getDate() - 1); continue; }
-    var anyDone = state.dailies.some(function(daily){
-      return daily.completedDates && daily.completedDates.includes(ds);
-    });
-    if(!anyDone) break;
+    if(!didShowUp(ds)) break;
     streak++;
     d.setDate(d.getDate() - 1);
   }
@@ -5924,7 +5952,7 @@ function showAddForm(tab){
   if(tab === 'habits'){
     area.innerHTML = '<div class="add-form" style="flex-wrap:wrap;gap:8px"><input type="text" id="addInput" placeholder="习惯名称..." maxlength="40" style="flex:1;min-width:120px"><div class="type-toggle"><button class="type-opt active" data-type="positive">👍 好</button><button class="type-opt" data-type="negative">👎 坏</button></div><div class="diff-toggle" id="diffToggle" style="flex-basis:100%"><button class="diff-opt e" data-diff="easy">⭐</button><button class="diff-opt m active" data-diff="medium">⭐⭐</button><button class="diff-opt h" data-diff="hard">⭐⭐⭐</button></div><div style="flex-basis:100%;display:flex;gap:8px"><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div></div>';
   }else if(tab === 'dailies'){
-    area.innerHTML = '<div class="add-form" style="flex-wrap:wrap;gap:8px"><input type="text" id="addInput" placeholder="任务名称..." maxlength="40" style="flex:1;min-width:120px"><input type="number" id="addTime" placeholder="分钟" min="0" max="480" style="max-width:64px;flex:0"><span style="font-size:11px;color:var(--text3)">分</span><div class="diff-toggle" id="diffToggle" style="flex-basis:100%"><button class="diff-opt e" data-diff="easy">⭐</button><button class="diff-opt m active" data-diff="medium">⭐⭐</button><button class="diff-opt h" data-diff="hard">⭐⭐⭐</button></div><div style="flex-basis:100%;display:flex;gap:8px"><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div></div>';
+    area.innerHTML = '<div class="add-form" style="flex-wrap:wrap;gap:8px"><input type="text" id="addInput" placeholder="任务名称..." maxlength="40" style="flex:1;min-width:120px"><input type="number" id="addTime" placeholder="分钟" min="0" max="480" style="max-width:64px;flex:0"><span style="font-size:11px;color:var(--text3)">分</span><div class="diff-toggle" id="diffToggle" style="flex-basis:100%"><button class="diff-opt e" data-diff="easy">⭐</button><button class="diff-opt m active" data-diff="medium">⭐⭐</button><button class="diff-opt h" data-diff="hard">⭐⭐⭐</button></div><div class="weekday-toggle" id="weekdayToggle" style="flex-basis:100%"><button class="weekday-btn active" data-wd="1">一</button><button class="weekday-btn active" data-wd="2">二</button><button class="weekday-btn active" data-wd="3">三</button><button class="weekday-btn active" data-wd="4">四</button><button class="weekday-btn active" data-wd="5">五</button><button class="weekday-btn active" data-wd="6">六</button><button class="weekday-btn active" data-wd="0">日</button></div><div style="flex-basis:100%;display:flex;gap:8px"><button class="btn-confirm" id="confirmAdd">添加</button><button class="btn-cancel" id="cancelAdd">取消</button></div></div>';
   }else if(tab === 'todos'){
     _selectedTag = null;
     area.innerHTML =
@@ -5994,7 +6022,14 @@ function confirmAdd(){
     const estMin = timeInput ? Math.max(0, parseInt(timeInput.value)||0) : 0;
     const activeDiff = document.querySelector('#diffToggle .diff-opt.active');
     const difficulty = activeDiff ? activeDiff.dataset.diff : 'medium';
-    state.dailies.push({ id: uid(), name, difficulty, completedDates: [], estimatedMinutes: estMin, accumulatedFocusMinutes: 0, updatedAt: new Date().toISOString() });
+    // Read selected weekdays
+    var wdBtns = document.querySelectorAll('#weekdayToggle .weekday-btn.active');
+    var weekdays = [];
+    if(wdBtns.length > 0 && wdBtns.length < 7){
+      // Only store if not all-selected (all=empty=每天, per convention)
+      wdBtns.forEach(function(b){ weekdays.push(parseInt(b.dataset.wd)); });
+    }
+    state.dailies.push({ id: uid(), name, difficulty, completedDates: [], estimatedMinutes: estMin, accumulatedFocusMinutes: 0, weekdays: weekdays, updatedAt: new Date().toISOString() });
   }else if(currentAddTab === 'todos'){
     const parsed = parseQuickAdd(name);
     const cleanName = parsed.name || name;
@@ -6143,6 +6178,16 @@ document.getElementById('app').addEventListener('click', function(e){
       if(d){
         const nameInput = document.getElementById('editDailyName');
         if(nameInput && nameInput.value.trim()){ d.name = nameInput.value.trim(); touch(d); }
+        // Save weekdays from edit form
+        var editWdBtns = document.querySelectorAll('#editWeekdayToggle .weekday-btn.active');
+        if(editWdBtns.length > 0 && editWdBtns.length < 7){
+          d.weekdays = [];
+          editWdBtns.forEach(function(b){ d.weekdays.push(parseInt(b.dataset.wd)); });
+          touch(d);
+        }else if(editWdBtns.length === 7 || editWdBtns.length === 0){
+          d.weekdays = []; // all selected or none visible = every day
+          touch(d);
+        }
         saveState();
       }
       editingDailyId = null;
@@ -6702,6 +6747,12 @@ document.getElementById('app').addEventListener('click', function(e){
     document.querySelectorAll('#diffToggle .diff-opt').forEach(o=>o.classList.remove('active'));
     diffOpt.classList.add('active');
     syncTodoForm();
+    return;
+  }
+  // 周几选择器：多选切换
+  const wdBtn = e.target.closest('.weekday-btn');
+  if(wdBtn){
+    wdBtn.classList.toggle('active');
     return;
   }
   const opt = e.target.closest('.type-opt');
