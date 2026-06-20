@@ -3022,6 +3022,7 @@ function defaultState(){
 
 let state;
 let openSwipeCardId = null;       // 当前左划打开的卡片 ID，全局互斥（三类共用）
+let _completedOpen = false;       // 已完成代办区是否展开（会话内，默认收起）
 function closeOpenSwipeCard(){
   if(!openSwipeCardId) return;
   const card = document.querySelector('.card-habit.swiped[data-id="'+openSwipeCardId+'"], .card-daily.swiped[data-id="'+openSwipeCardId+'"], .card-todo.swiped[data-id="'+openSwipeCardId+'"], .card-reward.swiped[data-id="'+openSwipeCardId+'"]');
@@ -4009,6 +4010,8 @@ function checkDailyReset(){
       if(!d3.completedDates) d3.completedDates = [];
       d3.accumulatedFocusMinutes = 0;
     }
+    // Auto-clear old completed todos
+    state.todos = state.todos.filter(function(td){ return !(td.completed && td.completedAt && td.completedAt < t); });
     state.lastResetDate = t;
     saveState();
     return;
@@ -4062,6 +4065,8 @@ function checkDailyReset(){
   state.lastResetDate = t;
   // 重置每日闸门
   state._nodeFiredToday = { subjectFocus: {}, taskCount5: false };
+  // Auto-clear old completed todos
+  state.todos = state.todos.filter(function(td){ return !(td.completed && td.completedAt && td.completedAt < t); });
   saveState();
 }
 
@@ -4713,7 +4718,8 @@ function dueClass(dateStr){
 function renderTodos(){
   const list = document.getElementById('todosList');
   const active = state.todos.filter(t=>!t.completed);
-  const completedItems = state.todos.filter(t=>t.completed);
+  const td = today();
+  const completedItems = state.todos.filter(function(x){ return x.completed && x.completedAt === td; });
   if(!active.length && !completedItems.length){
     list.innerHTML = '<div class="empty"><span class="icon">✅</span><p>还没有待办事项，点击右下角 + 添加</p><p class="empty-hint">试试输入：<code>明天 复习数学 #数学 !! 90分钟</code></p></div>';
     return;
@@ -4759,8 +4765,11 @@ function renderTodos(){
   }
 
   if(completedItems.length){
-    html += '<div class="todo-group"><div class="group-head upcoming">✓ 已完成 <span class="cnt">'+completedItems.length+'</span></div>';
-    html += completedItems.map(t=>'<div class="card card-todo completed" data-id="'+t.id+'"><div class="card-front" style="padding:10px 16px"><div class="card-body"><div class="card-row1"><span class="card-name" style="font-size:13px">'+esc(t.name)+'</span></div></div><button class="swipe-btn swipe-del" data-action="delete-todo" data-id="'+t.id+'" style="width:48px;opacity:.35">🗑</button></div></div>').join('');
+    var arrow = _completedOpen ? '▾' : '▸';
+    html += '<div class="todo-group"><div class="group-head upcoming" data-action="toggle-completed" style="cursor:pointer">'+arrow+' 今天已完成 <span class="cnt">'+completedItems.length+'</span></div>';
+    if(_completedOpen){
+      html += completedItems.map(function(t){ return '<div class="card card-todo completed" data-id="'+t.id+'"><div class="card-front" style="padding:10px 16px"><div class="card-body"><div class="card-row1"><span class="card-name" style="font-size:13px">'+esc(t.name)+'</span></div></div><button class="swipe-btn swipe-del" data-action="delete-todo" data-id="'+t.id+'" style="width:48px;opacity:.35">🗑</button></div></div>'; }).join('');
+    }
     html += '</div>';
   }
   list.innerHTML = html;
@@ -6090,6 +6099,11 @@ document.getElementById('app').addEventListener('click', function(e){
     case 'toggle-streak-info':{
       var pop2 = document.getElementById('streakInfoPop');
       if(pop2){ pop2.classList.toggle('show'); }
+      break;
+    }
+    case 'toggle-completed':{
+      _completedOpen = !_completedOpen;
+      render();
       break;
     }
     case 'toggle-rest-day':{
