@@ -544,17 +544,21 @@ body{
 .streak{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--text2)}
 /* Daily progress bar */
 .daily-prog{
-  width:100%;height:16px;border-radius:8px;overflow:hidden;
+  width:100%;height:16px;border-radius:8px;
   background:var(--border);position:relative;margin-top:4px;
 }
+.daily-prog-track{
+  width:100%;height:100%;border-radius:8px;overflow:hidden;
+}
 .daily-prog-fill{
-  height:100%;border-radius:8px;
+  position:absolute;left:0;top:0;height:100%;border-radius:8px;
   background:linear-gradient(90deg,#a7f3d0,#10b981);
   transition:width .5s ease;
 }
 .daily-prog-text{
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;
+  font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;z-index:1;
+  text-shadow:0 0 2px var(--surface),0 0 2px var(--surface);
 }
 
 /* ===== Study / Companion Mode ===== */
@@ -4647,7 +4651,7 @@ function renderDailies(){
     let bodyExtra = '';
     if(est>0 && !done){
       const pct = Math.min(100, Math.round(acc/est*100));
-      bodyExtra += '<div class="daily-prog"><div class="daily-prog-fill" style="width:'+pct+'%"></div><span class="daily-prog-text">'+acc+'/'+est+' 分钟</span></div>';
+      bodyExtra += '<div class="daily-prog"><div class="daily-prog-track"><div class="daily-prog-fill" style="width:'+pct+'%"></div></div><span class="daily-prog-text">'+acc+'/'+est+' 分钟</span></div>';
     }
     // 补做边框
     const cardStyle = isMakeup ? 'border:2px solid #f97316;border-radius:var(--radius-sm)' : '';
@@ -4794,7 +4798,7 @@ function renderTodoCard(t){
   }
   const estMin = t.estimatedMinutes||0;
   const accMin = t.accumulatedFocusMinutes||0;
-  if(estMin>0) auxParts.push('<span class="mini-sub" data-live-sub="'+t.id+'">⏱ '+accMin+'/'+estMin+'分</span>');
+  // （原 ⏱ 辅助行 chip 已删，进度条已显示相同信息）
 
   // 第二行额外信息：日期
   let row2Extra = '';
@@ -4807,7 +4811,7 @@ function renderTodoCard(t){
   let timeBar = '';
   if(estMin>0){
     const tp = Math.min(100, Math.round(accMin/estMin*100));
-    timeBar = '<div class="daily-prog" style="margin-top:6px" data-live-bar="'+t.id+'"><div class="daily-prog-fill" style="width:'+tp+'%"></div><span class="daily-prog-text">'+accMin+'/'+estMin+' 分钟</span></div>';
+    timeBar = '<div class="daily-prog" style="margin-top:6px" data-live-bar="'+t.id+'"><div class="daily-prog-track"><div class="daily-prog-fill" style="width:'+tp+'%"></div></div><span class="daily-prog-text">'+accMin+'/'+estMin+' 分钟</span></div>';
   }
 
   // 子任务清单
