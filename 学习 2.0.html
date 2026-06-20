@@ -1308,6 +1308,13 @@ body{
   70%{transform:scale(1.05);opacity:1}
   100%{transform:scale(1);opacity:1}
 }
+/* 代办创建软弹 — 比里程碑更小，不发光不变色 */
+@keyframes todoPopIn{
+  0%{opacity:0;transform:scale(.92)}
+  70%{opacity:1;transform:scale(1.03)}
+  100%{transform:scale(1)}
+}
+.todo-card.just-added{ animation:todoPopIn .28s ease-out; }
 
 /* 待办卡片完成时的消散过渡 */
 .todo-card.completing {
@@ -6018,6 +6025,8 @@ function showAddForm(tab){
     if(inp){
       inp.focus();
       if(currentAddTab === 'todos') setupSubjectAutocomplete(inp);
+      var dt = document.getElementById('addDate');
+      if(dt && !dt.value) dt.value = today();
     }
   },100);
 }
@@ -6065,7 +6074,7 @@ function confirmAdd(){
     const remTime = document.getElementById('addRemindTime');
     const activeDiff = document.querySelector('#diffToggle .diff-opt.active');
     const difficulty = activeDiff ? activeDiff.dataset.diff : (parsed.difficulty || 'medium');
-    const dueDate = (dateEl && dateEl.value) ? dateEl.value : parsed.dueDate;
+    const dueDate = (dateEl && dateEl.value) ? dateEl.value : (parsed.dueDate || today());
     const priority = (prEl && prEl.value !== 'none') ? prEl.value : (parsed.priority || 'none');
     const estMin = (estEl && estEl.value) ? Math.max(0, parseInt(estEl.value)||0) : (parsed.estimatedMinutes||0);
     const reminderTime = (remChk && remChk.checked && remTime && remTime.value) ? remTime.value : null;
@@ -6084,12 +6093,30 @@ function confirmAdd(){
     state.rewards.push({ id: uid(), name, price, updatedAt: new Date().toISOString() });
   }
   saveState();
-  // 连续录入：提交后不关表单，清空输入框，焦点保留
-  const inp = document.getElementById('addInput');
-  if(inp){ inp.value = ''; inp.focus(); }
-  _selectedTag = null;
-  if(currentAddTab === 'todos') renderSubjectChipsInline();
+  var newId = null;
+  if(currentAddTab === 'todos' && state.todos.length > 0){
+    newId = state.todos[state.todos.length - 1].id;
+  }
+  hideAddForm();
   render();
+  if(newId){ requestAnimationFrame(function(){ flashNewTodo(newId); }); }
+}
+
+// ========== 新建代办软弹入 ==========
+function flashNewTodo(id){
+  var el = document.querySelector('.todo-card[data-id="'+id+'"]');
+  if(!el) return;
+  // 专注/自习中：安静出现，不弹不滚
+  if(companionSession) return;
+  // 已可见就不滚
+  var r = el.getBoundingClientRect();
+  var vh = window.innerHeight;
+  var fullyVisible = r.top >= 0 && r.bottom <= vh;
+  if(!fullyVisible){
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  el.classList.add('just-added');
+  setTimeout(function(){ el.classList.remove('just-added'); }, 300);
 }
 
 // ========== Event Delegation ==========
