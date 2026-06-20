@@ -4894,17 +4894,28 @@ function renderRewards(){
   list.innerHTML = items.map((r,i)=>{
     const canAfford = state.stats.gold >= r.price;
     const icon = icons[i % icons.length];
-    return '<div class="card card-reward" data-id="'+r.id+'">'+
-      '<div class="card-front">'+
-        '<div class="card-body">'+
+    const isEditing = editingRewardId === r.id;
+    let frontHTML;
+    if(isEditing){
+      frontHTML = '<div class="card-edit-form">'+
+        '<input type="text" id="editRewardName" value="'+esc(r.name)+'" maxlength="30" style="flex:1;min-width:0;border:2px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;font-family:var(--font);outline:none;margin-bottom:6px">'+
+        '<div class="card-edit-row">'+
+          '<input type="number" id="editRewardPrice" value="'+r.price+'" min="1" max="99999" style="max-width:90px;border:2px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;font-family:var(--font);outline:none"><span style="font-size:11px;color:var(--text3)">🪙</span>'+
+          '<button class="btn btn-mini" data-action="edit-reward-done" data-id="'+r.id+'" style="flex-shrink:0;margin-left:auto">✓ 完成</button>'+
+        '</div>'+
+      '</div>';
+    }else{
+      frontHTML = '<div class="card-body">'+
           '<div class="card-row1"><span class="card-name">'+icon+' '+esc(r.name)+'</span></div>'+
         '</div>'+
         '<button class="reward-buy-box" data-action="buy-reward" data-id="'+r.id+'"'+(canAfford?'':' disabled')+'>'+
           '<span class="reward-buy-coin">🪙</span>'+
           '<span class="reward-buy-price">'+r.price+'</span>'+
-        '</button>'+
-      '</div>'+
-      '<div class="swipe-actions"><button class="swipe-btn swipe-del" data-action="delete-reward" data-id="'+r.id+'">🗑<br>删除</button></div>'+
+        '</button>';
+    }
+    return '<div class="card card-reward" data-id="'+r.id+'">'+
+      '<div class="card-front">'+frontHTML+'</div>'+
+      '<div class="swipe-actions"><button class="swipe-btn swipe-edit" data-action="edit-reward" data-id="'+r.id+'">✏️<br>编辑</button><button class="swipe-btn swipe-del" data-action="delete-reward" data-id="'+r.id+'">🗑<br>删除</button></div>'+
     '</div>';
   }).join('');
 }
@@ -5845,6 +5856,7 @@ let habitType = 'positive';
 let editingTodoId = null;
 let editingHabitId = null;
 let editingDailyId = null;
+let editingRewardId = null;
 
 // ========== 自然语言快速添加解析 ==========
 // 支持：日期(今天/明天/后天/周X/M月D日/M-D/M/D)、优先级(! !! !!!)、难度(简单/普通/困难/史诗)、标签(#xxx)
@@ -6395,6 +6407,24 @@ document.getElementById('app').addEventListener('click', function(e){
       var am = (state.pendingMisses||[]).find(function(x){ return x.id===id; });
       if(am && !am.resolved){ doAbandon(am); }
       else{ toast('该记录已处理', 'info'); }
+      break;
+    }
+    case 'edit-reward':{
+      editingRewardId = (editingRewardId === id) ? null : id;
+      render();
+      break;
+    }
+    case 'edit-reward-done':{
+      var r2 = state.rewards.find(function(x){ return x.id===id; });
+      if(r2){
+        var nmInput = document.getElementById('editRewardName');
+        var prInput = document.getElementById('editRewardPrice');
+        if(nmInput && nmInput.value.trim()){ r2.name = nmInput.value.trim(); touch(r2); }
+        if(prInput){ r2.price = Math.max(1, parseInt(prInput.value)||1); touch(r2); }
+        saveState();
+      }
+      editingRewardId = null;
+      render();
       break;
     }
     case 'delete-reward':{
@@ -7283,6 +7313,22 @@ const AI_TOOLS = [
         required: ['subject', 'field', 'value']
       }
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_reward',
+      description: '修改奖励的名字或价格。**仅在用户明确下令时调用（如"把看剧改成350金币"）。绝不主动提议某奖励该值多少、绝不擅自改价——这是红线。** 按奖励名字(name)定位。',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: '当前奖励名称（用于定位）' },
+          price: { type: 'number', description: '新价格（金币数）' },
+          newName: { type: 'string', description: '新名称（可选）' }
+        },
+        required: ['name']
+      }
+    }
   }
 ];
 
@@ -7333,6 +7379,9 @@ function getSystemPrompt(){
     + '例外①（用户明确下令）：用户明确说"把数学总账已完成改成30""把物理总量调成200"时，调用 update_ledger 执行。\n'
     + '例外②（完成待办后提议扣减）：用户完成某科相关待办后，你可以提议"要不要把【物理】总账−8？"——必须先问、用户确认后才调用 update_ledger。绝不允许自动直接扣减。\n'
     + '红线：绝不能主动巡查总账、自作主张重排或批量修改。用户无相关动作时不碰总账。仅例外①②可调用 update_ledger。\n'
+    + '\n'
+    + '=== 奖励控制权规则（AI 必须遵守）===\n'
+    + '奖励比总账更严——只有例外①（用户明确下令"把XX奖励改成YY金币"）可调用 update_reward。没有例外②（不存在"完成待办后提议改奖励"）。绝不主动提议某奖励该值多少、绝不擅自改价。\n'
     + '\n'
     + '【AI 调度】帮你切分每天的学习任务。\n'
     + '- 底座+增强+只增不减：先算匀速最低线，再根据弱科微调，建议只加不砍。\n'
@@ -7406,6 +7455,7 @@ function executeToolCall(toolName, args){
     case 'restore_todo': return restoreTodoTool(args);
     case 'list_trash': return listTrashTool();
     case 'update_ledger': return updateLedgerTool(args);
+    case 'update_reward': return updateRewardTool(args);
     default: return { success: false, message: '未知工具: ' + toolName };
   }
 }
@@ -7759,6 +7809,31 @@ function updateLedgerTool(args){
     success: true,
     message: '✅ 已更新「' + subject + '」总账：' + (field === 'completedUnits' ? '已完成' : '总量') + ' → ' + value + '（' + entry.completedUnits + '/' + entry.totalUnits + '）'
   };
+}
+
+// ========== AI 修改奖励工具 ==========
+function updateRewardTool(args){
+  args = args || {};
+  var rewardName = (args.name || '').trim();
+  if(!rewardName){ return { success: false, message: '请指定奖励名称。' }; }
+  var reward = (state.rewards || []).find(function(r){ return r.name === rewardName; });
+  if(!reward){ return { success: false, message: '没找到叫「' + rewardName + '」的奖励。' }; }
+  if(args.price !== undefined){
+    if(typeof args.price !== 'number' || !Number.isInteger(args.price) || args.price < 1){
+      return { success: false, message: '价格必须为正整数。' };
+    }
+    reward.price = args.price;
+    touch(reward);
+  }
+  if(args.newName && args.newName.trim()){
+    reward.name = args.newName.trim();
+    touch(reward);
+  }
+  if(args.price === undefined && !args.newName){
+    return { success: false, message: '请至少提供 price 或 newName 之一。' };
+  }
+  saveState(); render();
+  return { success: true, message: '✅ 已更新「' + reward.name + '」：' + reward.price + '🪙' };
 }
 
 function getTaskOverviewTool(){
