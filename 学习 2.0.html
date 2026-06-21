@@ -5466,16 +5466,21 @@ function showLedgerForm(){
   container.insertAdjacentHTML('beforeend', formHtml);
 
   // Pre-fill if editing an existing subject
-  document.getElementById('ledgerSubj').addEventListener('change', function(){
+  var subjEl = document.getElementById('ledgerSubj');
+  var saveEl = document.getElementById('ledgerSave');
+  var cancelEl = document.getElementById('ledgerCancel');
+  if(!subjEl || !saveEl || !cancelEl) return;
+
+  subjEl.onchange = function(){
     var sel = this.value;
     var ent = state.ledger.find(function(e){ return e.subject === sel; });
     if(ent){
       document.getElementById('ledgerTotal').value = ent.totalUnits;
       document.getElementById('ledgerDone').value = ent.completedUnits;
     }
-  });
+  };
 
-  document.getElementById('ledgerSave').addEventListener('click', function(){
+  saveEl.onclick = function(){
     var subj = document.getElementById('ledgerSubj').value;
     var total = parseInt(document.getElementById('ledgerTotal').value) || 0;
     var done = parseInt(document.getElementById('ledgerDone').value) || 0;
@@ -5489,12 +5494,13 @@ function showLedgerForm(){
       state.ledger.push({ id: uid(), subject: subj, totalUnits: total, completedUnits: Math.min(done, total), updatedAt: new Date().toISOString() });
     }
     saveState(); renderSummary();
-  });
-  document.getElementById('ledgerCancel').addEventListener('click', function(){
+  };
+
+  cancelEl.onclick = function(){
     var f = document.getElementById('ledgerForm');
     if(f) f.remove();
     renderSummary();
-  });
+  };
 
   // Trigger pre-fill on first subject
   var firstOpt = document.getElementById('ledgerSubj').value;
