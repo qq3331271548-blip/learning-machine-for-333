@@ -18,7 +18,7 @@
   --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
   --shadow-md:0 4px 12px rgba(0,0,0,.08);
   --radius:14px;
-  --radius-sm:12px;
+  --radius-sm:10px;
   --hp:#e88181; --hp-bg:#f3f4f6;
   --xp:#7c8db0; --xp-bg:#f3f4f6;
   --gold:#d4a853; --gold-bg:#f3f4f6;
@@ -103,21 +103,21 @@ body{
 /* ===== Stats Bar ===== */
 .stats-bar{
   background:var(--card);border-radius:var(--radius);
-  padding:14px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04),0 0 0 1px rgba(0,0,0,.02);
-  display:flex;flex-direction:column;gap:8px;
-  margin-bottom:12px;position:relative;
+  padding:20px 22px;box-shadow:0 2px 12px rgba(0,0,0,.05),0 1px 3px rgba(0,0,0,.04);
+  display:flex;flex-direction:column;gap:10px;
+  margin-bottom:16px;position:relative;
 }
 /* 左右分区主体 */
 .stats-main{
-  display:flex;flex-direction:row;gap:10px;align-items:stretch;
+  display:flex;flex-direction:row;gap:12px;align-items:stretch;
 }
 .stats-left{
   width:88px;flex-shrink:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
 }
 .stats-right{
   flex:1;min-width:0;
-  display:flex;flex-direction:column;gap:6px;
+  display:flex;flex-direction:column;gap:8px;
 }
 /* Top row */
 .stats-top{
@@ -135,22 +135,16 @@ body{
   transition:transform .3s,box-shadow .3s;
 }
 .stats-bar .level-badge .lv-label{
-  font-size:11px;font-weight:700;color:rgba(255,255,255,.85);
-  padding:5px 8px 5px 12px;letter-spacing:.5px;
+  font-size:12px;font-weight:700;color:rgba(255,255,255,.85);
+  padding:7px 10px 7px 14px;letter-spacing:.5px;
   border-right:1px solid rgba(255,255,255,.2);
 }
 .stats-bar .level-badge .lv-num{
-  font-size:14px;font-weight:800;color:#fff;
-  padding:5px 12px 5px 8px;
+  font-size:17px;font-weight:800;color:#fff;
+  padding:7px 14px 7px 10px;
   background:rgba(255,255,255,.1);
 }
 .stats-bar .level-badge.pulse{animation:levelPulse .5s ease}
-/* HP/XP 合并一行 */
-.stat-row{display:flex;gap:12px}
-.stat-row .stat-item{flex:1;min-width:0;gap:4px}
-.stat-row .stat-label{font-size:11px}
-.stat-row .stat-label span:last-child{font-size:10px}
-.stat-row .progress-track{height:7px;border-radius:4px}
 /* Stat items */
 .stat-item{display:flex;flex-direction:column;gap:6px}
 .stat-label{
@@ -245,11 +239,11 @@ body{
 /* ===== Cards ===== (分隔线式列表) */
 .card-list{display:flex;flex-direction:column;gap:0}
 .card{
-  padding:12px 2px;
+  padding:14px 2px;
   display:flex;align-items:center;gap:10px;
   flex-wrap:wrap;
   border-bottom:1px solid var(--border);
-  transition:opacity .3s,background .3s;
+  transition:opacity .3s;
   position:relative;overflow:hidden;
 }
 .card:last-child{border-bottom:none}
@@ -374,8 +368,8 @@ body{
 .card-edit-row .type-opt.active{background:#fff;color:var(--text);box-shadow:var(--shadow)}
 
 /* ===== Generic Card (daily + todo shared) ===== */
-.card.completed{opacity:.65;background:var(--bg)}
-.card.completed .card-name{text-decoration:line-through;color:var(--text3)}
+.card.completed{opacity:.55}
+.card.completed .card-name{text-decoration:line-through}
 .card-name{flex:1;font-size:15px;font-weight:500;color:var(--text);max-width:280px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
 .card-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .card-meta{font-size:12px;color:var(--text3);white-space:nowrap}
@@ -524,8 +518,8 @@ body{
 @keyframes goldShake{0%,100%{transform:scale(1)}25%{transform:scale(1.25) rotate(-5deg)}75%{transform:scale(1.25) rotate(5deg)}}
 @keyframes xpFlash{0%,100%{background:transparent}50%{background:rgba(59,130,246,.2)}}
 /* ===== Empty State ===== */
-.empty{text-align:center;padding:32px 20px;color:var(--text3)}
-.empty .icon{font-size:32px;display:block;margin-bottom:6px;opacity:.7}
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty .icon{font-size:40px;display:block;margin-bottom:8px}
 .empty p{font-size:14px}
 .empty-hint{margin-top:12px;font-size:12px;color:var(--text2)}
 .empty-hint code{background:var(--tab-bg);padding:2px 8px;border-radius:5px;font-size:12px;font-family:var(--font);color:var(--tab)}
@@ -949,11 +943,11 @@ body{
 /* ===== Responsive ===== */
 @media(max-width:400px){
   .app{padding:10px 10px 80px}
-  .stats-bar{padding:10px 12px;gap:6px}
+  .stats-bar{padding:12px 14px;gap:10px}
   .stats-top{gap:8px}
   .fox-float{height:82px;width:72px}
-  .stats-bar .level-badge .lv-label{font-size:10px;padding:4px 6px 4px 8px}
-  .stats-bar .level-badge .lv-num{font-size:13px;padding:4px 8px 4px 6px}
+  .stats-bar .level-badge .lv-label{font-size:10px;padding:5px 7px 5px 9px}
+  .stats-bar .level-badge .lv-num{font-size:14px;padding:5px 10px 5px 7px}
   .stat-mini-main{font-size:11px}
   .stat-mini-main span{font-size:14px}
   .stat-mini-sub{font-size:10px}
@@ -961,7 +955,7 @@ body{
   .stats-bottom .sep{display:none}      /* 移动端去竖线，用 gap 分隔，避免 wrap 时孤立竖线 */
   #streakMsg{display:none}              /* 移动端隐藏鼓励语，让四徽章对称，倍率仍保留 */
   .stag{font-size:10px;padding:2px 6px}
-  .tab-btn{font-size:13px;padding:8px 4px}
+  .tab-btn{font-size:12px;padding:8px 4px}
   .card{gap:8px;padding:12px 2px}
   /* 抵消 .card 内边距(12px 2px)：让 swipe 操作区与卡片正面(card-front)严格对齐，避免上下各 12px、右侧 2px 漏出红蓝色 */
   .card-habit .swipe-actions,.card-daily .swipe-actions,.card-todo .swipe-actions,.card-reward .swipe-actions{top:12px;right:2px;bottom:12px}
@@ -1482,15 +1476,13 @@ body{
       </div>
     </div>
     <!-- Middle: HP & XP bars -->
-    <div class="stat-row">
-      <div class="stat-item stat-item-hp">
-        <div class="stat-label"><span>❤️</span><span id="hpText">50/50</span></div>
-        <div class="progress-track hp-bg"><div class="progress-fill hp" id="hpBar" style="width:100%"></div></div>
-      </div>
-      <div class="stat-item stat-item-xp">
-        <div class="stat-label"><span>✦</span><span id="xpText">0/100</span></div>
-        <div class="progress-track xp-bg" id="xpTrack"><div class="progress-fill xp" id="xpBar" style="width:0%"></div></div>
-      </div>
+    <div class="stat-item">
+      <div class="stat-label"><span>❤️ 生命</span><span id="hpText">50/50</span></div>
+      <div class="progress-track hp-bg"><div class="progress-fill hp" id="hpBar" style="width:100%"></div></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label"><span><svg class="ixp" width="15" height="15"><use href="#icon-xp"/></svg> 经验</span><span id="xpText">0/100</span></div>
+      <div class="progress-track xp-bg" id="xpTrack"><div class="progress-fill xp" id="xpBar" style="width:0%"></div></div>
     </div>
       </div><!-- .stats-right -->
     </div><!-- .stats-main -->
