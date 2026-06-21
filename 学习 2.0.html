@@ -113,7 +113,7 @@ body{
 }
 .stats-left{
   width:88px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
 }
 .stats-right{
   flex:1;min-width:0;
@@ -121,7 +121,7 @@ body{
 }
 /* Top row */
 .stats-top{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;
 }
 .stats-badges{
   display:flex;gap:8px;align-items:center;
@@ -178,6 +178,8 @@ body{
   transition:opacity .3s;
 }
 .stat-mini.dim{opacity:.45}
+/* 显示时让内部 sep+restBadge 直接成为 stats-bottom 的 flex item，避免 span 包 block 在 flex 中垂直堆叠、基线错位 */
+#restBadgeWrap{display:contents}
 .stat-mini-sm{flex-direction:row;gap:4px;font-size:12px;font-weight:500;color:var(--text2)}
 .stat-mini-main{
   display:flex;align-items:baseline;gap:3px;
@@ -186,7 +188,7 @@ body{
 .stat-mini-main span{
   font-size:18px;font-weight:800;line-height:1;color:var(--text);
 }
-.stat-mini-sub{font-size:11px;font-weight:400;color:var(--text3)}
+.stat-mini-sub{font-size:11px;font-weight:400;color:var(--text3);white-space:nowrap}
 .gold-display{
   display:flex;align-items:baseline;gap:3px;
 }
@@ -949,10 +951,14 @@ body{
   .stat-mini-main{font-size:11px}
   .stat-mini-main span{font-size:15px}
   .stat-mini-sub{font-size:10px}
-  .stats-bottom{flex-wrap:wrap;justify-content:center;row-gap:2px}
+  .stats-bottom{flex-wrap:wrap;justify-content:center;row-gap:3px;column-gap:9px}
+  .stats-bottom .sep{display:none}      /* 移动端去竖线，用 gap 分隔，避免 wrap 时孤立竖线 */
+  #streakMsg{display:none}              /* 移动端隐藏鼓励语，让四徽章对称，倍率仍保留 */
   .stag{font-size:10px;padding:2px 6px}
   .tab-btn{font-size:12px;padding:8px 4px}
   .card{gap:8px;padding:12px 2px}
+  /* 抵消 .card 内边距(12px 2px)：让 swipe 操作区与卡片正面(card-front)严格对齐，避免上下各 12px、右侧 2px 漏出红蓝色 */
+  .card-habit .swipe-actions,.card-daily .swipe-actions,.card-todo .swipe-actions,.card-reward .swipe-actions{top:12px;right:2px;bottom:12px}
   .card-name{font-size:14px;max-width:100px}
   .companion-timer{font-size:52px}
   .companion-fox-wrap{width:100px;height:100px}
@@ -1446,17 +1452,15 @@ body{
     <div class="stats-main">
       <div class="stats-left">
         <div class="fox-float" id="foxFloat"><img src="fox-stats.png" alt="小狐狸"></div>
-        <div class="companion-summary" id="companionSummary" style="font-size:10px;color:var(--text3);text-align:center;margin-top:2px;line-height:1.3"></div>
-      </div>
-      <div class="stats-right">
-    <!-- Top row: level badge + header icons -->
-    <div class="stats-top">
-      <div class="stats-badges">
         <div class="level-badge" id="levelBadge">
           <span class="lv-label">Lv</span>
           <span class="lv-num" id="levelNum">1</span>
         </div>
+        <div class="companion-summary" id="companionSummary" style="font-size:10px;color:var(--text3);text-align:center;margin-top:2px;line-height:1.3"></div>
       </div>
+      <div class="stats-right">
+    <!-- Top row: header icons (Lv 已移入左侧身份组) -->
+    <div class="stats-top">
       <div class="header-icons">
         <button data-action="go-study" title="自习陪伴">📖</button>
         <button data-action="go-summary" title="月度">📊</button>
@@ -1504,9 +1508,9 @@ body{
         <span class="stat-mini-main"><span id="todayCount">0</span>项</span>
       </div>
       <div class="sep"></div>
-      <div class="gold-display">
-        <span class="coin">🪙</span>
-        <span id="goldText">0</span>
+      <div class="stat-mini" id="goldBadge">
+        <span class="stat-mini-sub">🪙金币</span>
+        <span class="stat-mini-main"><span id="goldText">0</span></span>
       </div>
     </div>
     <!-- 奖励机制弹窗 -->
