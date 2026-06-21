@@ -112,8 +112,8 @@ body{
   display:flex;flex-direction:row;gap:12px;align-items:stretch;
 }
 .stats-left{
-  width:88px;flex-shrink:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  width:96px;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
 }
 .stats-right{
   flex:1;min-width:0;
@@ -319,10 +319,10 @@ body{
 .reward-xp,.reward-gold,.reward-hp{
   display:inline-flex;align-items:center;
   justify-content:flex-start;  /* 数字跟在图标后面自然排列 */
-  gap:2px;font-size:13px;font-weight:700;white-space:nowrap;
+  gap:2px;font-size:12px;font-weight:700;white-space:nowrap;
 }
 .reward-hp{color:#dc2626}
-.ricon{width:22px;min-width:22px;max-width:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+.ricon{width:19px;min-width:19px;max-width:19px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
 .ricon .ixp{width:16px;height:16px}
 .rnum{display:inline-block;min-width:32px;white-space:nowrap}
 /* ===== 5-tier reward color by streak multiplier ===== */
@@ -929,7 +929,7 @@ body{
 /* ===== Floating Fox ===== */
 .fox-float{
   position:relative;
-  height:100px;width:88px;
+  height:108px;width:96px;
   pointer-events:auto;
   animation:foxFloat 2s ease-in-out infinite;
   transition:transform .2s;
@@ -945,7 +945,7 @@ body{
   .app{padding:10px 10px 80px}
   .stats-bar{padding:12px 14px;gap:10px}
   .stats-top{gap:8px}
-  .fox-float{height:82px;width:72px}
+  .fox-float{height:90px;width:80px}
   .stats-bar .level-badge .lv-label{font-size:10px;padding:5px 7px 5px 9px}
   .stats-bar .level-badge .lv-num{font-size:14px;padding:5px 10px 5px 7px}
   .stat-mini-main{font-size:11px}
@@ -3211,6 +3211,12 @@ function loadState(){
           if(t.customReward === undefined) t.customReward = null;
         }
       }
+      // 迁移：为老数据的 ledger 条目补齐 id
+      if(Array.isArray(s.ledger)){
+        for(const le of s.ledger){
+          if(le.id == null) le.id = uid();
+        }
+      }
       // 迁移：为老数据的习惯和每日补齐难度 + id
       if(Array.isArray(s.habits)){
         for(const h of s.habits){
@@ -4666,7 +4672,7 @@ function renderHabits(){
         '</div>'+
       '</div>';
     }else{
-      frontHTML = '<div class="card-body"><div class="card-row1"><span class="card-name">'+esc(h.name)+'</span><span class="habit-count '+countCls+'">'+(count>0?'×'+count:'')+'</span></div><div class="card-row2">'+renderStarBadge(diff)+'</div></div><div class="card-reward-col'+(isPos?'':' is-negative')+'">'+rewardCol+'</div><button class="card-trigger '+cls+'" data-action="trigger-habit" data-id="'+h.id+'" title="'+(isPos?'做得好':'又犯了')+'">'+icon+'</button>';
+      frontHTML = '<div class="card-body"><div class="card-row1"><span class="card-name">'+esc(h.name)+'</span></div><div class="card-row2">'+renderStarBadge(diff)+(count>0?'<span class="habit-count '+countCls+'" style="margin-left:7px">×'+count+'</span>':'')+'</div></div><div class="card-reward-col'+(isPos?'':' is-negative')+'">'+rewardCol+'</div><button class="card-trigger '+cls+'" data-action="trigger-habit" data-id="'+h.id+'" title="'+(isPos?'做得好':'又犯了')+'">'+icon+'</button>';
     }
     return '<div class="card card-habit'+customClass+'" data-id="'+h.id+'"><div class="card-front">'+frontHTML+'</div><div class="swipe-actions"><button class="swipe-btn swipe-edit" data-action="edit-habit" data-id="'+h.id+'">✏️<br>编辑</button><button class="swipe-btn swipe-del" data-action="delete-habit" data-id="'+h.id+'">🗑<br>删除</button></div></div>';
   }).join('');
@@ -5108,6 +5114,7 @@ function renderSummary(){
   }else{
     for(var li = 0; li < ledger.length; li++){
       var entry = ledger[li];
+      if(entry.id == null) entry.id = uid(); // 兜底旧数据缺 id
       var pct = entry.totalUnits > 0 ? Math.round(entry.completedUnits / entry.totalUnits * 100) : 0;
       var remaining = Math.max(0, entry.totalUnits - entry.completedUnits);
       html += '<div class="ledger-row" data-id="'+entry.id+'">'+
