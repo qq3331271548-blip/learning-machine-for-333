@@ -949,8 +949,6 @@ body{
   .stat-mini-main{font-size:11px}
   .stat-mini-main span{font-size:15px}
   .stat-mini-sub{font-size:10px}
-  /* 休息日提示：移动端限制宽度，防止溢出 */
-  .rest-day-hint{max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1}
   .stats-bottom{flex-wrap:wrap;justify-content:center;row-gap:2px}
   .stag{font-size:10px;padding:2px 6px}
   .tab-btn{font-size:12px;padding:8px 4px}
@@ -1033,10 +1031,6 @@ body{
   font-family:var(--font);-webkit-tap-highlight-color:transparent;
 }
 .streak-info-btn:hover,.streak-info-btn:active{opacity:1;color:var(--text);border-color:var(--text)}
-.rest-day-hint{
-  font-size:9px;color:var(--text3);white-space:nowrap;flex-shrink:0;
-  font-family:var(--font);
-}
 .rest-day-section{text-align:left}
 .rest-day-quota{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);margin-bottom:4px}
 .rest-quota-btn{width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--font);line-height:1;transition:all .15s}
@@ -1495,9 +1489,13 @@ body{
         <span class="stat-mini-main"><span id="streakDays">0</span>天</span>
         <span class="stat-mini-sub" id="streakMsg"></span>
         <span class="stat-mini-sub" id="streakMult" style="display:none"></span>
+        <button class="streak-info-btn" data-action="toggle-streak-info" title="奖励机制">!</button>
       </div>
-      <button class="streak-info-btn" data-action="toggle-streak-info" title="奖励机制">!</button>
-      <span class="rest-day-hint" id="restDayHint" style="display:none"></span>
+      <div class="sep"></div>
+      <div class="stat-mini" id="restBadge" style="display:none">
+        <span class="stat-mini-sub">😴休息</span>
+        <span class="stat-mini-main"><span id="restUsed">0</span>/<span id="restQuota">0</span></span>
+      </div>
       <div class="sep"></div>
       <div class="stat-mini" id="todayBadge">
         <span class="stat-mini-sub">✅今日</span>
@@ -5652,15 +5650,18 @@ function updateRestDayUI(){
   var isRest = (state.restDays || []).includes(td);
   var perWeek = state.restDaysPerWeek || 0;
   var thisWeek = getWeekRestDays();
-  // 统计栏提示
-  var hint = document.getElementById('restDayHint');
-  if(hint){
+  // 统计栏休息日徽章
+  var restBadge = document.getElementById('restBadge');
+  if(restBadge){
     if(perWeek > 0 || isRest){
       var used = thisWeek.length;
-      hint.textContent = '😴 本周已休 ' + used + '/' + perWeek + ' 天' + (isRest ? ' · 今日休息' : '');
-      hint.style.display = '';
+      var usedEl2 = document.getElementById('restUsed');
+      var quotaEl2 = document.getElementById('restQuota');
+      if(usedEl2) usedEl2.textContent = used;
+      if(quotaEl2) quotaEl2.textContent = perWeek;
+      restBadge.style.display = '';
     }else{
-      hint.style.display = 'none';
+      restBadge.style.display = 'none';
     }
   }
   // 弹窗内配额显示
