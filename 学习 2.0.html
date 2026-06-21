@@ -2324,6 +2324,15 @@ async function pushToCloud(){
     updateSyncStatus('fail');
   }finally{
     cloudSyncing = false;
+    // Clean old tombstones (older than 5 min) after each push attempt
+    var now2 = Date.now();
+    var dd = state._deletedIds || {};
+    for(var dk in dd){
+      if(dd.hasOwnProperty(dk)){
+        dd[dk] = dd[dk].filter(function(t){ return now2 - t.ts < 300000; });
+        if(dd[dk].length === 0) delete dd[dk];
+      }
+    }
   }
 }
 
@@ -2418,11 +2427,17 @@ async function pullFromCloud(){
 }
 
 // ── Merge cloud data into state (per-item, timestamp-based) ──
-function mergeItems(localArr, cloudArr, key){
+function mergeItems(localArr, cloudArr, key, arrName){
   const map = new Map();
   // Index local items
   for(const item of (localArr||[])){
     if(item[key] != null) map.set(item[key], item);
+  }
+  // Check tombstones for this array type
+  var tombstones = (state._deletedIds || {})[arrName] || [];
+  var tombstoneIds = new Set();
+  for(var ti = 0; ti < tombstones.length; ti++){
+    tombstoneIds.add(tombstones[ti].id);
   }
   // Merge cloud items
   for(const c of (cloudArr||[])){
@@ -2436,7 +2451,8 @@ function mergeItems(localArr, cloudArr, key){
       if(ct > lt) map.set(ck, c); // cloud is newer, replace
       // else keep local (already in map)
     }else{
-      // Only in cloud — add it
+      // Only in cloud — check if locally deleted before adding back
+      if(tombstoneIds.has(ck)) continue; // user deleted this, skip
       map.set(ck, c);
     }
   }
@@ -2445,15 +2461,15 @@ function mergeItems(localArr, cloudArr, key){
 
 function mergeCloudIntoState(cloudData){
   if(!cloudData) return;
-  state.habits = mergeItems(state.habits, cloudData.habits, 'id');
-  state.dailies = mergeItems(state.dailies, cloudData.dailies, 'id');
-  state.todos = mergeItems(state.todos, cloudData.todos, 'id');
+  state.habits = mergeItems(state.habits, cloudData.habits, 'id', 'habits');
+  state.dailies = mergeItems(state.dailies, cloudData.dailies, 'id', 'dailies');
+  state.todos = mergeItems(state.todos, cloudData.todos, 'id', 'todos');
   state.rewards = mergeItems(state.rewards, cloudData.rewards, 'id');
   if(cloudData.stats){
     state.stats = Object.assign({}, state.stats, cloudData.stats);
   }
   if(cloudData.focusSessions){
-    state.focusSessions = mergeItems(state.focusSessions, cloudData.focusSessions, 'id');
+    state.focusSessions = mergeItems(state.focusSessions, cloudData.focusSessions, 'id', 'focusSessions');
   }
   state.lastResetDate = today();
   state.streakMilestones = state.streakMilestones || [];
@@ -3019,6 +3035,7 @@ function defaultState(){
     aiModel: 'auto',
     aiDeepThink: false,
     aiChatHistory: [],
+    _deletedIds: {},
     restDays: [],
     restDaysPerWeek: 0,
     bestStreak: 0,
@@ -3171,6 +3188,7 @@ function loadState(){
       if(!Array.isArray(s.subjects)) s.subjects = ['数学','物理','英语'];
       if(!Array.isArray(s.ledger)) s.ledger = [];
       if(!Array.isArray(s._trash)) s._trash = [];
+      if(!s._deletedIds || typeof s._deletedIds !== 'object') s._deletedIds = {};
       // 迁移：为老数据的待办补齐新字段
       if(Array.isArray(s.todos)){
         for(const t of s.todos){
@@ -4438,9 +4456,23 @@ function buyReward(reward){
   return true;
 }
 
-function deleteItem(arr, id){
+function deleteItem(arr, id, arrName){
   const idx = arr.findIndex(x => x.id === id);
-  if(idx >= 0) arr.splice(idx,1);
+  if(idx >= 0){
+    // Record tombstone to prevent cloud resurrecting deleted items on refresh
+    var name = arrName || (
+      arr === state.habits ? 'habits' : arr === state.dailies ? 'dailies' :
+      arr === state.todos ? 'todos' : arr === state.rewards ? 'rewards' : null
+    );
+    if(name){
+      if(!state._deletedIds) state._deletedIds = {};
+      if(!state._deletedIds[name]) state._deletedIds[name] = [];
+      state._deletedIds[name].push({ id: id, ts: Date.now() });
+      // Keep only last 200 tombstones per type
+      if(state._deletedIds[name].length > 200) state._deletedIds[name] = state._deletedIds[name].slice(-200);
+    }
+    arr.splice(idx,1);
+  }
   saveState();
   render();
 }
@@ -6218,7 +6250,7 @@ document.getElementById('app').addEventListener('click', function(e){
     case 'delete-habit':{
       if(confirm('确定删除这个习惯吗？')){
         closeOpenSwipeCard();
-        deleteItem(state.habits, id);
+        deleteItem(state.habits, id, 'habits');
       }
       break;
     }
