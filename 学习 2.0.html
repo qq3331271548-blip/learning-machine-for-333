@@ -3215,6 +3215,9 @@ function loadState(){
       if(Array.isArray(s.ledger)){
         for(const le of s.ledger){
           if(le.id == null) le.id = uid();
+          // v2→v3: 科目级升级为任务级，补 taskName 和 unit
+          if(le.taskName === undefined) le.taskName = le.subject || '未命名';
+          if(le.unit === undefined) le.unit = '项';
         }
       }
       // 迁移：为老数据的习惯和每日补齐难度 + id
@@ -5491,7 +5494,7 @@ function showLedgerForm(){
       existingEntry.completedUnits = Math.min(done, total);
       touch(existingEntry);
     }else{
-      state.ledger.push({ id: uid(), subject: subj, totalUnits: total, completedUnits: Math.min(done, total), updatedAt: new Date().toISOString() });
+      state.ledger.push({ id: uid(), subject: subj, taskName: subj, unit: '项', totalUnits: total, completedUnits: Math.min(done, total), updatedAt: new Date().toISOString() });
     }
     saveState(); renderSummary();
   };
