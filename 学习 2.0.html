@@ -1489,13 +1489,15 @@ body{
         <span class="stat-mini-main"><span id="streakDays">0</span>天</span>
         <span class="stat-mini-sub" id="streakMsg"></span>
         <span class="stat-mini-sub" id="streakMult" style="display:none"></span>
-        <button class="streak-info-btn" data-action="toggle-streak-info" title="奖励机制">!</button>
       </div>
-      <div class="stat-mini" id="restBadge" style="display:none">
+      <button class="streak-info-btn" data-action="toggle-streak-info" title="奖励机制">!</button>
+      <span id="restBadgeWrap" style="display:none">
         <div class="sep"></div>
-        <span class="stat-mini-sub">😴休息</span>
-        <span class="stat-mini-main"><span id="restUsed">0</span>/<span id="restQuota">0</span></span>
-      </div>
+        <div class="stat-mini" id="restBadge">
+          <span class="stat-mini-sub">😴休息</span>
+          <span class="stat-mini-main"><span id="restUsed">0</span>/<span id="restQuota">0</span></span>
+        </div>
+      </span>
       <div class="sep"></div>
       <div class="stat-mini" id="todayBadge">
         <span class="stat-mini-sub">✅今日</span>
@@ -5651,17 +5653,17 @@ function updateRestDayUI(){
   var perWeek = state.restDaysPerWeek || 0;
   var thisWeek = getWeekRestDays();
   // 统计栏休息日徽章
-  var restBadge = document.getElementById('restBadge');
-  if(restBadge){
+  var restWrap = document.getElementById('restBadgeWrap');
+  if(restWrap){
     if(perWeek > 0 || isRest){
       var used = thisWeek.length;
       var usedEl2 = document.getElementById('restUsed');
       var quotaEl2 = document.getElementById('restQuota');
       if(usedEl2) usedEl2.textContent = used;
       if(quotaEl2) quotaEl2.textContent = perWeek;
-      restBadge.style.display = '';
+      restWrap.style.display = '';
     }else{
-      restBadge.style.display = 'none';
+      restWrap.style.display = 'none';
     }
   }
   // 弹窗内配额显示
