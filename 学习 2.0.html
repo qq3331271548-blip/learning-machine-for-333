@@ -836,6 +836,9 @@ body{
   font-family:var(--font);-webkit-tap-highlight-color:transparent;
 }
 .ledger-add-btn:hover,.ledger-add-btn:active{color:var(--tab);border-color:var(--tab)}
+.unit-chip{padding:4px 10px;border-radius:14px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
+.unit-chip:hover{border-color:var(--tab);color:var(--tab)}
+.unit-chip.active{background:var(--tab);color:#fff;border-color:var(--tab)}
 
 .day-list{display:flex;flex-direction:column;gap:8px}
 .day-item{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
@@ -5064,7 +5067,9 @@ function renderPlan(){
   html += '<div class="summary-header">📋 复习计划</div>';
 
   // ── Ledger: 总账（各科复习进度）──
-  var ledger = state.ledger || [];
+  var ledgerAll = state.ledger || [];
+  // Sort: group by subject, then by taskName (copy to avoid mutating state)
+  var ledger = ledgerAll.slice().sort(function(a,b){ return (a.subject||'').localeCompare(b.subject||'') || (a.taskName||'').localeCompare(b.taskName||''); });
   html += '<div class="chart-section" style="text-align:left"><div class="chart-title">📚 复习总账</div>';
   if(ledger.length === 0){
     html += '<p style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">暂无总账数据。录入各科复习总量后，燃尽图会自动开启。</p>';
@@ -5072,12 +5077,21 @@ function renderPlan(){
     for(var li = 0; li < ledger.length; li++){
       var entry = ledger[li];
       if(entry.id == null) entry.id = uid();
-      var pct = entry.totalUnits > 0 ? Math.round(entry.completedUnits / entry.totalUnits * 100) : 0;
-      var remaining = Math.max(0, entry.totalUnits - entry.completedUnits);
+      var subj = entry.subject || '';
+      var task = entry.taskName || subj || '未命名';
+      var unit = entry.unit || '项';
+      var total = entry.totalUnits || 0;
+      var done = entry.completedUnits || 0;
+      var pct = total > 0 ? Math.round(done / total * 100) : 0;
+      var remaining = Math.max(0, total - done);
+      var dotColor = getSubjectColor(subj);
       html += '<div class="ledger-row" data-id="'+entry.id+'">'+
         '<div class="ledger-top">'+
-          '<span class="ledger-subject">'+esc(entry.subject)+'</span>'+
-          '<span class="ledger-nums">'+entry.completedUnits+' / '+entry.totalUnits+' · 剩 '+remaining+'</span>'+
+          '<span class="ledger-subject"><span class="subj-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+dotColor+';margin-right:6px;flex-shrink:0"></span>'+esc(subj)+' · '+esc(task)+'</span>'+
+          '<span class="ledger-nums">'+
+            '<span class="ledger-done-num" data-action="ledger-edit-done" data-id="'+entry.id+'" data-max="'+total+'" title="点击修改已完成数" style="cursor:pointer;font-weight:700;color:var(--tab);border-bottom:1.5px dotted var(--tab)">'+done+'</span>'+
+            ' / '+total+' '+esc(unit)+' · 剩 '+remaining+
+          '</span>'+
         '</div>'+
         '<div class="ledger-bar"><div class="ledger-fill" style="width:'+pct+'%"></div></div>'+
         '<div class="ledger-actions">'+
@@ -5478,6 +5492,8 @@ function showLedgerForm(){
   if(!options) options = '<option value="">（无科目，请先在待办区创建）</option>';
 
   var container = document.getElementById('planContainer') || document.getElementById('summaryContainer');
+  var presetUnits = ['页','题','章','个','节','套','篇'];
+  var unitChipsHTML = presetUnits.map(function(u){ return '<button class="unit-chip" data-unit="'+u+'" onclick="var t=this;t.classList.toggle(\'active\');var c=document.getElementById(\'ledgerUnitCustom\');if(c){if(t.classList.contains(\'active\')){c.style.display=\'none\';}var act=document.querySelector(\'.unit-chip.active\');if(!act&&c){c.style.display=\'\';}}">'+u+'</button>'; }).join('');
   var formHtml = '<div class="chart-section" id="ledgerForm" style="text-align:left">'+
     '<div class="chart-title">📝 编辑复习总账</div>'+
     '<div style="display:flex;flex-direction:column;gap:8px">'+
@@ -5486,12 +5502,16 @@ function showLedgerForm(){
         '<select id="ledgerSubj" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+options+'</select>'+
       '</div>'+
       '<div style="display:flex;gap:6px;align-items:center">'+
-        '<span style="font-size:12px;min-width:40px">总量</span>'+
-        '<input type="number" id="ledgerTotal" placeholder="如 186（块/节/页）" min="1" max="9999" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+
+        '<span style="font-size:12px;min-width:40px">任务名</span>'+
+        '<input type="text" id="ledgerTaskName" placeholder="如 物理课本" maxlength="30" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+        '<span style="font-size:12px;min-width:40px">单位</span>'+
+        '<div class="unit-chips" id="unitChips" style="display:flex;gap:4px;flex-wrap:wrap">'+unitChipsHTML+'<input type="text" id="ledgerUnitCustom" placeholder="自定义" maxlength="4" style="width:60px;padding:4px 6px;border-radius:6px;border:1.5px solid var(--border);font-size:11px;background:var(--card);display:none"></div>'+
       '</div>'+
       '<div style="display:flex;gap:6px;align-items:center">'+
-        '<span style="font-size:12px;min-width:40px">已完成</span>'+
-        '<input type="number" id="ledgerDone" placeholder="当前已完成数" min="0" max="9999" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+
+        '<span style="font-size:12px;min-width:40px">总量</span>'+
+        '<input type="number" id="ledgerTotal" placeholder="如 180" min="1" max="9999" style="flex:1;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;background:var(--card)">'+
       '</div>'+
     '</div>'+
     '<div style="display:flex;gap:8px;margin-top:10px">'+
@@ -5513,23 +5533,38 @@ function showLedgerForm(){
     var sel = this.value;
     var ent = state.ledger.find(function(e){ return e.subject === sel; });
     if(ent){
+      document.getElementById('ledgerTaskName').value = ent.taskName || ent.subject || '';
       document.getElementById('ledgerTotal').value = ent.totalUnits;
-      document.getElementById('ledgerDone').value = ent.completedUnits;
+      // Pre-select unit chip
+      var uu = ent.unit || '';
+      var chips = document.querySelectorAll('.unit-chip');
+      for(var ci=0;ci<chips.length;ci++){ chips[ci].classList.toggle('active', chips[ci].dataset.unit===uu); }
+      var cu = document.getElementById('ledgerUnitCustom');
+      if(cu){ cu.style.display = (uu && !presetUnits.includes(uu)) ? '' : 'none'; if(cu.style.display==='') cu.value = uu; }
     }
   };
 
   saveEl.onclick = function(){
     var subj = document.getElementById('ledgerSubj').value;
+    var taskName = document.getElementById('ledgerTaskName').value.trim() || subj;
     var total = parseInt(document.getElementById('ledgerTotal').value) || 0;
-    var done = parseInt(document.getElementById('ledgerDone').value) || 0;
     if(!subj || total <= 0) return;
-    var existingEntry = state.ledger.find(function(e){ return e.subject === subj; });
+    // Get selected unit: check chips first, then custom input
+    var unit = '';
+    var activeChip = document.querySelector('.unit-chip.active');
+    if(activeChip){ unit = activeChip.dataset.unit; }
+    else{
+      var cu = document.getElementById('ledgerUnitCustom');
+      if(cu && cu.value.trim()) unit = cu.value.trim();
+    }
+    if(!unit) unit = '项';
+    var existingEntry = state.ledger.find(function(e){ return e.subject === subj && e.taskName === taskName; });
     if(existingEntry){
       existingEntry.totalUnits = total;
-      existingEntry.completedUnits = Math.min(done, total);
+      existingEntry.unit = unit;
       touch(existingEntry);
     }else{
-      state.ledger.push({ id: uid(), subject: subj, taskName: subj, unit: '项', totalUnits: total, completedUnits: Math.min(done, total), updatedAt: new Date().toISOString() });
+      state.ledger.push({ id: uid(), subject: subj, taskName: taskName, unit: unit, totalUnits: total, completedUnits: 0, updatedAt: new Date().toISOString() });
     }
     saveState(); renderPlan();
   };
@@ -6663,6 +6698,24 @@ document.getElementById('app').addEventListener('click', function(e){
     }
     case 'ledger-add':{
       showLedgerForm();
+      break;
+    }
+    case 'ledger-edit-done':{
+      var max = parseInt(btn.dataset.max) || 9999;
+      var ent3 = state.ledger.find(function(x){ return x.id === id; });
+      if(ent3){
+        var newVal = prompt('修改已完成数（0~'+max+'）：', ent3.completedUnits);
+        if(newVal !== null){
+          var n = parseInt(newVal);
+          if(!isNaN(n) && n >= 0 && n <= max){
+            ent3.completedUnits = n;
+            touch(ent3);
+            saveState(); renderPlan();
+          }else{
+            toast('请输入 0~'+max+' 之间的整数', 'warn');
+          }
+        }
+      }
       break;
     }
     case 'cal-day':{
