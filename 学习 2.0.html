@@ -1554,6 +1554,7 @@ body{
     <button class="tab-btn" data-tab="dailies">📅 每日</button>
     <button class="tab-btn" data-tab="todos">✅ 待办</button>
     <button class="tab-btn" data-tab="rewards">🎁 奖励</button>
+    <button class="tab-btn" data-tab="plan">📋 计划</button>
   </div>
 
   <!-- Tab Contents -->
@@ -1586,6 +1587,9 @@ body{
   </div>
   <div class="tab-content" id="tab-summary">
     <div id="summaryContainer"></div>
+  </div>
+  <div class="tab-content" id="tab-plan">
+    <div id="planContainer"></div>
   </div>
   </div><!-- .tab-stage -->
 </div>
@@ -4618,6 +4622,7 @@ function render(){
   renderDailies();
   renderTodos();
   renderRewards();
+  renderPlan();
   renderStudy();
   renderSummary();
   renderRemedAll();
@@ -5029,6 +5034,173 @@ function renderStudy(){
       : '');
 }
 
+function renderPlan(){
+  var container = document.getElementById('planContainer');
+  if(!container) return;
+
+  var year = summaryYear;
+  var month = summaryMonth;
+  var monthStr = year+'-'+pad(month);
+  var nextM = month===12?1:month+1;
+  var nextY = month===12?year+1:year;
+  var daysInMonth = new Date(year, month, 0).getDate();
+
+  // ── Compute dailyDone for burn-down fallback ──
+  var allTodos = state.todos || [];
+  var dailyDone = [];
+  for(var d2 = 1; d2 <= daysInMonth; d2++){
+    var ds2 = year+'-'+pad(month)+'-'+pad(d2);
+    var cnt = 0;
+    for(var ti2 = 0; ti2 < allTodos.length; ti2++){
+      if(allTodos[ti2].completed && allTodos[ti2].completedAt === ds2) cnt++;
+    }
+    var dailiesDone = (state.dailies || []).filter(function(dd){ return dd.completedDates && dd.completedDates.includes(ds2); }).length;
+    var habitsDone = (state.habits || []).filter(function(hh){ return hh.history && hh.history[ds2]; }).length;
+    dailyDone.push({ date: ds2, count: cnt + dailiesDone + habitsDone });
+  }
+
+  // ── Render ──
+  var html = '';
+  html += '<div class="summary-header">📋 复习计划</div>';
+
+  // ── Ledger: 总账（各科复习进度）──
+  var ledger = state.ledger || [];
+  html += '<div class="chart-section" style="text-align:left"><div class="chart-title">📚 复习总账</div>';
+  if(ledger.length === 0){
+    html += '<p style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">暂无总账数据。录入各科复习总量后，燃尽图会自动开启。</p>';
+  }else{
+    for(var li = 0; li < ledger.length; li++){
+      var entry = ledger[li];
+      if(entry.id == null) entry.id = uid();
+      var pct = entry.totalUnits > 0 ? Math.round(entry.completedUnits / entry.totalUnits * 100) : 0;
+      var remaining = Math.max(0, entry.totalUnits - entry.completedUnits);
+      html += '<div class="ledger-row" data-id="'+entry.id+'">'+
+        '<div class="ledger-top">'+
+          '<span class="ledger-subject">'+esc(entry.subject)+'</span>'+
+          '<span class="ledger-nums">'+entry.completedUnits+' / '+entry.totalUnits+' · 剩 '+remaining+'</span>'+
+        '</div>'+
+        '<div class="ledger-bar"><div class="ledger-fill" style="width:'+pct+'%"></div></div>'+
+        '<div class="ledger-actions">'+
+          '<button class="ledger-btn minus" data-action="ledger-minus" data-id="'+entry.id+'">−1</button>'+
+          '<button class="ledger-btn plus" data-action="ledger-plus" data-id="'+entry.id+'">+1</button>'+
+          '<button class="ledger-btn del" data-action="ledger-del" data-id="'+entry.id+'" style="margin-left:auto">✕</button>'+
+        '</div>'+
+        '</div>';
+    }
+  }
+  html += '<button class="ledger-add-btn" data-action="ledger-add">＋ 新增/编辑科目总账</button>';
+  html += '</div>';
+
+  // ── Burn-down chart ──
+  var burnTitle = ledger.length > 0 ? '📉 燃尽图：总剩余 vs 匀速线' : '📉 每日完成趋势（录入总账后自动切换为燃尽图）';
+  html += '<div class="chart-section"><div class="chart-title">'+burnTitle+'</div>';
+  html += '<canvas id="planBurnChart" width="600" height="200" style="width:100%;max-width:600px;height:200px"></canvas>';
+  html += '</div>';
+
+  // ── 第二步预留位 ──
+  html += '<div id="planAiSlot" style="margin-top:16px;padding:20px;border:2px dashed var(--border);border-radius:var(--radius);text-align:center;color:var(--text3);font-size:12px">'+
+    '// 第二步预留：AI排任务按钮 / 自动手动开关 / 完成确认扣减<br>（本步不实现任何功能，仅占位）'+
+    '</div>';
+
+  container.innerHTML = html;
+
+  // Draw burn-down chart
+  setTimeout(function(){
+    var burnCanvas = document.getElementById('planBurnChart');
+    if(!burnCanvas) return;
+    var bctx = burnCanvas.getContext('2d');
+    var cs2 = getComputedStyle(document.body);
+    var lineColor = cs2.getPropertyValue('--tab').trim() || '#6366f1';
+    var redColor = '#ef4444';
+    var greenColor = cs2.getPropertyValue('--good').trim() || '#10b981';
+    var textGray = cs2.getPropertyValue('--text3').trim() || '#9ca3af';
+    var gridColor = cs2.getPropertyValue('--border').trim() || '#e5e7eb';
+    var W = burnCanvas.width = burnCanvas.offsetWidth || 600;
+    var H = burnCanvas.height = 200;
+    var pad2 = { left: 44, right: 16, top: 16, bottom: 28 };
+    var pw = W - pad2.left - pad2.right;
+    var ph = H - pad2.top - pad2.bottom;
+    var useLedger = ledger.length > 0;
+
+    if(useLedger){
+      var totalRemaining = 0;
+      for(var li2 = 0; li2 < ledger.length; li2++){
+        totalRemaining += Math.max(0, ledger[li2].totalUnits - ledger[li2].completedUnits);
+      }
+      var totalAll = 0;
+      for(var li3 = 0; li3 < ledger.length; li3++){ totalAll += ledger[li3].totalUnits; }
+      if(totalAll < 1) totalAll = 1;
+      var todayIdx = new Date().getDate() - 1;
+      if(todayIdx < 0) todayIdx = 0;
+      if(todayIdx >= daysInMonth) todayIdx = daysInMonth - 1;
+      var maxVal = totalAll;
+      if(maxVal < 10) maxVal = 10;
+      bctx.strokeStyle = gridColor; bctx.lineWidth = 1;
+      for(var g2 = 0; g2 <= 4; g2++){
+        var gy2 = pad2.top + (ph * g2 / 4);
+        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'right';
+        bctx.fillText(Math.round(maxVal * (1 - g2/4)), pad2.left - 6, gy2 + 3);
+        if(g2 > 0){ bctx.beginPath(); bctx.moveTo(pad2.left, gy2); bctx.lineTo(W - pad2.right, gy2); bctx.stroke(); }
+      }
+      bctx.beginPath();
+      bctx.strokeStyle = textGray; bctx.lineWidth = 1.5; bctx.setLineDash([5,4]);
+      var idealStartX = pad2.left + (pw * todayIdx / Math.max(1, daysInMonth - 1));
+      var idealStartY = pad2.top + ph - (ph * totalRemaining / maxVal);
+      bctx.moveTo(idealStartX, idealStartY);
+      var idealEndX = pad2.left + pw;
+      var idealEndY = pad2.top + ph;
+      bctx.lineTo(idealEndX, idealEndY);
+      bctx.stroke();
+      bctx.setLineDash([]);
+      bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'left';
+      bctx.fillText('← 理想线', idealEndX - 50, idealEndY - 6);
+      var dotX = idealStartX;
+      var dotY = idealStartY;
+      bctx.beginPath(); bctx.arc(dotX, dotY, 7, 0, Math.PI*2);
+      bctx.fillStyle = totalRemaining > 0 ? redColor : greenColor; bctx.fill();
+      bctx.fillStyle = '#fff'; bctx.font = 'bold 9px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'middle';
+      bctx.fillText(totalRemaining, dotX, dotY);
+      bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'alphabetic';
+      for(var xl2 = 0; xl2 < daysInMonth; xl2 += Math.max(1, Math.floor(daysInMonth/6))){
+        var lx2 = pad2.left + (pw * xl2 / Math.max(1, daysInMonth - 1));
+        bctx.fillText((xl2+1)+'日', lx2, H - pad2.bottom + 14);
+      }
+    }else{
+      var maxCnt2 = 1;
+      for(var bc = 0; bc < dailyDone.length; bc++){ if(dailyDone[bc].count > maxCnt2) maxCnt2 = dailyDone[bc].count; }
+      if(maxCnt2 < 5) maxCnt2 = 5;
+      bctx.strokeStyle = gridColor; bctx.lineWidth = 1;
+      for(var g3 = 0; g3 <= 4; g3++){
+        var gy3 = pad2.top + (ph * g3 / 4);
+        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'right';
+        bctx.fillText(Math.round(maxCnt2 * (1 - g3/4)), pad2.left - 6, gy3 + 3);
+        if(g3 > 0){ bctx.beginPath(); bctx.moveTo(pad2.left, gy3); bctx.lineTo(W - pad2.right, gy3); bctx.stroke(); }
+      }
+      bctx.beginPath();
+      bctx.strokeStyle = lineColor; bctx.lineWidth = 2.5; bctx.lineJoin = 'round';
+      var firstPoint2 = true;
+      for(var bp3 = 0; bp3 < dailyDone.length; bp3++){
+        var bx3 = pad2.left + (pw * bp3 / Math.max(1, dailyDone.length - 1));
+        var by3 = pad2.top + ph - (ph * dailyDone[bp3].count / maxCnt2);
+        if(firstPoint2){ bctx.moveTo(bx3, by3); firstPoint2 = false; }
+        else bctx.lineTo(bx3, by3);
+      }
+      bctx.stroke();
+      for(var bp4 = 0; bp4 < dailyDone.length; bp4++){
+        var bx4 = pad2.left + (pw * bp4 / Math.max(1, dailyDone.length - 1));
+        var by4 = pad2.top + ph - (ph * dailyDone[bp4].count / maxCnt2);
+        bctx.beginPath(); bctx.arc(bx4, by4, 3, 0, Math.PI*2);
+        bctx.fillStyle = lineColor; bctx.fill();
+      }
+      bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'center';
+      for(var xl3 = 0; xl3 < dailyDone.length; xl3 += Math.max(1, Math.floor(dailyDone.length/6))){
+        var lx3 = pad2.left + (pw * xl3 / Math.max(1, dailyDone.length - 1));
+        bctx.fillText(dailyDone[xl3].date.slice(5), lx3, H - pad2.bottom + 14);
+      }
+    }
+  }, 50);
+}
+
 function renderSummary(){
   var container = document.getElementById('summaryContainer');
   if(!container) return;
@@ -5109,39 +5281,9 @@ function renderSummary(){
     '<div class="summary-card"><div class="sc-val">'+bestDayMin+'分</div><div class="sc-label">最猛一天</div></div>'+
     '</div>';
 
-  // ── Ledger: 总账（各科复习进度）──
-  var ledger = state.ledger || [];
-  html += '<div class="chart-section" style="text-align:left"><div class="chart-title">📚 复习总账</div>';
-  if(ledger.length === 0){
-    html += '<p style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0">暂无总账数据。录入各科复习总量后，燃尽图会自动开启。</p>';
-  }else{
-    for(var li = 0; li < ledger.length; li++){
-      var entry = ledger[li];
-      if(entry.id == null) entry.id = uid(); // 兜底旧数据缺 id
-      var pct = entry.totalUnits > 0 ? Math.round(entry.completedUnits / entry.totalUnits * 100) : 0;
-      var remaining = Math.max(0, entry.totalUnits - entry.completedUnits);
-      html += '<div class="ledger-row" data-id="'+entry.id+'">'+
-        '<div class="ledger-top">'+
-          '<span class="ledger-subject">'+esc(entry.subject)+'</span>'+
-          '<span class="ledger-nums">'+entry.completedUnits+' / '+entry.totalUnits+' · 剩 '+remaining+'</span>'+
-        '</div>'+
-        '<div class="ledger-bar"><div class="ledger-fill" style="width:'+pct+'%"></div></div>'+
-        '<div class="ledger-actions">'+
-          '<button class="ledger-btn minus" data-action="ledger-minus" data-id="'+entry.id+'">−1</button>'+
-          '<button class="ledger-btn plus" data-action="ledger-plus" data-id="'+entry.id+'">+1</button>'+
-          '<button class="ledger-btn del" data-action="ledger-del" data-id="'+entry.id+'" style="margin-left:auto">✕</button>'+
-        '</div>'+
-        '</div>';
-    }
-  }
-  html += '<button class="ledger-add-btn" data-action="ledger-add">＋ 新增/编辑科目总账</button>';
-  html += '</div>';
-
-  // ── Charts container (visible only in chart view, or always for list/calendar) ──
+  // ── ① Pie chart: subject focus time ──
   var showCharts = (summaryView === 'chart');
   html += '<div id="summaryCharts" style="'+(summaryView==='chart'?'':'display:none')+'">';
-
-  // ── ② Pie chart: subject focus time ──
   var subjKeys = Object.keys(subjectMin).sort(function(a,b){ return subjectMin[b] - subjectMin[a]; });
   if(subjKeys.length === 0) subjKeys = ['暂无数据'];
   html += '<div class="chart-section"><div class="chart-title">🎯 各科专注时间占比</div>';
@@ -5154,12 +5296,6 @@ function renderSummary(){
     html += '<div class="legend-item"><span class="legend-dot" style="background:'+color+'"></span>'+esc(subjKeys[pk])+'</div>';
   }
   html += '</div></div></div>';
-
-  // ── ③ Burn-down chart (real data if ledger exists, else task completions placeholder) ──
-  var burnTitle = ledger.length > 0 ? '📉 燃尽图：总剩余 vs 匀速线' : '📉 每日完成趋势（录入总账后自动切换为燃尽图）';
-  html += '<div class="chart-section"><div class="chart-title">'+burnTitle+'</div>';
-  html += '<canvas id="burnChart" width="600" height="200" style="width:100%;max-width:600px;height:200px"></canvas>';
-  html += '</div>';
 
   html += '</div>'; // close #summaryCharts
 
@@ -5210,107 +5346,6 @@ function renderSummary(){
           ctx.fillText(Math.round(subjectMin[subjKeys[j]]/totalMin*100)+'%', lx, ly);
         }
         angle += slice;
-      }
-    }
-    // Draw burn-down chart
-    var burnCanvas = document.getElementById('burnChart');
-    if(burnCanvas){
-      var bctx = burnCanvas.getContext('2d');
-      var cs2 = getComputedStyle(document.body);
-      var lineColor = cs2.getPropertyValue('--tab').trim() || '#6366f1';
-      var redColor = '#ef4444';
-      var greenColor = cs2.getPropertyValue('--good').trim() || '#10b981';
-      var textGray = cs2.getPropertyValue('--text3').trim() || '#9ca3af';
-      var gridColor = cs2.getPropertyValue('--border').trim() || '#e5e7eb';
-      var W = burnCanvas.width = burnCanvas.offsetWidth || 600;
-      var H = burnCanvas.height = 200;
-      var pad2 = { left: 44, right: 16, top: 16, bottom: 28 };
-      var pw = W - pad2.left - pad2.right;
-      var ph = H - pad2.top - pad2.bottom;
-      var useLedger = ledger.length > 0;
-
-      if(useLedger){
-        // ── Real burn-down: total remaining vs ideal line ──
-        var totalRemaining = 0;
-        for(var li2 = 0; li2 < ledger.length; li2++){
-          totalRemaining += Math.max(0, ledger[li2].totalUnits - ledger[li2].completedUnits);
-        }
-        var totalAll = 0;
-        for(var li3 = 0; li3 < ledger.length; li3++){ totalAll += ledger[li3].totalUnits; }
-        if(totalAll < 1) totalAll = 1;
-        var todayIdx = new Date().getDate() - 1; // 0-indexed day of month
-        if(todayIdx < 0) todayIdx = 0;
-        if(todayIdx >= daysInMonth) todayIdx = daysInMonth - 1;
-        var maxVal = totalAll;
-        if(maxVal < 10) maxVal = 10;
-        // Grid
-        bctx.strokeStyle = gridColor; bctx.lineWidth = 1;
-        for(var g2 = 0; g2 <= 4; g2++){
-          var gy2 = pad2.top + (ph * g2 / 4);
-          bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'right';
-          bctx.fillText(Math.round(maxVal * (1 - g2/4)), pad2.left - 6, gy2 + 3);
-          if(g2 > 0){ bctx.beginPath(); bctx.moveTo(pad2.left, gy2); bctx.lineTo(W - pad2.right, gy2); bctx.stroke(); }
-        }
-        // Ideal line: from (day1, totalRemaining) to (last-day, 0)
-        bctx.beginPath();
-        bctx.strokeStyle = textGray; bctx.lineWidth = 1.5; bctx.setLineDash([5,4]);
-        var idealStartX = pad2.left + (pw * todayIdx / Math.max(1, daysInMonth - 1));
-        var idealStartY = pad2.top + ph - (ph * totalRemaining / maxVal);
-        bctx.moveTo(idealStartX, idealStartY);
-        var idealEndX = pad2.left + pw;
-        var idealEndY = pad2.top + ph;
-        bctx.lineTo(idealEndX, idealEndY);
-        bctx.stroke();
-        bctx.setLineDash([]);
-        // Label "匀速线"
-        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'left';
-        bctx.fillText('← 理想线', idealEndX - 50, idealEndY - 6);
-        // Today's actual dot
-        var dotX = idealStartX;
-        var dotY = idealStartY;
-        bctx.beginPath(); bctx.arc(dotX, dotY, 7, 0, Math.PI*2);
-        bctx.fillStyle = totalRemaining > 0 ? redColor : greenColor; bctx.fill();
-        bctx.fillStyle = '#fff'; bctx.font = 'bold 9px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'middle';
-        bctx.fillText(totalRemaining, dotX, dotY);
-        // X-axis
-        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'alphabetic';
-        for(var xl2 = 0; xl2 < daysInMonth; xl2 += Math.max(1, Math.floor(daysInMonth/6))){
-          var lx2 = pad2.left + (pw * xl2 / Math.max(1, daysInMonth - 1));
-          bctx.fillText((xl2+1)+'日', lx2, H - pad2.bottom + 14);
-        }
-      }else{
-        // ── Placeholder: task completions per day ──
-        var maxCnt2 = 1;
-        for(var bc = 0; bc < dailyDone.length; bc++){ if(dailyDone[bc].count > maxCnt2) maxCnt2 = dailyDone[bc].count; }
-        if(maxCnt2 < 5) maxCnt2 = 5;
-        bctx.strokeStyle = gridColor; bctx.lineWidth = 1;
-        for(var g3 = 0; g3 <= 4; g3++){
-          var gy3 = pad2.top + (ph * g3 / 4);
-          bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'right';
-          bctx.fillText(Math.round(maxCnt2 * (1 - g3/4)), pad2.left - 6, gy3 + 3);
-          if(g3 > 0){ bctx.beginPath(); bctx.moveTo(pad2.left, gy3); bctx.lineTo(W - pad2.right, gy3); bctx.stroke(); }
-        }
-        bctx.beginPath();
-        bctx.strokeStyle = lineColor; bctx.lineWidth = 2.5; bctx.lineJoin = 'round';
-        var firstPoint2 = true;
-        for(var bp3 = 0; bp3 < dailyDone.length; bp3++){
-          var bx3 = pad2.left + (pw * bp3 / Math.max(1, dailyDone.length - 1));
-          var by3 = pad2.top + ph - (ph * dailyDone[bp3].count / maxCnt2);
-          if(firstPoint2){ bctx.moveTo(bx3, by3); firstPoint2 = false; }
-          else bctx.lineTo(bx3, by3);
-        }
-        bctx.stroke();
-        for(var bp4 = 0; bp4 < dailyDone.length; bp4++){
-          var bx4 = pad2.left + (pw * bp4 / Math.max(1, dailyDone.length - 1));
-          var by4 = pad2.top + ph - (ph * dailyDone[bp4].count / maxCnt2);
-          bctx.beginPath(); bctx.arc(bx4, by4, 3, 0, Math.PI*2);
-          bctx.fillStyle = lineColor; bctx.fill();
-        }
-        bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'center';
-        for(var xl3 = 0; xl3 < dailyDone.length; xl3 += Math.max(1, Math.floor(dailyDone.length/6))){
-          var lx3 = pad2.left + (pw * xl3 / Math.max(1, dailyDone.length - 1));
-          bctx.fillText(dailyDone[xl3].date.slice(5), lx3, H - pad2.bottom + 14);
-        }
       }
     }
   }, 50);
@@ -5442,7 +5477,7 @@ function showLedgerForm(){
   }).join('');
   if(!options) options = '<option value="">（无科目，请先在待办区创建）</option>';
 
-  var container = document.getElementById('summaryContainer');
+  var container = document.getElementById('planContainer') || document.getElementById('summaryContainer');
   var formHtml = '<div class="chart-section" id="ledgerForm" style="text-align:left">'+
     '<div class="chart-title">📝 编辑复习总账</div>'+
     '<div style="display:flex;flex-direction:column;gap:8px">'+
@@ -5496,13 +5531,13 @@ function showLedgerForm(){
     }else{
       state.ledger.push({ id: uid(), subject: subj, taskName: subj, unit: '项', totalUnits: total, completedUnits: Math.min(done, total), updatedAt: new Date().toISOString() });
     }
-    saveState(); renderSummary();
+    saveState(); renderPlan();
   };
 
   cancelEl.onclick = function(){
     var f = document.getElementById('ledgerForm');
     if(f) f.remove();
-    renderSummary();
+    renderPlan();
   };
 
   // Trigger pre-fill on first subject
@@ -5907,7 +5942,7 @@ function updateFab(){
     if(activeContent){ tab = activeContent.id.replace('tab-',''); }
   }
   tab = tab || 'habits';
-  if(tab === 'study' || tab === 'summary'){
+  if(tab === 'study' || tab === 'summary' || tab === 'plan'){
     fab.classList.add('hidden');
   }else{
     fab.classList.remove('hidden');
@@ -6613,17 +6648,17 @@ document.getElementById('app').addEventListener('click', function(e){
     // ── Ledger actions ──
     case 'ledger-plus':{
       var ent = state.ledger.find(function(x){ return x.id === id; });
-      if(ent){ ent.completedUnits = Math.min(ent.totalUnits, ent.completedUnits + 1); touch(ent); saveState(); renderSummary(); }
+      if(ent){ ent.completedUnits = Math.min(ent.totalUnits, ent.completedUnits + 1); touch(ent); saveState(); renderPlan(); }
       break;
     }
     case 'ledger-minus':{
       var ent2 = state.ledger.find(function(x){ return x.id === id; });
-      if(ent2){ ent2.completedUnits = Math.max(0, ent2.completedUnits - 1); touch(ent2); saveState(); renderSummary(); }
+      if(ent2){ ent2.completedUnits = Math.max(0, ent2.completedUnits - 1); touch(ent2); saveState(); renderPlan(); }
       break;
     }
     case 'ledger-del':{
       state.ledger = state.ledger.filter(function(x){ return x.id !== id; });
-      saveState(); renderSummary();
+      saveState(); renderPlan();
       break;
     }
     case 'ledger-add':{
@@ -6928,7 +6963,7 @@ document.getElementById('app').addEventListener('keydown', function(e){
 });
 
 // ========== Tabs ==========
-const TAB_ORDER = ['habits','dailies','todos','rewards','study','summary'];
+const TAB_ORDER = ['habits','dailies','todos','rewards','plan','study','summary'];
 
 function switchTab(tab){
   const oldActive = document.querySelector('.tab-content.active');
@@ -7893,7 +7928,7 @@ function updateLedgerTool(args){
     entry.totalUnits = value;
   }
 
-  touch(entry); saveState(); renderSummary();
+  touch(entry); saveState(); renderPlan();
   return {
     success: true,
     message: '✅ 已更新「' + subject + '」总账：' + (field === 'completedUnits' ? '已完成' : '总量') + ' → ' + value + '（' + entry.completedUnits + '/' + entry.totalUnits + '）'
