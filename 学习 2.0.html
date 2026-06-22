@@ -5107,17 +5107,22 @@ async function triggerAiArrange(){
       JSON.stringify(overview.data, null, 1).substring(0, 6000)+
       '\n\n请根据以上数据，按B组规则（留缓冲/真实速度/阶段校准）和C组规则（跳过休息日、匀速扣休息日）为今天排任务。每个大任务切1-3个具体待办，务必带tag(科目)和sourceLedgerId(对应总账id)。直接调create_todo。';
     var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'请根据总账数据为我安排今天的学习任务'}];
+    // 用 v4pro（reasoner）做编排，它更擅长多工具调用
     var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-chat'),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 8000); })
+      callDeepSeek(msgs, 'deepseek-reasoner'),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
     ]);
     if(result && result.choices && result.choices[0] && result.choices[0].message){
       var msg = result.choices[0].message;
       var createdCount = 0;
       if(msg.tool_calls){ for(var i=0;i<msg.tool_calls.length;i++){ var tc=msg.tool_calls[i]; if(tc.function.name==='create_todo'){ var args=JSON.parse(tc.function.arguments||'{}'); createTodoTool(args); createdCount++; } } }
-      if(createdCount>0){ toast('🦊 已为你安排今天 '+createdCount+' 个任务，已放进待办', 'info'); }
-      else{ toast('小狐分析完毕，但未创建新任务（可能已全部完成或数据不足）', 'info'); }
-      addAiBubble('assistant', '🦊 已根据你的总账和最近速度安排好今天的学习任务。查看待办列表，过几天我会根据完成情况再校准~');
+      if(createdCount>0){
+        toast('🦊 已为你安排今天 '+createdCount+' 个任务，已放进待办', 'info');
+        addAiBubble('assistant', '🦊 已根据你的总账和最近速度安排好今天的学习任务。查看待办列表，过几天我会根据完成情况再校准~');
+      }else{
+        if(msg.content){ addAiBubble('assistant', msg.content); }
+        toast('没能创建任务。在 AI 聊天里直接说"帮我排今天的任务"试试', 'info');
+      }
     }
   }catch(e){
     toast('安排失败，稍后再试', 'warn');
