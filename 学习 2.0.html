@@ -839,6 +839,27 @@ body{
 .unit-chip{padding:4px 10px;border-radius:14px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
 .unit-chip:hover{border-color:var(--tab);color:var(--tab)}
 .unit-chip.active{background:var(--tab);color:#fff;border-color:var(--tab)}
+/* Toggle switch */
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px}
+.toggle-switch input{display:none}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:24px;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;height:20px;width:20px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-switch input:checked+.toggle-slider{background:var(--tab)}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px)}
+/* Plan AI button */
+.plan-ai-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--tab),#8b5cf6);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s}
+.plan-ai-btn:hover{opacity:.9;transform:scale(1.01)}
+.plan-ai-btn:active{transform:scale(.98)}
+.plan-ai-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.plan-ai-btn.dim{background:var(--border);color:var(--text2)}
+/* Completion confirm bar */
+.ledger-confirm-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.08);animation:slideUp .25s ease}
+.ledger-confirm-bar .lc-text{flex:1;font-size:13px;color:var(--text)}
+.ledger-confirm-bar .lc-btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);white-space:nowrap}
+.ledger-confirm-bar .lc-confirm{background:var(--tab);color:#fff}
+.ledger-confirm-bar .lc-skip{background:var(--bg);color:var(--text3);border:1px solid var(--border)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 .day-list{display:flex;flex-direction:column;gap:8px}
 .day-item{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
@@ -3050,7 +3071,8 @@ function defaultState(){
     restDays: [],
     restDaysPerWeek: 0,
     bestStreak: 0,
-    settings: { sfxEnabled: true },
+    settings: { sfxEnabled: true, autoPlan: false },
+    _autoPlannedToday: null,
     _nodeFiredToday: { subjectFocus: {}, taskCount5: false },
     _prevStreak: 0,
     _surpriseCounter: 0,
@@ -3189,6 +3211,8 @@ function loadState(){
       if(s.bestStreak == null) s.bestStreak = 0;
       if(!s.settings){ s.settings = { sfxEnabled: true }; }
       if(s.settings.sfxEnabled == null) s.settings.sfxEnabled = true;
+      if(s.settings.autoPlan == null) s.settings.autoPlan = false;
+      if(s._autoPlannedToday == null) s._autoPlannedToday = null;
       if(!s._nodeFiredToday){ s._nodeFiredToday = { subjectFocus: {}, taskCount5: false }; }
       if(s._prevStreak == null) s._prevStreak = 0;
       if(s._graceFired == null) s._graceFired = false;
@@ -4387,6 +4411,36 @@ function completeTodo(todo, clickX, clickY){
   if(clickX !== undefined && clickY !== undefined){
     spawnParticles(clickX, clickY);
   }
+  // 完成扣减：检查是否AI排的任务关联了总账
+  if(todo.sourceLedgerId){
+    var le = (state.ledger||[]).find(function(l){ return l.id === todo.sourceLedgerId; });
+    if(le){
+      showLedgerConfirmBar(todo, le);
+    }
+  }
+}
+
+// 完成AI排任务后的扣减确认条
+function showLedgerConfirmBar(todo, ledgerEntry){
+  var existing = document.getElementById('ledgerConfirmBar');
+  if(existing) existing.remove();
+  var unit = ledgerEntry.unit || '项';
+  var delta = todo.estimatedMinutes > 0 ? Math.max(1, Math.round(todo.estimatedMinutes / 10)) : 1;
+  var bar = document.createElement('div');
+  bar.id = 'ledgerConfirmBar';
+  bar.className = 'ledger-confirm-bar';
+  bar.innerHTML = '<span class="lc-text">完成「'+esc(todo.name)+'」，要把「'+esc(ledgerEntry.subject)+' · '+esc(ledgerEntry.taskName||ledgerEntry.subject)+'」总账推进 <b>'+delta+'</b> '+unit+' 吗？</span>'+
+    '<button class="lc-btn lc-skip" id="lcSkip">暂不</button>'+
+    '<button class="lc-btn lc-confirm" id="lcConfirm">确认</button>';
+  document.body.appendChild(bar);
+  document.getElementById('lcConfirm').onclick = function(){
+    ledgerEntry.completedUnits = Math.min(ledgerEntry.totalUnits, (ledgerEntry.completedUnits||0) + delta);
+    touch(ledgerEntry);
+    saveState(); renderPlan();
+    bar.remove();
+    digitBounce(document.querySelector('.ledger-row[data-id="'+ledgerEntry.id+'"] .ledger-nums'));
+  };
+  document.getElementById('lcSkip').onclick = function(){ bar.remove(); };
 }
 
 // 【第二重】粒子从点击位置爆开后飞向 XP 条
@@ -5037,6 +5091,38 @@ function renderStudy(){
       : '');
 }
 
+async function triggerAiArrange(){
+  var btn = document.getElementById('planAiBtn');
+  var statusEl = document.getElementById('planAiStatus');
+  if(!btn || !statusEl) return;
+  if(!state.aiKey){ toast('请先配置 AI API Key', 'warn'); return; }
+  btn.style.display = 'none';
+  statusEl.style.display = '';
+  try{
+    var overview = getTaskOverviewTool();
+    var prompt = '你是一个学习规划助手。请根据以下总账数据（每条含subject/taskName/unit/total/completed/remaining）和用户统计，为今天安排学习任务。\n\n'+
+      '规则：\n1. 留30-50%缓冲，不要排满\n2. 用真实速度估计（参考subjectDailyAvg7d）\n3. 跳过休息日\n4. 每个大任务切1-3个具体待办\n5. 用create_todo建任务，必须带tag(科目)和sourceLedgerId(对应总账id)\n\n'+
+      '用户数据：\n'+JSON.stringify(overview.data, null, 1).substring(0, 8000)+'\n\n请直接调用create_todo工具创建今天的学习待办。';
+    var msgs = [{role:'system',content:prompt},{role:'user',content:'请根据总账数据为我安排今天的学习任务'}];
+    var result = await Promise.race([
+      callDeepSeek(msgs, 'deepseek-chat'),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 2500); })
+    ]);
+    if(result && result.choices && result.choices[0] && result.choices[0].message){
+      var msg = result.choices[0].message;
+      var createdCount = 0;
+      if(msg.tool_calls){ for(var i=0;i<msg.tool_calls.length;i++){ var tc=msg.tool_calls[i]; if(tc.function.name==='create_todo'){ var args=JSON.parse(tc.function.arguments||'{}'); createTodoTool(args); createdCount++; } } }
+      if(createdCount>0){ toast('🦊 已为你安排今天 '+createdCount+' 个任务，已放进待办', 'info'); }
+      else{ toast('小狐分析完毕，但未创建新任务（可能已全部完成或数据不足）', 'info'); }
+      addAiBubble('assistant', '🦊 已根据你的总账和最近速度安排好今天的学习任务。查看待办列表，过几天我会根据完成情况再校准~');
+    }
+  }catch(e){
+    toast('安排失败，稍后再试', 'warn');
+  }
+  btn.style.display = '';
+  statusEl.style.display = 'none';
+}
+
 function renderPlan(){
   var container = document.getElementById('planContainer');
   if(!container) return;
@@ -5112,9 +5198,20 @@ function renderPlan(){
   html += '</div>';
 
   // ── 第二步预留位 ──
-  html += '<div id="planAiSlot" style="margin-top:16px;padding:20px;border:2px dashed var(--border);border-radius:var(--radius);text-align:center;color:var(--text3);font-size:12px">'+
-    '// 第二步预留：AI排任务按钮 / 自动手动开关 / 完成确认扣减<br>（本步不实现任何功能，仅占位）'+
+  html += '<div id="planAiSlot" style="margin-top:16px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px;color:var(--text2)">'+
+      '<span>⚙️ 每日自动排任务</span>'+
+      '<label class="toggle-switch"><input type="checkbox" id="autoPlanChk" data-action="toggle-auto-plan"'+(state.settings.autoPlan?' checked':'')+'><span class="toggle-slider"></span></label>'+
+    '</div>'+
+    '<div id="autoPlanHint" style="font-size:10px;color:var(--text3);margin-bottom:12px;'+(state.settings.autoPlan?'':'display:none')+'">已开启 · 每天首次打开会自动排好今天的任务</div>'+
+    '<button id="planAiBtn" class="plan-ai-btn" data-action="plan-ai-arrange">🦊 让小狐安排今天</button>'+
+    '<div id="planAiStatus" style="display:none;text-align:center;padding:12px;font-size:12px;color:var(--text2)">'+
+      '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--tab);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px"></span>小狐正在安排…</div>'+
     '</div>';
+  // Auto-plan hint if already planned today
+  if(state.settings.autoPlan && state._autoPlannedToday === today()){
+    // Already auto-planned today — dim the button
+  }
 
   container.innerHTML = html;
 
@@ -6700,6 +6797,15 @@ document.getElementById('app').addEventListener('click', function(e){
       showLedgerForm();
       break;
     }
+    case 'toggle-auto-plan':{
+      state.settings.autoPlan = !state.settings.autoPlan;
+      saveState(); renderPlan();
+      break;
+    }
+    case 'plan-ai-arrange':{
+      triggerAiArrange();
+      break;
+    }
     case 'ledger-edit-done':{
       var max = parseInt(btn.dataset.max) || 9999;
       var ent3 = state.ledger.find(function(x){ return x.id === id; });
@@ -7393,7 +7499,8 @@ const AI_TOOLS = [
           dueDate: { type: 'string', description: '截止日期 YYYY-MM-DD' },
           priority: { type: 'string', enum: ['high', 'medium', 'low', 'none'], description: '优先级' },
           estimatedMinutes: { type: 'number', description: '预估耗时（分钟）' },
-          tag: { type: 'string', description: '科目标签，如"数学""物理""英语"。匹配用户已有的科目列表。' }
+          tag: { type: 'string', description: '科目标签，如"数学""物理""英语"。匹配用户已有的科目列表。' },
+          sourceLedgerId: { type: 'string', description: '关联的总账条目ID。按总账排任务时必须填写，便于完成任务后扣减总账。' }
         },
         required: ['name']
       }
@@ -7479,15 +7586,17 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'update_ledger',
-      description: '修改复习总账中某科目的已完成数或总量。**仅在用户明确下令修改总账，或用户确认了你提出的扣减提议后才能调用。** 绝不能擅自调用。用户明确说"把XX改成YY"时直接调用，不需要先查 get_task_overview。',
+      description: '修改复习总账中某条大任务的已完成数或总量。可通过 ledgerId 精确定位，或 subject+taskName 组合定位，或只用 subject。**仅在用户明确下令修改总账，或用户确认了你提出的扣减提议后才能调用。** 绝不能擅自调用。',
       parameters: {
         type: 'object',
         properties: {
+          ledgerId: { type: 'string', description: '总账条目 ID，优先使用' },
           subject: { type: 'string', description: '科目名称，如"数学""物理"' },
-          field: { type: 'string', enum: ['completedUnits', 'totalUnits'], description: '要修改的字段：completedUnits=已完成数，totalUnits=总量' },
+          taskName: { type: 'string', description: '大任务名，如"物理课本"（可选，配合 subject 精确定位）' },
+          field: { type: 'string', enum: ['completedUnits', 'totalUnits'], description: 'completedUnits=已完成数，totalUnits=总量' },
           value: { type: 'number', description: '目标值（整数）' }
         },
-        required: ['subject', 'field', 'value']
+        required: ['field', 'value']
       }
     }
   },
@@ -7679,7 +7788,7 @@ function createTodoTool(args){
     id, name: args.name, completed: false, createdAt: today(),
     difficulty: args.difficulty || 'medium',
     dueDate: args.dueDate || today(),
-    priority: args.priority || 'medium', tag: args.tag || null, subtasks: [],
+    priority: args.priority || 'medium', tag: args.tag || null, sourceLedgerId: args.sourceLedgerId || null, subtasks: [],
     completedAt: null, estimatedMinutes: args.estimatedMinutes || 0,
     accumulatedFocusMinutes: 0, reminderTime: null, reminded: false,
     customReward: null, penalty: null,
@@ -7945,11 +8054,13 @@ function listTrashTool(){
 // ========== AI 修改总账工具 ==========
 function updateLedgerTool(args){
   args = args || {};
+  var ledgerId = args.ledgerId;
   var subject = (args.subject || '').trim();
+  var taskName = (args.taskName || '').trim();
   var field = args.field;
   var value = args.value;
 
-  if(!subject){ return { success: false, message: '请指定科目名称。' }; }
+  if(!ledgerId && !subject){ return { success: false, message: '请指定 ledgerId 或科目名称(subject)。' }; }
   if(field !== 'completedUnits' && field !== 'totalUnits'){
     return { success: false, message: 'field 必须是 completedUnits 或 totalUnits。' };
   }
@@ -7958,10 +8069,13 @@ function updateLedgerTool(args){
   }
 
   var ledger = state.ledger || [];
-  var entry = ledger.find(function(e){ return e.subject === subject; });
+  var entry;
+  if(ledgerId){ entry = ledger.find(function(e){ return e.id === ledgerId; }); }
+  else if(taskName){ entry = ledger.find(function(e){ return e.subject === subject && e.taskName === taskName; }); }
+  else{ entry = ledger.find(function(e){ return e.subject === subject; }); }
 
   if(!entry){
-    return { success: false, message: '未找到科目「' + subject + '」的总账记录。请先在总结页添加该科目。' };
+    return { success: false, message: '未找到总账记录。请先添加总账。' };
   }
 
   // 边界保护
@@ -8195,14 +8309,29 @@ function getTaskOverviewTool(){
     }
   }
 
+  // ── Ledger summary (task-level, for AI) ──
+  var ledgerSummary = (state.ledger || []).map(function(le){
+    return {
+      id: le.id, subject: le.subject, taskName: le.taskName || le.subject || '',
+      unit: le.unit || '项', total: le.totalUnits || 0, completed: le.completedUnits || 0,
+      remaining: Math.max(0, (le.totalUnits || 0) - (le.completedUnits || 0))
+    };
+  });
+
+  // ── Available days this month ──
+  var daysInMonth2 = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+  var availableDays = Math.max(1, daysInMonth2 - new Date().getDate() + 1);
+
   return { success: true, message: msg, data: {
     overdueTodos: overdueTodos, todayTodos: todayTodos, tomorrowTodos: tomorrowTodos,
     uncheckedHabits: uncheckedHabits, uncompletedDailies: uncompletedDailies,
     subjectMinutes: subjectMinutes, streak: streak, atRisk: atRisk,
     trend: { dailyCompletions: dailyCompletions, subjectTrend: subjectTrend, streakCurve: streakCurve, brokenHabits7d: brokenHabits7d },
     ledger: ledger,
+    ledgerSummary: ledgerSummary,
     restDays: restInfo,
-    subjectDailyAvg7d: subjectDailyAvg7d
+    subjectDailyAvg7d: subjectDailyAvg7d,
+    availableDays: availableDays
   }};
 }
 
@@ -8597,6 +8726,17 @@ async function init(){
   initAllSwipes();
   checkReminders();
   setInterval(checkReminders, 30000);
+  // 自动排任务：开启后每天首次打开自动安排
+  if(state.settings.autoPlan && state.aiKey && state._autoPlannedToday !== today()){
+    var ledger = state.ledger || [];
+    if(ledger.length > 0){
+      setTimeout(function(){
+        state._autoPlannedToday = today();
+        saveState();
+        triggerAiArrange();
+      }, 1500);
+    }
+  }
 }
 
 // Helper: show companion UI without starting timers (for recovery)
