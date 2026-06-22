@@ -5149,6 +5149,7 @@ function openIntensityOverlay(){
   var o = document.getElementById('intensityOverlay');
   if(o) o.classList.remove('hidden');
 }
+window.openIntensityOverlay = openIntensityOverlay;
 
 async function triggerAiArrange(intensity, specialNote){
   intensity = intensity || 'normal';
@@ -5197,6 +5198,7 @@ async function triggerAiArrange(intensity, specialNote){
   btn.style.display = '';
   statusEl.style.display = 'none';
 }
+window.triggerAiArrange = triggerAiArrange;
 
 // 记录今天的总剩余量快照（供燃尽图蓝线用）
 function recordDailyRemaining(){
@@ -8908,9 +8910,7 @@ if(location.search.includes('debug=1')){
   window.__dbg = { get state(){return state;}, getStreakMultiplier, checkStreakMilestones, showAchievement, applyMult, calcStreak, getEffectiveReward, getReward, DIFF_REWARDS, STREAK_MILESTONES, triggerHop };
   console.log('🐛 调试模式已开启。试试 __dbg.checkStreakMilestones(30)');
 }
-// 暴露给 HTML onclick（onclick 在全局作用域执行，IIFE 内的函数需要手动挂到 window）
-window.openIntensityOverlay = openIntensityOverlay;
-window.triggerAiArrange = triggerAiArrange;
+// 函数已就近挂到 window（见 openIntensityOverlay / triggerAiArrange 定义处）
 })();
 </script>
 
