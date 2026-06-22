@@ -1330,6 +1330,31 @@ body{
   font-family:var(--font);transition:all .15s;
 }
 .achievement-card .achi-btn:active{transform:scale(.95)}
+/* 强度选择浮层 */
+.intensity-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:570;
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .25s ease;
+}
+.intensity-overlay.hidden{display:none}
+.intensity-card{
+  background:var(--card);border-radius:18px;padding:28px 24px 22px;margin:20px;
+  max-width:360px;width:100%;
+  box-shadow:0 8px 32px rgba(0,0,0,.12);
+  animation:sheetUp .28s ease;
+}
+.intensity-title{font-size:16px;font-weight:700;color:var(--text);text-align:center;margin-bottom:16px}
+.intensity-row{display:flex;gap:8px;margin-bottom:14px}
+.intensity-opt{flex:1;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;text-align:center}
+.intensity-opt:hover{border-color:var(--tab);color:var(--tab)}
+.intensity-opt.active{background:var(--tab);color:#fff;border-color:var(--tab)}
+.intensity-note{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);font-size:13px;color:var(--text);font-family:var(--font);outline:none;margin-bottom:16px;box-sizing:border-box}
+.intensity-note:focus{border-color:var(--tab)}
+.intensity-note::placeholder{color:var(--text3)}
+.intensity-btns{display:flex;gap:10px}
+.intensity-cancel{flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--text3);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.intensity-start{flex:2;padding:12px;border-radius:10px;border:none;background:var(--tab);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.intensity-cancel:active,.intensity-start:active{transform:scale(.97)}
 @keyframes achiPop{
   0%{transform:scale(.3);opacity:0}
   70%{transform:scale(1.05);opacity:1}
@@ -1629,6 +1654,23 @@ body{
     <div class="achi-body" id="achiBody"></div>
     <div class="achi-gold" id="achiGold"></div>
     <button class="achi-btn" id="achiClose">🎉 太棒了！</button>
+  </div>
+</div>
+
+<!-- 强度选择浮层 -->
+<div class="intensity-overlay hidden" id="intensityOverlay">
+  <div class="intensity-card">
+    <div class="intensity-title">🦊 今天想怎么安排？</div>
+    <div class="intensity-row" id="intensityRow">
+      <button class="intensity-opt" data-action="pick-intensity" data-intensity="light">少学点</button>
+      <button class="intensity-opt active" data-action="pick-intensity" data-intensity="normal">正常</button>
+      <button class="intensity-opt" data-action="pick-intensity" data-intensity="heavy">多学点</button>
+    </div>
+    <input type="text" class="intensity-note" id="intensityNote" placeholder="今天有什么特殊情况吗？（可不填）" maxlength="60">
+    <div class="intensity-btns">
+      <button class="intensity-cancel" data-action="intensity-cancel">取消</button>
+      <button class="intensity-start" data-action="intensity-start">开始安排</button>
+    </div>
   </div>
 </div>
 
@@ -5093,7 +5135,9 @@ function renderStudy(){
       : '');
 }
 
-async function triggerAiArrange(){
+async function triggerAiArrange(intensity, specialNote){
+  intensity = intensity || 'normal';
+  specialNote = specialNote || '';
   var btn = document.getElementById('planAiBtn');
   var statusEl = document.getElementById('planAiStatus');
   if(!btn || !statusEl) return;
@@ -5103,24 +5147,30 @@ async function triggerAiArrange(){
   try{
     var overview = getTaskOverviewTool();
     var data = overview.data;
+    // 燃尽图趋势
+    var trendStr = state._dailyRemaining && state._dailyRemaining.length>0 ? 'behind' : 'on_track';
     var ledgerSummaryStr = JSON.stringify((data.ledgerSummary||[]).map(function(l){return {s:l.subject,t:l.taskName,u:l.unit,r:l.remaining};})).substring(0,2000);
-    var sysPrompt = getSystemPrompt() + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+' 请用create_todo建任务，每个带tag(科目)和sourceLedgerId。';
-    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'直接调create_todo帮我建今天的学习任务'}, {role:'assistant',content:'收到，我来。'}, {role:'user',content:'请直接调create_todo，别只说。'}];
-    // 先用 flash 模型（快），失败再降级
+    // 强度语义描述（给AI约束，不是系数）
+    var intensityGuide = intensity==='heavy' ? '用户今天有余力想多学。优先把余力投到最该追的科目（落后最多/剩最多的），而非每科平均加。'
+      : intensity==='light' ? '用户今天状态差/时间紧，保底模式。优先保最不能断的科目（离检测最近的），其余往后挪。排最低限度不至于崩的量。'
+      : '用户今天正常学习。踩着匀速进度走，留30-40%缓冲。';
+    var sysPrompt = getSystemPrompt() + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag和sourceLedgerId。回复末尾用一句话（≤40字，狐狸口吻）说明为什么这么排。';
+    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"，请根据约束帮他排今天的任务，先出文本方案，再调create_todo。'}, {role:'user',content:'请先简短说明方案理由，然后直接调create_todo创建任务。'}];
     var result = await Promise.race([
       callDeepSeek(msgs, 'deepseek-chat', 'required'),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 12000); })
     ]);
     if(result && result.error){
-      // API 报错，不再重试，直接告诉用户
       toast('API 错误: ' + result.error, 'warn');
     }else if(result && result.choices && result.choices[0] && result.choices[0].message){
       var msg = result.choices[0].message;
+      var reasonText = msg.content ? msg.content.substring(0,80) : '';
       var createdCount = 0;
       if(msg.tool_calls){ for(var i=0;i<msg.tool_calls.length;i++){ var tc=msg.tool_calls[i]; if(tc.function.name==='create_todo'){ var args=JSON.parse(tc.function.arguments||'{}'); createTodoTool(args); createdCount++; } } }
       if(createdCount>0){
         toast('🦊 已为你安排今天 '+createdCount+' 个任务，已放进待办', 'info');
-        addAiBubble('assistant', '🦊 已根据你的总账和最近速度安排好今天的学习任务。查看待办列表，过几天我会根据完成情况再校准~');
+        var bubbleText = reasonText || '🦊 已根据你的总账和最近速度安排好今天的学习任务。查看待办列表~';
+        addAiBubble('assistant', bubbleText);
       }else{
         if(msg.content){ addAiBubble('assistant', msg.content); }
         toast('没能创建任务。在 AI 聊天里直接说"帮我排今天的任务"试试', 'info');
@@ -6863,7 +6913,31 @@ document.getElementById('app').addEventListener('click', function(e){
       break;
     }
     case 'plan-ai-arrange':{
-      triggerAiArrange();
+      var l2 = state.ledger || [];
+      if(l2.length === 0){ toast('还没有总账，先去计划页录一条吧～', 'info'); break; }
+      var iOverlay = document.getElementById('intensityOverlay');
+      if(iOverlay){ iOverlay.classList.remove('hidden'); }
+      break;
+    }
+    case 'pick-intensity':{
+      var allOpts = document.querySelectorAll('.intensity-opt');
+      for(var oi=0;oi<allOpts.length;oi++){ allOpts[oi].classList.remove('active'); }
+      btn.classList.add('active');
+      break;
+    }
+    case 'intensity-cancel':{
+      var iO = document.getElementById('intensityOverlay');
+      if(iO) iO.classList.add('hidden');
+      break;
+    }
+    case 'intensity-start':{
+      var iO2 = document.getElementById('intensityOverlay');
+      if(iO2) iO2.classList.add('hidden');
+      var activeOpt = document.querySelector('.intensity-opt.active');
+      var intensity = activeOpt ? activeOpt.dataset.intensity : 'normal';
+      var noteEl = document.getElementById('intensityNote');
+      var note = noteEl ? noteEl.value.trim() : '';
+      triggerAiArrange(intensity, note);
       break;
     }
     case 'ledger-edit-done':{
