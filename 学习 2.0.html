@@ -5215,8 +5215,11 @@ async function triggerAiArrange(intensity, specialNote){
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     if(result && result.error){
-      if(preview) preview.classList.add('hidden');
-      toast('API 错误: ' + result.error, 'warn');
+      // API 出错：在预览面板里显示错误，不关面板
+      console.error('[triggerAiArrange] API error:', result.error);
+      if(loading) loading.style.display = 'none';
+      if(taskList) taskList.innerHTML = '<div class="preview-empty" style="color:#ef4444;">⚠️ API 错误：'+escHtml(result.error)+'</div>';
+      if(reasonEl){ reasonEl.classList.add('hidden'); }
     }else if(result && result.choices && result.choices[0] && result.choices[0].message){
       var msg = result.choices[0].message;
       var reasonText = msg.content ? msg.content.substring(0,80) : '';
@@ -5237,14 +5240,22 @@ async function triggerAiArrange(intensity, specialNote){
         if(loading) loading.style.display = 'none';
         if(reasonEl && reasonText){ reasonEl.classList.remove('hidden'); reasonEl.textContent = reasonText; }
       }else{
-        if(preview) preview.classList.add('hidden');
+        // AI 没调 create_todo：降级显示文本回复
+        console.warn('[triggerAiArrange] No create_todo tool calls in response');
+        if(loading) loading.style.display = 'none';
+        if(taskList) taskList.innerHTML = '<div class="preview-empty">⚠️ AI 没有返回可解析的任务。试试<a href="javascript:void(0)" onclick="document.getElementById(\'arrangePreviewOverlay\').classList.add(\'hidden\');openIntensityOverlay()">重新安排</a></div>';
         if(msg.content){ addAiBubble('assistant', msg.content); }
-        toast('没能解析出任务。在 AI 聊天里说"帮我排今天的任务"试试', 'info');
       }
+    }else{
+      // 返回值异常（既没 error 也没 choices）
+      console.error('[triggerAiArrange] Unexpected API response:', JSON.stringify(result).substring(0,500));
+      if(loading) loading.style.display = 'none';
+      if(taskList) taskList.innerHTML = '<div class="preview-empty" style="color:#ef4444;">⚠️ API 返回异常，请重试</div>';
     }
   }catch(e){
-    if(preview) preview.classList.add('hidden');
-    toast('安排失败，稍后再试', 'warn');
+    console.error('[triggerAiArrange] Exception:', e);
+    if(loading) loading.style.display = 'none';
+    if(taskList) taskList.innerHTML = '<div class="preview-empty" style="color:#ef4444;">⚠️ 安排失败：'+escHtml(e.message||'未知错误')+'</div>';
   }
 }
 window.triggerAiArrange = triggerAiArrange;
