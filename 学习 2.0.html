@@ -3121,7 +3121,7 @@ function initSwipe(listId){
     startY = e.clientY;
     tracking = true;
     captured = false;
-    // Read current transform
+    // Read current transform/
     const m = front.style.transform.match(/-?\d+/);
     startTransform = m ? parseFloat(m[0]) : 0;
     currentCard.classList.remove('closing');
@@ -5102,17 +5102,19 @@ async function triggerAiArrange(){
   statusEl.style.display = '';
   try{
     var overview = getTaskOverviewTool();
-    // 把系统提示放在前面，后面追加具体数据
-    var sysPrompt = getSystemPrompt() + '\n\n=== 当前总账数据 ===\n'+
-      JSON.stringify(overview.data, null, 1).substring(0, 6000)+
-      '\n\n请根据以上数据，按B组规则（留缓冲/真实速度/阶段校准）和C组规则（跳过休息日、匀速扣休息日）为今天排任务。每个大任务切1-3个具体待办，务必带tag(科目)和sourceLedgerId(对应总账id)。直接调create_todo。';
-    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'请根据总账数据为我安排今天的学习任务'}];
-    // 用 v4pro（reasoner）做编排，它更擅长多工具调用
+    var data = overview.data;
+    var ledgerSummaryStr = JSON.stringify((data.ledgerSummary||[]).map(function(l){return {s:l.subject,t:l.taskName,u:l.unit,r:l.remaining};})).substring(0,2000);
+    var sysPrompt = getSystemPrompt() + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+' 请用create_todo建任务，每个带tag(科目)和sourceLedgerId。';
+    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'直接调create_todo帮我建今天的学习任务'}, {role:'assistant',content:'收到，我来。'}, {role:'user',content:'请直接调create_todo，别只说。'}];
+    // 先用 flash 模型（快），失败再降级
     var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-reasoner'),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+      callDeepSeek(msgs, 'deepseek-chat'),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 12000); })
     ]);
-    if(result && result.choices && result.choices[0] && result.choices[0].message){
+    if(result && result.error){
+      // API 报错，不再重试，直接告诉用户
+      toast('API 错误: ' + result.error, 'warn');
+    }else if(result && result.choices && result.choices[0] && result.choices[0].message){
       var msg = result.choices[0].message;
       var createdCount = 0;
       if(msg.tool_calls){ for(var i=0;i<msg.tool_calls.length;i++){ var tc=msg.tool_calls[i]; if(tc.function.name==='create_todo'){ var args=JSON.parse(tc.function.arguments||'{}'); createTodoTool(args); createdCount++; } } }
