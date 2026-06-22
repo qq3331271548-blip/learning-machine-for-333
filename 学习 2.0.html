@@ -1355,6 +1355,21 @@ body{
 .intensity-cancel{flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--text3);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)}
 .intensity-start{flex:2;padding:12px;border-radius:10px;border:none;background:var(--tab);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font)}
 .intensity-cancel:active,.intensity-start:active{transform:scale(.97)}
+.preview-task-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.preview-task-row:last-child{border-bottom:none}
+.preview-task-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.preview-task-name{flex:1;font-size:14px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preview-task-qty{width:52px;padding:5px 6px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);text-align:center;font-family:var(--font);outline:none;font-weight:600}
+.preview-task-qty:focus{border-color:var(--tab)}
+.preview-task-unit{font-size:13px;color:var(--text2);flex-shrink:0;min-width:18px}
+.preview-task-del{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--text3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.preview-task-del:hover{background:#fee2e2;color:#ef4444}
+.preview-reason{font-size:13px;color:var(--text2);padding:10px 12px;margin:10px 0 6px;background:var(--bg);border-radius:8px;line-height:1.5}
+.preview-reason::before{content:'💬 ';font-size:12px}
+.preview-loading{text-align:center;padding:28px 0}
+.preview-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--tab);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+.preview-loading-text{font-size:14px;color:var(--text2)}
+.preview-empty{text-align:center;padding:20px;color:var(--text3);font-size:13px}
 @keyframes achiPop{
   0%{transform:scale(.3);opacity:0}
   70%{transform:scale(1.05);opacity:1}
@@ -1670,6 +1685,24 @@ body{
     <div class="intensity-btns">
       <button class="intensity-cancel" onclick="document.getElementById('intensityOverlay').classList.add('hidden')">取消</button>
       <button class="intensity-start" onclick="document.getElementById('intensityOverlay').classList.add('hidden');var a=document.querySelector('.intensity-opt.active');var iv=a?a.dataset.intensity:'normal';var n=document.getElementById('intensityNote');triggerAiArrange(iv,n?n.value.trim():'')">开始安排</button>
+    </div>
+  </div>
+</div>
+
+<!-- 安排预览面板（第二阶段：AI排完先预览，不直接进待办） -->
+<div class="intensity-overlay hidden" id="arrangePreviewOverlay">
+  <div class="intensity-card" style="max-width:420px;">
+    <div class="intensity-title">🦊 今天的建议安排</div>
+    <div class="preview-loading" id="previewLoading">
+      <div class="preview-spinner"></div>
+      <div class="preview-loading-text">小狐正在为你安排…</div>
+    </div>
+    <div id="previewTaskList"></div>
+    <div class="preview-reason hidden" id="previewReason"></div>
+    <div class="intensity-btns" style="flex-wrap:wrap;">
+      <button id="previewDiscussBtn" class="intensity-cancel" style="flex:1;min-width:0;">💬 和小狐聊聊</button>
+      <button id="previewRearrangeBtn" class="intensity-cancel" style="flex:1;min-width:0;">重新安排</button>
+      <button id="previewConfirmBtn" class="intensity-start" style="flex:2;">确认放进待办</button>
     </div>
   </div>
 </div>
@@ -3123,7 +3156,8 @@ function defaultState(){
     _streakGrace: null,
     _streakRecovery: 0,
     ledger: [],
-    _trash: []
+    _trash: [],
+    _foxBrainSignals: []
   };
 }
 
@@ -3257,6 +3291,7 @@ function loadState(){
       if(s.settings.autoPlan == null) s.settings.autoPlan = false;
       if(s._autoPlannedToday == null) s._autoPlannedToday = null;
       if(!Array.isArray(s._dailyRemaining)) s._dailyRemaining = [];
+      if(!Array.isArray(s._foxBrainSignals)) s._foxBrainSignals = [];
       if(!s._nodeFiredToday){ s._nodeFiredToday = { subjectFocus: {}, taskCount5: false }; }
       if(s._prevStreak == null) s._prevStreak = 0;
       if(s._graceFired == null) s._graceFired = false;
@@ -5154,19 +5189,22 @@ window.openIntensityOverlay = openIntensityOverlay;
 async function triggerAiArrange(intensity, specialNote){
   intensity = intensity || 'normal';
   specialNote = specialNote || '';
-  var btn = document.getElementById('planAiBtn');
-  var statusEl = document.getElementById('planAiStatus');
-  if(!btn || !statusEl) return;
   if(!state.aiKey){ toast('请先配置 AI API Key', 'warn'); return; }
-  btn.style.display = 'none';
-  statusEl.style.display = '';
+  // 隐藏强度浮层，打开预览面板的加载态
+  var io = document.getElementById('intensityOverlay');
+  if(io) io.classList.add('hidden');
+  var preview = document.getElementById('arrangePreviewOverlay');
+  var loading = document.getElementById('previewLoading');
+  var taskList = document.getElementById('previewTaskList');
+  var reasonEl = document.getElementById('previewReason');
+  if(preview) preview.classList.remove('hidden');
+  if(loading) loading.style.display = '';
+  if(taskList) taskList.innerHTML = '';
+  if(reasonEl){ reasonEl.classList.add('hidden'); reasonEl.textContent = ''; }
   try{
     var overview = getTaskOverviewTool();
     var data = overview.data;
-    // 燃尽图趋势
-    var trendStr = state._dailyRemaining && state._dailyRemaining.length>0 ? 'behind' : 'on_track';
     var ledgerSummaryStr = JSON.stringify((data.ledgerSummary||[]).map(function(l){return {s:l.subject,t:l.taskName,u:l.unit,r:l.remaining};})).substring(0,2000);
-    // 强度语义描述（给AI约束，不是系数）
     var intensityGuide = intensity==='heavy' ? '用户今天有余力想多学。优先把余力投到最该追的科目（落后最多/剩最多的），而非每科平均加。'
       : intensity==='light' ? '用户今天状态差/时间紧，保底模式。优先保最不能断的科目（离检测最近的），其余往后挪。排最低限度不至于崩的量。'
       : '用户今天正常学习。踩着匀速进度走，留30-40%缓冲。';
@@ -5177,28 +5215,171 @@ async function triggerAiArrange(intensity, specialNote){
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     if(result && result.error){
+      if(preview) preview.classList.add('hidden');
       toast('API 错误: ' + result.error, 'warn');
     }else if(result && result.choices && result.choices[0] && result.choices[0].message){
       var msg = result.choices[0].message;
       var reasonText = msg.content ? msg.content.substring(0,80) : '';
-      var createdCount = 0;
-      if(msg.tool_calls){ for(var i=0;i<msg.tool_calls.length;i++){ var tc=msg.tool_calls[i]; if(tc.function.name==='create_todo'){ var args=JSON.parse(tc.function.arguments||'{}'); createTodoTool(args); createdCount++; } } }
-      if(createdCount>0){
-        toast('🦊 已为你安排今天 '+createdCount+' 个任务，已放进待办', 'info');
-        var bubbleText = reasonText || '🦊 已根据你的总账和最近速度安排好今天的学习任务。查看待办列表~';
-        addAiBubble('assistant', bubbleText);
+      var previewTasks = [];
+      if(msg.tool_calls){
+        for(var i=0;i<msg.tool_calls.length;i++){
+          var tc = msg.tool_calls[i];
+          if(tc.function.name==='create_todo'){
+            var args = JSON.parse(tc.function.arguments||'{}');
+            var parsed = parseTaskFromToolCall(args, state.ledger || []);
+            previewTasks.push(parsed);
+          }
+        }
+      }
+      if(previewTasks.length > 0){
+        state._arrangePreview = {tasks:previewTasks, reason:reasonText, intensity:intensity, specialNote:specialNote};
+        renderPreviewTasks();
+        if(loading) loading.style.display = 'none';
+        if(reasonEl && reasonText){ reasonEl.classList.remove('hidden'); reasonEl.textContent = reasonText; }
       }else{
+        if(preview) preview.classList.add('hidden');
         if(msg.content){ addAiBubble('assistant', msg.content); }
-        toast('没能创建任务。在 AI 聊天里直接说"帮我排今天的任务"试试', 'info');
+        toast('没能解析出任务。在 AI 聊天里说"帮我排今天的任务"试试', 'info');
       }
     }
   }catch(e){
+    if(preview) preview.classList.add('hidden');
     toast('安排失败，稍后再试', 'warn');
   }
-  btn.style.display = '';
-  statusEl.style.display = 'none';
 }
 window.triggerAiArrange = triggerAiArrange;
+
+// 从 AI 的 create_todo 参数解析为预览任务
+function parseTaskFromToolCall(args, ledger){
+  var name = args.name || '';
+  var subject = args.tag || '';
+  var sourceLedgerId = args.sourceLedgerId || null;
+  // 匹配总账条目
+  var ledgerEntry = null;
+  if(sourceLedgerId && ledger){
+    for(var i=0;i<ledger.length;i++){ if(ledger[i].id===sourceLedgerId){ ledgerEntry=ledger[i]; break; } }
+  }
+  // 从任务名解析数量和单位
+  var qtyMatch = name.match(/(\d+)\s*(页|题|个|项|章|节|篇|套|分钟|小时|课|道|张|本|遍|次|min|h)/);
+  var quantity = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+  var unit = qtyMatch ? qtyMatch[2] : (ledgerEntry ? ledgerEntry.unit : '项');
+  var cleanName = name;
+  if(qtyMatch){ cleanName = name.replace(qtyMatch[0],'').trim(); }
+  else{ var numMatch = name.match(/(\d{1,})\s*$/); if(numMatch){ quantity=parseInt(numMatch[1]); cleanName=name.replace(numMatch[0],'').trim(); } }
+  return {name:cleanName, subject:subject, quantity:quantity, unit:unit, sourceLedgerId:sourceLedgerId, tag:subject, _origArgs:args};
+}
+
+// 渲染预览任务列表
+function renderPreviewTasks(){
+  var list = document.getElementById('previewTaskList');
+  if(!list) return;
+  var tasks = (state._arrangePreview && state._arrangePreview.tasks) || [];
+  if(tasks.length===0){ list.innerHTML='<div class="preview-empty">暂无任务</div>'; return; }
+  var html = '';
+  for(var i=0;i<tasks.length;i++){
+    var t = tasks[i];
+    var color = getSubjectColor(t.subject);
+    html += '<div class="preview-task-row" data-index="'+i+'">'+
+      '<span class="preview-task-dot" style="background:'+color+';"></span>'+
+      '<span class="preview-task-name" title="'+(t.subject||'')+'·'+(t.name||'')+'">'+(t.subject||'')+'·'+(t.name||'')+'</span>'+
+      '<input class="preview-task-qty" type="number" value="'+t.quantity+'" min="1" max="999" data-action="editQty" data-index="'+i+'">'+
+      '<span class="preview-task-unit">'+(t.unit||'项')+'</span>'+
+      '<button class="preview-task-del" data-action="deleteTask" data-index="'+i+'">✕</button>'+
+    '</div>';
+  }
+  list.innerHTML = html;
+}
+
+// 确认：将预览中的任务真正创建进待办
+function confirmArrange(){
+  var tasks = (state._arrangePreview && state._arrangePreview.tasks) || [];
+  if(tasks.length===0){ toast('没有任务可确认', 'warn'); return; }
+  var createdCount = 0;
+  for(var i=0;i<tasks.length;i++){
+    var t = tasks[i];
+    var args = Object.assign({}, t._origArgs);
+    // 用当前（可能被用户改过的）数量和任务名更新
+    args.name = (t.subject||'')+'·'+(t.name||'')+' '+t.quantity+(t.unit||'项');
+    args.tag = t.tag || t.subject;
+    args.sourceLedgerId = t.sourceLedgerId;
+    createTodoTool(args);
+    createdCount++;
+  }
+  var preview = document.getElementById('arrangePreviewOverlay');
+  if(preview) preview.classList.add('hidden');
+  // 信号记录（小步三-B 数据管道用）
+  recordArrangeSignal('confirm', tasks);
+  state._arrangePreview = null; saveState();
+  toast('✅ 已放进待办，'+createdCount+' 个任务', 'info');
+}
+
+// 重新安排：回到强度浮层
+function rearrangeFromPreview(){
+  var preview = document.getElementById('arrangePreviewOverlay');
+  if(preview) preview.classList.add('hidden');
+  state._arrangePreview = null;
+  openIntensityOverlay();
+}
+
+// 绑定预览面板的事件（addEventListener 在 IIFE 内，不依赖 onclick）
+function setupPreviewOverlay(){
+  var confirmBtn = document.getElementById('previewConfirmBtn');
+  var rearrangeBtn = document.getElementById('previewRearrangeBtn');
+  var discussBtn = document.getElementById('previewDiscussBtn');
+  var taskList = document.getElementById('previewTaskList');
+  var overlay = document.getElementById('arrangePreviewOverlay');
+  if(confirmBtn) confirmBtn.addEventListener('click', confirmArrange);
+  if(rearrangeBtn) rearrangeBtn.addEventListener('click', rearrangeFromPreview);
+  if(discussBtn) discussBtn.addEventListener('click', function(){
+    toast('💬 讨论功能将在小步三上线，先看看预览吧～', 'info');
+  });
+  // 任务列表：数量编辑 + 删除（事件委托）
+  if(taskList){
+    taskList.addEventListener('change', function(e){
+      var input = e.target.closest('[data-action="editQty"]');
+      if(!input) return;
+      var idx = parseInt(input.dataset.index);
+      if(isNaN(idx)) return;
+      var newQty = parseInt(input.value);
+      if(isNaN(newQty) || newQty<1){ input.value=1; newQty=1; }
+      if(state._arrangePreview && state._arrangePreview.tasks && state._arrangePreview.tasks[idx]){
+        state._arrangePreview.tasks[idx].quantity = newQty;
+      }
+    });
+    taskList.addEventListener('click', function(e){
+      var delBtn = e.target.closest('[data-action="deleteTask"]');
+      if(!delBtn) return;
+      var idx = parseInt(delBtn.dataset.index);
+      if(isNaN(idx)) return;
+      if(state._arrangePreview && state._arrangePreview.tasks){
+        state._arrangePreview.tasks.splice(idx,1);
+        renderPreviewTasks();
+        // 如果全删完了，给个提示
+        var remaining = state._arrangePreview.tasks.length;
+        if(remaining===0){ document.getElementById('previewTaskList').innerHTML='<div class="preview-empty">任务已全部移除</div>'; }
+      }
+    });
+  }
+  // 点击遮罩关闭（但不影响卡片内操作）
+  if(overlay){
+    overlay.addEventListener('click', function(e){
+      if(e.target===overlay){ overlay.classList.add('hidden'); }
+    });
+  }
+}
+
+// 信号记录（小步三-B 数据管道：只存不分析）
+function recordArrangeSignal(type, data){
+  try{
+    if(!state._foxBrainSignals) state._foxBrainSignals = [];
+    var signal = {date:today(), type:type, intensity:(state._arrangePreview&&state._arrangePreview.intensity)||'normal', specialNote:(state._arrangePreview&&state._arrangePreview.specialNote)||'', data:data};
+    state._foxBrainSignals.push(signal);
+    if(state._foxBrainSignals.length>200) state._foxBrainSignals = state._foxBrainSignals.slice(-200);
+  }catch(e){ /* 存储失败不影响任何功能 */ }
+}
+
+// 初始化预览面板事件绑定
+setupPreviewOverlay();
 
 // 记录今天的总剩余量快照（供燃尽图蓝线用）
 function recordDailyRemaining(){
