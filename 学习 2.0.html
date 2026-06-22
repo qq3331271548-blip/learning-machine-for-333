@@ -5157,8 +5157,8 @@ async function triggerAiArrange(intensity, specialNote){
     var sysPrompt = getSystemPrompt() + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag和sourceLedgerId。回复末尾用一句话（≤40字，狐狸口吻）说明为什么这么排。';
     var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"，请根据约束帮他排今天的任务，先出文本方案，再调create_todo。'}, {role:'user',content:'请先简短说明方案理由，然后直接调create_todo创建任务。'}];
     var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-chat', 'required'),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 12000); })
+      callDeepSeek(msgs, 'deepseek-reasoner', 'required'),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     if(result && result.error){
       toast('API 错误: ' + result.error, 'warn');
