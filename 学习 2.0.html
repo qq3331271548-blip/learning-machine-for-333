@@ -8446,8 +8446,6 @@ async function sendAiMessage(userText){
         try{ args = JSON.parse(tc.function.arguments); }catch(e){ args = {}; }
         const result = executeToolCall(tc.function.name, args);
         toolMsgs.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
-        // Show result as system message
-        addAiBubble('assistant', '🔧 ' + result.message);
       }
       // Add tool results to history
       for(const tm of toolMsgs){ state.aiChatHistory.push(tm); }
