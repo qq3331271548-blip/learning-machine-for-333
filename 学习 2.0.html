@@ -5108,7 +5108,7 @@ async function triggerAiArrange(){
     var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'直接调create_todo帮我建今天的学习任务'}, {role:'assistant',content:'收到，我来。'}, {role:'user',content:'请直接调create_todo，别只说。'}];
     // 先用 flash 模型（快），失败再降级
     var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-chat'),
+      callDeepSeek(msgs, 'deepseek-chat', 'required'),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 12000); })
     ]);
     if(result && result.error){
@@ -8425,12 +8425,12 @@ function pickModel(userText){
   return 'deepseek-chat'; // 默认 flash
 }
 
-async function callDeepSeek(messages, model){
+async function callDeepSeek(messages, model, toolChoice){
   var useModel = model || 'deepseek-chat';
   const key = state.aiKey;
   if(!key) return { error: '请先配置 DeepSeek API Key（点击 ⚙️ AI 设置）' };
   try{
-    var body = { model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: 'auto' };
+    var body = { model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: toolChoice || 'auto' };
     // deepseek-chat 需要显式开启 thinking；deepseek-reasoner 自带深度思考，不需要传
     if(state.aiDeepThink && useModel === 'deepseek-chat'){
       body.thinking = { type: 'enabled' };
