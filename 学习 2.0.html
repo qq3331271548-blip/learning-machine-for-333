@@ -3073,6 +3073,7 @@ function defaultState(){
     bestStreak: 0,
     settings: { sfxEnabled: true, autoPlan: false },
     _autoPlannedToday: null,
+    _dailyRemaining: [],
     _nodeFiredToday: { subjectFocus: {}, taskCount5: false },
     _prevStreak: 0,
     _surpriseCounter: 0,
@@ -3213,6 +3214,7 @@ function loadState(){
       if(s.settings.sfxEnabled == null) s.settings.sfxEnabled = true;
       if(s.settings.autoPlan == null) s.settings.autoPlan = false;
       if(s._autoPlannedToday == null) s._autoPlannedToday = null;
+      if(!Array.isArray(s._dailyRemaining)) s._dailyRemaining = [];
       if(!s._nodeFiredToday){ s._nodeFiredToday = { subjectFocus: {}, taskCount5: false }; }
       if(s._prevStreak == null) s._prevStreak = 0;
       if(s._graceFired == null) s._graceFired = false;
@@ -4436,7 +4438,7 @@ function showLedgerConfirmBar(todo, ledgerEntry){
   document.getElementById('lcConfirm').onclick = function(){
     ledgerEntry.completedUnits = Math.min(ledgerEntry.totalUnits, (ledgerEntry.completedUnits||0) + delta);
     touch(ledgerEntry);
-    saveState(); renderPlan();
+    recordDailyRemaining(); saveState(); renderPlan();
     bar.remove();
     digitBounce(document.querySelector('.ledger-row[data-id="'+ledgerEntry.id+'"] .ledger-nums'));
   };
@@ -5124,6 +5126,22 @@ async function triggerAiArrange(){
   statusEl.style.display = 'none';
 }
 
+// 记录今天的总剩余量快照（供燃尽图蓝线用）
+function recordDailyRemaining(){
+  var td = today();
+  var ledger = state.ledger || [];
+  var remaining = 0;
+  for(var i=0;i<ledger.length;i++){ remaining += Math.max(0, ledger[i].totalUnits - ledger[i].completedUnits); }
+  if(!state._dailyRemaining) state._dailyRemaining = [];
+  // 替换今天已有的记录（同一天只留最新一笔）
+  for(var j=state._dailyRemaining.length-1;j>=0;j--){
+    if(state._dailyRemaining[j].date===td){ state._dailyRemaining.splice(j,1); }
+  }
+  state._dailyRemaining.push({date:td,remaining:remaining});
+  // 只保留最近 90 天的快照
+  if(state._dailyRemaining.length>90) state._dailyRemaining = state._dailyRemaining.slice(-90);
+}
+
 function renderPlan(){
   var container = document.getElementById('planContainer');
   if(!container) return;
@@ -5247,6 +5265,7 @@ function renderPlan(){
       if(todayIdx >= daysInMonth) todayIdx = daysInMonth - 1;
       var maxVal = totalAll;
       if(maxVal < 10) maxVal = 10;
+      // Grid
       bctx.strokeStyle = gridColor; bctx.lineWidth = 1;
       for(var g2 = 0; g2 <= 4; g2++){
         var gy2 = pad2.top + (ph * g2 / 4);
@@ -5254,24 +5273,57 @@ function renderPlan(){
         bctx.fillText(Math.round(maxVal * (1 - g2/4)), pad2.left - 6, gy2 + 3);
         if(g2 > 0){ bctx.beginPath(); bctx.moveTo(pad2.left, gy2); bctx.lineTo(W - pad2.right, gy2); bctx.stroke(); }
       }
+      // ── 理想线：从月初总量斜降到月底 0 ──
       bctx.beginPath();
       bctx.strokeStyle = textGray; bctx.lineWidth = 1.5; bctx.setLineDash([5,4]);
-      var idealStartX = pad2.left + (pw * todayIdx / Math.max(1, daysInMonth - 1));
-      var idealStartY = pad2.top + ph - (ph * totalRemaining / maxVal);
+      var idealStartX = pad2.left; // day 1
+      var idealStartY = pad2.top + ph - (ph * totalAll / maxVal);
+      var idealEndX = pad2.left + pw; // last day
+      var idealEndY = pad2.top + ph; // zero remaining
       bctx.moveTo(idealStartX, idealStartY);
-      var idealEndX = pad2.left + pw;
-      var idealEndY = pad2.top + ph;
       bctx.lineTo(idealEndX, idealEndY);
       bctx.stroke();
       bctx.setLineDash([]);
       bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'left';
       bctx.fillText('← 理想线', idealEndX - 50, idealEndY - 6);
-      var dotX = idealStartX;
-      var dotY = idealStartY;
-      bctx.beginPath(); bctx.arc(dotX, dotY, 7, 0, Math.PI*2);
-      bctx.fillStyle = totalRemaining > 0 ? redColor : greenColor; bctx.fill();
+      // ── 蓝线：每日剩余量快照 ──
+      var snaps = state._dailyRemaining || [];
+      if(snaps.length > 0){
+        bctx.beginPath();
+        bctx.strokeStyle = lineColor; bctx.lineWidth = 2.5; bctx.lineJoin = 'round';
+        var firstSnap = true;
+        for(var si = 0; si < snaps.length; si++){
+          var snap = snaps[si];
+          var snapDay = parseInt(snap.date.slice(8),10) - 1; // day-of-month → 0-indexed
+          if(snapDay < 0 || snapDay >= daysInMonth) continue;
+          var sx = pad2.left + (pw * snapDay / Math.max(1, daysInMonth - 1));
+          var sy = pad2.top + ph - (ph * Math.max(0, snap.remaining) / maxVal);
+          if(firstSnap){ bctx.moveTo(sx, sy); firstSnap = false; }
+          else bctx.lineTo(sx, sy);
+        }
+        bctx.stroke();
+        // Dots on each snapshot point
+        for(var si2 = 0; si2 < snaps.length; si2++){
+          var snap2 = snaps[si2];
+          var sd2 = parseInt(snap2.date.slice(8),10) - 1;
+          if(sd2 < 0 || sd2 >= daysInMonth) continue;
+          var dsx = pad2.left + (pw * sd2 / Math.max(1, daysInMonth - 1));
+          var dsy = pad2.top + ph - (ph * Math.max(0, snap2.remaining) / maxVal);
+          bctx.beginPath(); bctx.arc(dsx, dsy, 3, 0, Math.PI*2);
+          bctx.fillStyle = lineColor; bctx.fill();
+        }
+      }
+      // ── 今天的圆点：红=落后于理想线，绿=超前 ──
+      var todayDotX = pad2.left + (pw * todayIdx / Math.max(1, daysInMonth - 1));
+      var todayDotY = pad2.top + ph - (ph * totalRemaining / maxVal);
+      // Ideal remaining for today
+      var idealRemainingToday = Math.round(totalAll * (1 - todayIdx / Math.max(1, daysInMonth - 1)));
+      var behind = totalRemaining > idealRemainingToday;
+      bctx.beginPath(); bctx.arc(todayDotX, todayDotY, 7, 0, Math.PI*2);
+      bctx.fillStyle = behind ? redColor : greenColor; bctx.fill();
       bctx.fillStyle = '#fff'; bctx.font = 'bold 9px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'middle';
-      bctx.fillText(totalRemaining, dotX, dotY);
+      bctx.fillText(totalRemaining, todayDotX, todayDotY);
+      // X-axis labels
       bctx.fillStyle = textGray; bctx.font = '10px system-ui'; bctx.textAlign = 'center'; bctx.textBaseline = 'alphabetic';
       for(var xl2 = 0; xl2 < daysInMonth; xl2 += Math.max(1, Math.floor(daysInMonth/6))){
         var lx2 = pad2.left + (pw * xl2 / Math.max(1, daysInMonth - 1));
@@ -5664,7 +5716,7 @@ function showLedgerForm(){
     }else{
       state.ledger.push({ id: uid(), subject: subj, taskName: taskName, unit: unit, totalUnits: total, completedUnits: 0, updatedAt: new Date().toISOString() });
     }
-    saveState(); renderPlan();
+    recordDailyRemaining(); saveState(); renderPlan();
   };
 
   cancelEl.onclick = function(){
@@ -6781,17 +6833,17 @@ document.getElementById('app').addEventListener('click', function(e){
     // ── Ledger actions ──
     case 'ledger-plus':{
       var ent = state.ledger.find(function(x){ return x.id === id; });
-      if(ent){ ent.completedUnits = Math.min(ent.totalUnits, ent.completedUnits + 1); touch(ent); saveState(); renderPlan(); }
+      if(ent){ ent.completedUnits = Math.min(ent.totalUnits, ent.completedUnits + 1); touch(ent); recordDailyRemaining(); saveState(); renderPlan(); }
       break;
     }
     case 'ledger-minus':{
       var ent2 = state.ledger.find(function(x){ return x.id === id; });
-      if(ent2){ ent2.completedUnits = Math.max(0, ent2.completedUnits - 1); touch(ent2); saveState(); renderPlan(); }
+      if(ent2){ ent2.completedUnits = Math.max(0, ent2.completedUnits - 1); touch(ent2); recordDailyRemaining(); saveState(); renderPlan(); }
       break;
     }
     case 'ledger-del':{
       state.ledger = state.ledger.filter(function(x){ return x.id !== id; });
-      saveState(); renderPlan();
+      recordDailyRemaining(); saveState(); renderPlan();
       break;
     }
     case 'ledger-add':{
@@ -6817,7 +6869,7 @@ document.getElementById('app').addEventListener('click', function(e){
           if(!isNaN(n) && n >= 0 && n <= max){
             ent3.completedUnits = n;
             touch(ent3);
-            saveState(); renderPlan();
+            recordDailyRemaining(); saveState(); renderPlan();
           }else{
             toast('请输入 0~'+max+' 之间的整数', 'warn');
           }
@@ -8096,7 +8148,7 @@ function updateLedgerTool(args){
     entry.totalUnits = value;
   }
 
-  touch(entry); saveState(); renderPlan();
+  touch(entry); recordDailyRemaining(); saveState(); renderPlan();
   return {
     success: true,
     message: '✅ 已更新「' + subject + '」总账：' + (field === 'completedUnits' ? '已完成' : '总量') + ' → ' + value + '（' + entry.completedUnits + '/' + entry.totalUnits + '）'
@@ -8723,6 +8775,8 @@ async function init(){
   render();
   renderAiHistory();
   initAllSwipes();
+  // 每日剩余量快照（燃尽图蓝线数据源）
+  recordDailyRemaining();
   checkReminders();
   setInterval(checkReminders, 30000);
   // 自动排任务：开启后每天首次打开自动安排
