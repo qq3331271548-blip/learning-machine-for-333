@@ -5100,13 +5100,14 @@ async function triggerAiArrange(){
   statusEl.style.display = '';
   try{
     var overview = getTaskOverviewTool();
-    var prompt = '你是一个学习规划助手。请根据以下总账数据（每条含subject/taskName/unit/total/completed/remaining）和用户统计，为今天安排学习任务。\n\n'+
-      '规则：\n1. 留30-50%缓冲，不要排满\n2. 用真实速度估计（参考subjectDailyAvg7d）\n3. 跳过休息日\n4. 每个大任务切1-3个具体待办\n5. 用create_todo建任务，必须带tag(科目)和sourceLedgerId(对应总账id)\n\n'+
-      '用户数据：\n'+JSON.stringify(overview.data, null, 1).substring(0, 8000)+'\n\n请直接调用create_todo工具创建今天的学习待办。';
-    var msgs = [{role:'system',content:prompt},{role:'user',content:'请根据总账数据为我安排今天的学习任务'}];
+    // 把系统提示放在前面，后面追加具体数据
+    var sysPrompt = getSystemPrompt() + '\n\n=== 当前总账数据 ===\n'+
+      JSON.stringify(overview.data, null, 1).substring(0, 6000)+
+      '\n\n请根据以上数据，按B组规则（留缓冲/真实速度/阶段校准）和C组规则（跳过休息日、匀速扣休息日）为今天排任务。每个大任务切1-3个具体待办，务必带tag(科目)和sourceLedgerId(对应总账id)。直接调create_todo。';
+    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'请根据总账数据为我安排今天的学习任务'}];
     var result = await Promise.race([
       callDeepSeek(msgs, 'deepseek-chat'),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 2500); })
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 8000); })
     ]);
     if(result && result.choices && result.choices[0] && result.choices[0].message){
       var msg = result.choices[0].message;
@@ -7662,7 +7663,7 @@ function getSystemPrompt(){
     + '\n'
     + '=== 总账控制权规则（AI 必须遵守）===\n'
     + '默认：AI 只建议，不直接修改总账。帮用户规划时，通过 create_todo 把任务建进待办，不要去改总账数字。\n'
-    + '例外①（用户明确下令）：用户明确说"把数学总账已完成改成30""把物理总量调成200"时，调用 update_ledger 执行。\n'
+    + '例外①（用户明确下令）：用户说"改总账""帮我改一下总账""推进一下物理"但不清楚具体数值时，先调 get_task_overview 读数据，把当前总账条目列出来给用户看，再追问具体怎么改（如"你希望把这5条中的哪条改成多少？"）。用户说出具体数值后再调 update_ledger 执行。\n'
     + '例外②（完成待办后提议扣减）：用户完成某科相关待办后，你可以提议"要不要把【物理】总账−8？"——必须先问、用户确认后才调用 update_ledger。绝不允许自动直接扣减。\n'
     + '红线：绝不能主动巡查总账、自作主张重排或批量修改。用户无相关动作时不碰总账。仅例外①②可调用 update_ledger。\n'
     + '\n'
