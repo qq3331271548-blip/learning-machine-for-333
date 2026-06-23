@@ -1362,6 +1362,7 @@ body{
 .preview-task-qty{width:52px;padding:5px 6px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;color:var(--text);text-align:center;font-family:var(--font);outline:none;font-weight:600}
 .preview-task-qty:focus{border-color:var(--tab)}
 .preview-task-unit{font-size:13px;color:var(--text2);flex-shrink:0;min-width:18px}
+.preview-task-est{font-size:11px;color:var(--text3);flex-shrink:0;margin-left:2px;white-space:nowrap}
 .preview-task-del{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--text3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .preview-task-del:hover{background:#fee2e2;color:#ef4444}
 .preview-reason{font-size:13px;color:var(--text2);padding:10px 12px;margin:10px 0 6px;background:var(--bg);border-radius:8px;line-height:1.5}
@@ -5286,7 +5287,8 @@ function parseTaskFromToolCall(args, ledger){
   var cleanName = name;
   if(qtyMatch){ cleanName = name.replace(qtyMatch[0],'').trim(); }
   else{ var numMatch = name.match(/(\d{1,})\s*$/); if(numMatch){ quantity=parseInt(numMatch[1]); cleanName=name.replace(numMatch[0],'').trim(); } }
-  return {name:cleanName, subject:subject, quantity:quantity, unit:unit, sourceLedgerId:sourceLedgerId, tag:subject, _origArgs:args};
+  var estMin = args.estimatedMinutes || 0;
+  return {name:cleanName, subject:subject, quantity:quantity, unit:unit, estimatedMinutes:estMin, sourceLedgerId:sourceLedgerId, tag:subject, _origArgs:args};
 }
 
 // 渲染预览任务列表
@@ -5304,6 +5306,7 @@ function renderPreviewTasks(){
       '<span class="preview-task-name" title="'+(t.subject||'')+'·'+(t.name||'')+'">'+(t.subject||'')+'·'+(t.name||'')+'</span>'+
       '<input class="preview-task-qty" type="number" value="'+t.quantity+'" min="1" max="999" data-action="editQty" data-index="'+i+'">'+
       '<span class="preview-task-unit">'+(t.unit||'项')+'</span>'+
+      '<span class="preview-task-est" title="预计耗时">⏱'+(t.estimatedMinutes||'?')+'分</span>'+
       '<button class="preview-task-del" data-action="deleteTask" data-index="'+i+'">✕</button>'+
     '</div>';
   }
@@ -5363,7 +5366,13 @@ function setupPreviewOverlay(){
       var newQty = parseInt(input.value);
       if(isNaN(newQty) || newQty<1){ input.value=1; newQty=1; }
       if(state._arrangePreview && state._arrangePreview.tasks && state._arrangePreview.tasks[idx]){
-        state._arrangePreview.tasks[idx].quantity = newQty;
+        var task = state._arrangePreview.tasks[idx];
+        var oldQty = task.quantity;
+        task.quantity = newQty;
+        // 同比缩放预计时长（保留原始比例：estMinPerUnit = estMin / oldQty）
+        if(oldQty > 0 && task.estimatedMinutes > 0){
+          task.estimatedMinutes = Math.max(1, Math.round(task.estimatedMinutes * newQty / oldQty));
+        }
       }
     });
     taskList.addEventListener('click', function(e){
