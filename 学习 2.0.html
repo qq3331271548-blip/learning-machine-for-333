@@ -5372,6 +5372,9 @@ function setupPreviewOverlay(){
         // 同比缩放预计时长（保留原始比例：estMinPerUnit = estMin / oldQty）
         if(oldQty > 0 && task.estimatedMinutes > 0){
           task.estimatedMinutes = Math.max(1, Math.round(task.estimatedMinutes * newQty / oldQty));
+          // 同步更新 DOM 上的 ⏱ 显示
+          var row = document.querySelector('.preview-task-row[data-index="'+idx+'"]');
+          if(row){ var estEl = row.querySelector('.preview-task-est'); if(estEl) estEl.textContent = '⏱'+task.estimatedMinutes+'分'; }
         }
       }
     });
