@@ -2264,6 +2264,7 @@ function stripLocalFields(item){
 async function pushToCloud(){
   if(!sb || !cloudUser) return;
   if(!_pullDone) return;  // never push before first successful pull
+  if(state._syncDisabled) return;
   cloudSyncing = true;
   updateSyncStatus('syncing');
   const uid = cloudUser.id;
@@ -3157,7 +3158,8 @@ function defaultState(){
     _streakRecovery: 0,
     ledger: [],
     _trash: [],
-    _foxBrainSignals: []
+    _foxBrainSignals: [],
+    _syncDisabled: false
   };
 }
 
@@ -3292,6 +3294,7 @@ function loadState(){
       if(s._autoPlannedToday == null) s._autoPlannedToday = null;
       if(!Array.isArray(s._dailyRemaining)) s._dailyRemaining = [];
       if(!Array.isArray(s._foxBrainSignals)) s._foxBrainSignals = [];
+      if(s._syncDisabled == null) s._syncDisabled = false;
       if(!s._nodeFiredToday){ s._nodeFiredToday = { subjectFocus: {}, taskCount5: false }; }
       if(s._prevStreak == null) s._prevStreak = 0;
       if(s._graceFired == null) s._graceFired = false;
@@ -8988,8 +8991,14 @@ async function init(){
           new Promise(r => setTimeout(() => r({ok:false}), 3000))
         ]);
         if(result.ok && result.cd){ mergeCloudIntoState(result.cd); _pullDone = true; updateSyncStatus('ok'); }
-        else if(!result.ok){ updateSyncStatus('fail'); }
-      }catch(e){ console.warn('Init cloud pull failed:', e.message); }
+        else if(!result.ok){
+          updateSyncStatus('fail');
+          state._syncDisabled = true;  // 云端不可达，禁用后续同步避免持续400报错
+        }
+      }catch(e){
+        console.warn('Init cloud pull failed:', e.message);
+        state._syncDisabled = true;
+      }
     }
     updateUserUI();
   }
