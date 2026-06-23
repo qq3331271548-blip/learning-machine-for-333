@@ -5208,8 +5208,10 @@ async function triggerAiArrange(intensity, specialNote){
     var intensityGuide = intensity==='heavy' ? '用户今天有余力想多学。优先把余力投到最该追的科目（落后最多/剩最多的），而非每科平均加。'
       : intensity==='light' ? '用户今天状态差/时间紧，保底模式。优先保最不能断的科目（离检测最近的），其余往后挪。排最低限度不至于崩的量。'
       : '用户今天正常学习。踩着匀速进度走，留30-40%缓冲。';
-    var sysPrompt = getSystemPrompt() + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag和sourceLedgerId。回复末尾用一句话（≤40字，狐狸口吻）说明为什么这么排。';
-    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"，请根据约束帮他排今天的任务，先出文本方案，再调create_todo。'}, {role:'user',content:'请先简短说明方案理由，然后直接调create_todo创建任务。'}];
+    // 安排专用提示词：覆盖"先诊断"规则，数据已附，直接排
+    var arrangePrefix = '⚠️ 本次是自动排任务——所有总账/速度/休息日数据已附在下方。**禁止调用 get_task_overview / get_today_status / get_recent_behavior 等查询工具**。直接根据已有数据调 create_todo 创建任务。回复文本里简短说明理由（≤40字，狐狸口吻）。';
+    var sysPrompt = arrangePrefix + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag和sourceLedgerId。';
+    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"模式'+(specialNote?'，特别说明：'+specialNote:'')+'。请根据上方已有的总账和速度数据，直接调create_todo安排今天的任务。'}];
     var result = await Promise.race([
       callDeepSeek(msgs, 'deepseek-chat', 'required'),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
