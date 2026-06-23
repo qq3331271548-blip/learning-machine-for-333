@@ -3294,7 +3294,7 @@ function loadState(){
       if(s._autoPlannedToday == null) s._autoPlannedToday = null;
       if(!Array.isArray(s._dailyRemaining)) s._dailyRemaining = [];
       if(!Array.isArray(s._foxBrainSignals)) s._foxBrainSignals = [];
-      if(s._syncDisabled == null) s._syncDisabled = false;
+      // _syncDisabled 仅会话级，每次刷新重置（不持久化）
       if(!s._nodeFiredToday){ s._nodeFiredToday = { subjectFocus: {}, taskCount5: false }; }
       if(s._prevStreak == null) s._prevStreak = 0;
       if(s._graceFired == null) s._graceFired = false;
@@ -3373,6 +3373,7 @@ function loadState(){
           }
         }
       }
+      s._syncDisabled = false;  // 会话级：每次刷新重置，给 Supabase 一次重新连接的机会
       return s;
     }
   }catch(e){}
