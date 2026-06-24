@@ -5244,10 +5244,16 @@ async function triggerAiArrange(intensity, specialNote){
         }
       }
       if(previewTasks.length > 0){
+        // AI 没返回理由时，用数据自动拼一句兜底
+        if(!reasonText){
+          var subjNames = previewTasks.map(function(t){return t.subject;}).filter(function(v,i,a){return a.indexOf(v)===i;});
+          var focusSubj = subjNames[0] || '';
+          reasonText = '🦊 按"'+intensity+'"强度，今天排了'+previewTasks.length+'项'+(focusSubj?'，重点'+focusSubj:'')+(specialNote?'，考虑了你说的"'+specialNote+'"':'')+'～';
+        }
         state._arrangePreview = {tasks:previewTasks, reason:reasonText, intensity:intensity, specialNote:specialNote};
         renderPreviewTasks();
         if(loading) loading.style.display = 'none';
-        if(reasonEl && reasonText){ reasonEl.classList.remove('hidden'); reasonEl.textContent = reasonText; }
+        if(reasonEl){ reasonEl.classList.remove('hidden'); reasonEl.textContent = reasonText; }
       }else{
         // AI 没调 create_todo：降级显示文本回复
         console.warn('[triggerAiArrange] No create_todo tool calls in response');
