@@ -1366,7 +1366,6 @@ body{
 .preview-task-del{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--text3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .preview-task-del:hover{background:#fee2e2;color:#ef4444}
 .preview-reason{font-size:13px;color:var(--text2);padding:10px 12px;margin:10px 0 6px;background:var(--bg);border-radius:8px;line-height:1.5}
-.preview-reason::before{content:'🦊 ';font-size:12px}
 .preview-loading{text-align:center;padding:28px 0}
 .preview-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--tab);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 .preview-loading-text{font-size:14px;color:var(--text2)}
@@ -5244,11 +5243,13 @@ async function triggerAiArrange(intensity, specialNote){
         }
       }
       if(previewTasks.length > 0){
-        // AI 没返回理由时，用数据自动拼一句兜底
+        // 确保理由以 🦊 开头（CSS 已去 ::before，由代码统一加）
         if(!reasonText){
           var subjNames = previewTasks.map(function(t){return t.subject;}).filter(function(v,i,a){return a.indexOf(v)===i;});
           var focusSubj = subjNames[0] || '';
           reasonText = '🦊 按"'+intensity+'"强度，今天排了'+previewTasks.length+'项'+(focusSubj?'，重点'+focusSubj:'')+(specialNote?'，考虑了你说的"'+specialNote+'"':'')+'～';
+        }else if(reasonText.indexOf('🦊') !== 0){
+          reasonText = '🦊 ' + reasonText;
         }
         state._arrangePreview = {tasks:previewTasks, reason:reasonText, intensity:intensity, specialNote:specialNote};
         renderPreviewTasks();
