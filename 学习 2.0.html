@@ -1366,6 +1366,18 @@ body{
 .preview-task-del{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--text3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .preview-task-del:hover{background:#fee2e2;color:#ef4444}
 .preview-reason{font-size:13px;color:var(--text2);padding:10px 12px;margin:10px 0 6px;background:var(--bg);border-radius:8px;line-height:1.5}
+.preview-discuss{margin:10px 0;border-top:1px solid var(--border);padding-top:10px}
+.preview-discuss.hidden{display:none}
+.preview-discuss-hint{font-size:11px;color:var(--text3);margin-bottom:8px;text-align:center}
+.preview-discuss-msgs{max-height:200px;overflow-y:auto;margin-bottom:8px;font-size:13px;line-height:1.5}
+.preview-discuss-msg{margin-bottom:6px;padding:6px 8px;border-radius:8px;max-width:90%}
+.preview-discuss-msg.user{margin-left:auto;background:var(--tab);color:#fff;text-align:right}
+.preview-discuss-msg.assistant{background:var(--bg);color:var(--text)}
+.preview-discuss-input-row{display:flex;gap:6px;margin-bottom:6px}
+.preview-discuss-input{flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);font-size:13px;color:var(--text);font-family:var(--font);outline:none}
+.preview-discuss-input:focus{border-color:var(--tab)}
+.preview-discuss-send{padding:8px 14px;border-radius:8px;border:none;background:var(--tab);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.preview-discuss-close{display:block;width:100%;padding:6px;border:none;background:transparent;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--font)}
 .preview-loading{text-align:center;padding:28px 0}
 .preview-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--tab);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 .preview-loading-text{font-size:14px;color:var(--text2)}
@@ -1699,6 +1711,16 @@ body{
     </div>
     <div id="previewTaskList"></div>
     <div class="preview-reason hidden" id="previewReason"></div>
+    <!-- 讨论区（小步三） -->
+    <div class="preview-discuss hidden" id="previewDiscuss">
+      <div class="preview-discuss-hint">和小狐聊聊今天的安排～</div>
+      <div class="preview-discuss-msgs" id="previewDiscussMsgs"></div>
+      <div class="preview-discuss-input-row">
+        <input type="text" class="preview-discuss-input" id="previewDiscussInput" placeholder="比如：为什么物理排这么多？" maxlength="200">
+        <button class="preview-discuss-send" id="previewDiscussSend">发送</button>
+      </div>
+      <button class="preview-discuss-close" id="previewDiscussClose">✕ 关闭讨论</button>
+    </div>
     <div class="intensity-btns" style="flex-wrap:wrap;">
       <button id="previewDiscussBtn" class="intensity-cancel" style="flex:1;min-width:0;">💬 和小狐聊聊</button>
       <button id="previewRearrangeBtn" class="intensity-cancel" style="flex:1;min-width:0;">重新安排</button>
@@ -5360,9 +5382,7 @@ function setupPreviewOverlay(){
   var overlay = document.getElementById('arrangePreviewOverlay');
   if(confirmBtn) confirmBtn.addEventListener('click', confirmArrange);
   if(rearrangeBtn) rearrangeBtn.addEventListener('click', rearrangeFromPreview);
-  if(discussBtn) discussBtn.addEventListener('click', function(){
-    toast('💬 讨论功能将在小步三上线，先看看预览吧～', 'info');
-  });
+  if(discussBtn) discussBtn.addEventListener('click', openDiscuss);
   // 任务列表：数量编辑 + 删除（事件委托）
   if(taskList){
     taskList.addEventListener('change', function(e){
@@ -5418,6 +5438,148 @@ function recordArrangeSignal(type, data){
 }
 
 // 初始化预览面板事件绑定
+// ── 讨论环节（小步三）──
+function openDiscuss(){
+  var discuss = document.getElementById('previewDiscuss');
+  var btns = document.querySelector('#arrangePreviewOverlay .intensity-btns');
+  if(discuss){ discuss.classList.remove('hidden'); }
+  if(btns){ btns.style.display = 'none'; }  // 讨论中隐藏操作按钮
+  if(!state._arrangePreview) return;
+  if(!state._arrangePreview.discussMsgs) state._arrangePreview.discussMsgs = [];
+  if(!state._arrangePreview.discussAdjustments) state._arrangePreview.discussAdjustments = [];
+  renderDiscussMsgs();
+  var input = document.getElementById('previewDiscussInput');
+  if(input){ input.focus(); }
+}
+
+function closeDiscuss(){
+  var discuss = document.getElementById('previewDiscuss');
+  var btns = document.querySelector('#arrangePreviewOverlay .intensity-btns');
+  if(discuss){ discuss.classList.add('hidden'); }
+  if(btns){ btns.style.display = ''; }
+}
+
+function renderDiscussMsgs(){
+  var msgsEl = document.getElementById('previewDiscussMsgs');
+  if(!msgsEl) return;
+  var msgs = (state._arrangePreview && state._arrangePreview.discussMsgs) || [];
+  var html = '';
+  for(var i=0;i<msgs.length;i++){
+    var m = msgs[i];
+    html += '<div class="preview-discuss-msg '+m.role+'">'+escHtml(m.text)+'</div>';
+  }
+  if(msgs.length===0){
+    html = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:8px">问问小狐为什么这么排吧～</div>';
+  }
+  msgsEl.innerHTML = html;
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+async function sendDiscussMessage(){
+  var input = document.getElementById('previewDiscussInput');
+  if(!input || !input.value.trim()) return;
+  var userText = input.value.trim();
+  input.value = '';
+  if(!state._arrangePreview){ state._arrangePreview = {tasks:[], reason:'', intensity:'normal', specialNote:''}; }
+  if(!state._arrangePreview.discussMsgs) state._arrangePreview.discussMsgs = [];
+  state._arrangePreview.discussMsgs.push({role:'user', text:userText});
+  renderDiscussMsgs();
+  // 构建讨论上下文
+  var tasks = state._arrangePreview.tasks || [];
+  var taskSummary = tasks.map(function(t,i){ return (i+1)+'. '+t.subject+'·'+t.name+' '+t.quantity+t.unit; }).join('\n');
+  var discussSys = '你是小狐，正在和用户讨论今天的任务安排。当前预览里的任务：\n'+taskSummary+'\n用户强度：'+(state._arrangePreview.intensity||'normal')+(state._arrangePreview.specialNote?'\n用户特殊情况：'+state._arrangePreview.specialNote:'')+'\n总账(简短):'+JSON.stringify((state.ledger||[]).map(function(l){return {s:l.subject,t:l.taskName,u:l.unit,r:Math.max(0,l.totalUnits-l.completedUnits)};})).substring(0,1000)+'\n\n约束：①回答必须基于真实数据，禁止引用学习理论（艾宾浩斯、间隔重复等），禁止说教/空泛话；②≤80字，狐狸口吻；③如果用户想调整（"少点""多点""换成X"），在文字回复后调用update_arrange_preview执行调整。';
+  var discussMsgs = [{role:'system',content:discussSys}];
+  // 加入最近6轮对话历史
+  var history = state._arrangePreview.discussMsgs;
+  var start = Math.max(0, history.length - 7); // 当前消息（最后一条）+ 前3轮
+  for(var j=start;j<history.length;j++){
+    discussMsgs.push({role: history[j].role==='assistant'?'assistant':'user', content: history[j].text});
+  }
+  try{
+    var result = await Promise.race([
+      callDeepSeek(discussMsgs, 'deepseek-chat'),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+    ]);
+    if(result && result.choices && result.choices[0] && result.choices[0].message){
+      var msg = result.choices[0].message;
+      var reply = msg.content || '(小狐想了想…)';
+      state._arrangePreview.discussMsgs.push({role:'assistant', text:reply});
+      // 处理调整
+      if(msg.tool_calls){
+        for(var k=0;k<msg.tool_calls.length;k++){
+          var tc = msg.tool_calls[k];
+          if(tc.function.name==='update_arrange_preview'){
+            var args = JSON.parse(tc.function.arguments||'{}');
+            executePreviewAdjustment(args);
+          }
+        }
+      }
+    }else{
+      state._arrangePreview.discussMsgs.push({role:'assistant', text:'抱歉，网络不太稳，再说一遍？'});
+    }
+  }catch(e){
+    state._arrangePreview.discussMsgs.push({role:'assistant', text:'抱歉，网络不太稳，再说一遍？'});
+  }
+  renderDiscussMsgs();
+  // 记录讨论信号
+  recordDiscussSignal(userText, state._arrangePreview.discussMsgs[state._arrangePreview.discussMsgs.length-1]?.text||'');
+}
+
+function executePreviewAdjustment(args){
+  var tasks = (state._arrangePreview && state._arrangePreview.tasks) || [];
+  var idx = args.taskIndex;
+  if(isNaN(idx) || idx < 0 || idx >= tasks.length) return;
+  if(!state._arrangePreview.discussAdjustments) state._arrangePreview.discussAdjustments = [];
+  if(args.field === 'delete'){
+    var removed = tasks[idx];
+    state._arrangePreview.discussAdjustments.push({taskIndex:idx, subject:removed.subject, from:removed.quantity, to:0, deleted:true});
+    tasks.splice(idx, 1);
+    renderPreviewTasks();
+    return;
+  }
+  var task = tasks[idx];
+  var oldVal = args.field==='quantity' ? task.quantity : task.estimatedMinutes;
+  var newVal = args.newValue;
+  if(args.field === 'quantity'){
+    task.quantity = Math.max(1, newVal||1);
+    // 同比缩放 estimatedMinutes
+    if(oldVal > 0 && task.estimatedMinutes > 0){
+      task.estimatedMinutes = Math.max(1, Math.round(task.estimatedMinutes * task.quantity / oldVal));
+    }
+  }else if(args.field === 'estimatedMinutes'){
+    task.estimatedMinutes = Math.max(1, newVal||1);
+  }
+  state._arrangePreview.discussAdjustments.push({taskIndex:idx, subject:task.subject, field:args.field, from:oldVal, to:args.field==='quantity'?task.quantity:task.estimatedMinutes});
+  renderPreviewTasks();
+}
+
+function recordDiscussSignal(userText, aiReply){
+  try{
+    if(!state._foxBrainSignals) state._foxBrainSignals = [];
+    var preview = state._arrangePreview;
+    var signal = {
+      date: today(),
+      type: 'discuss',
+      context: { intensity: preview.intensity||'normal', specialNote: preview.specialNote||'', taskCount: (preview.tasks||[]).length },
+      lastUserMsg: userText.substring(0,200),
+      lastAiReply: aiReply.substring(0,200),
+      adjustments: (preview.discussAdjustments||[]).slice(-5)
+    };
+    state._foxBrainSignals.push(signal);
+    if(state._foxBrainSignals.length > 200) state._foxBrainSignals = state._foxBrainSignals.slice(-200);
+  }catch(e){ /* 存储失败不影响功能 */ }
+}
+
+// 绑定讨论区事件
+(function(){
+  var sendBtn = document.getElementById('previewDiscussSend');
+  var closeBtn = document.getElementById('previewDiscussClose');
+  var input = document.getElementById('previewDiscussInput');
+  if(sendBtn) sendBtn.addEventListener('click', sendDiscussMessage);
+  if(closeBtn) closeBtn.addEventListener('click', closeDiscuss);
+  if(input) input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); sendDiscussMessage(); } });
+})();
+
 setupPreviewOverlay();
 
 // 记录今天的总剩余量快照（供燃尽图蓝线用）
@@ -7984,6 +8146,22 @@ const AI_TOOLS = [
           newName: { type: 'string', description: '新名称（可选）' }
         },
         required: ['name']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_arrange_preview',
+      description: '修改当前预览面板中的任务（仅在讨论环节使用，不能加新任务或创建新的——只可调整已有任务的数量、预计时长，或移除某条任务）。',
+      parameters: {
+        type: 'object',
+        properties: {
+          taskIndex: { type: 'number', description: '要修改的第几条任务，从0开始' },
+          field: { type: 'string', enum: ['quantity', 'estimatedMinutes', 'delete'], description: '修改哪个字段' },
+          newValue: { type: 'number', description: '新值（field为delete时无需传）' }
+        },
+        required: ['taskIndex', 'field']
       }
     }
   }
