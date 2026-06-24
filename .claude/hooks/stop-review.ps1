@@ -41,6 +41,14 @@ try {
     # Only .html / .css / .js files count as web-code
     $webFiles = $changed | Where-Object { $_ -match '\.(html|css|js)$' }
 
+    # Threshold: skip review if total diff is small (≤20 lines across all web files)
+    $totalLines = 0
+    foreach ($f in ($webFiles | Sort-Object)) {
+        $diffLines = (git -c core.quotePath=false diff -- $f 2>$null | Measure-Object -Line).Lines
+        $totalLines += $diffLines
+    }
+    if ($totalLines -le 20) { exit 0 }
+
     # Fingerprint the current state from web-code files only
     $sig = ''
     foreach ($f in ($webFiles | Sort-Object)) {

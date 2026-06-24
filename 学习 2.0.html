@@ -5229,9 +5229,8 @@ async function triggerAiArrange(intensity, specialNote){
       if(reasonEl){ reasonEl.classList.add('hidden'); }
     }else if(result && result.choices && result.choices[0] && result.choices[0].message){
       var msg = result.choices[0].message;
-      // 诊断日志：看 AI 到底返回了什么
-      console.log('[triggerAiArrange] msg.content:', (msg.content||'').substring(0,200));
-      console.log('[triggerAiArrange] msg.tool_calls:', msg.tool_calls ? msg.tool_calls.length+' calls: '+msg.tool_calls.map(function(tc){return tc.function.name;}).join(', ') : 'undefined/null');
+      // 诊断日志（仅 debug 模式下输出）
+      if(window.__dbg){ console.log('[triggerAiArrange] msg.content:', (msg.content||'').substring(0,200)); console.log('[triggerAiArrange] msg.tool_calls:', msg.tool_calls ? msg.tool_calls.length+' calls: '+msg.tool_calls.map(function(tc){return tc.function.name;}).join(', ') : 'undefined/null'); }
       var reasonText = msg.content ? msg.content.substring(0,80) : '';
       var previewTasks = [];
       if(msg.tool_calls){
@@ -5325,6 +5324,7 @@ function confirmArrange(){
     args.name = (t.subject||'')+'·'+(t.name||'')+' '+t.quantity+(t.unit||'项');
     args.tag = t.tag || t.subject;
     args.sourceLedgerId = t.sourceLedgerId;
+    args.estimatedMinutes = t.estimatedMinutes || args.estimatedMinutes || 0;  // 用户可能改过数量，用缩放后的值
     createTodoTool(args);
     createdCount++;
   }
