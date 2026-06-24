@@ -5215,9 +5215,9 @@ async function triggerAiArrange(intensity, specialNote){
     // 安排专用提示词：覆盖"先诊断"规则，数据已附，直接排
     var arrangePrefix = '⚠️ 本次是自动排任务——所有总账/速度/休息日数据已附在下方。**禁止调用 get_task_overview / get_today_status / get_recent_behavior 等查询工具**。直接根据已有数据调 create_todo 创建任务。\n\n每条 create_todo 必须填 estimatedMinutes（预估耗时分钟）。估算规则：①参考各科日均(分)——某科日均专注分钟是该科每天的总投入，本条任务的量在其中的占比决定估算时长（如物理日均14分钟、排16页，估40-50分钟；英语日均9分钟、排30个单词，估10-15分钟）；②不同科目、不同量的任务 estimatedMinutes 必须有差异，禁止所有任务同一个值；③若某科日均数据缺失或为0，保守估算——小量任务15-25分钟，中量30-45分钟。\n\n回复时：①先调 create_todo 创建所有任务；②在 content 里给一句理由（≤40字，狐狸口吻）。理由必须引用真实数据（从以下至少选一：用户选的强度、某科剩余量、燃尽图落后情况、用户填的特殊情况、本月剩余天数、用户真实速度）。禁止空泛话（"精心安排""加油"），禁止引用学习理论（"艾宾浩斯""间隔重复"等），只能用用户的真实数字讲道理。';
     var sysPrompt = arrangePrefix + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag、sourceLedgerId、estimatedMinutes。';
-    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"模式'+(specialNote?'，特别说明：'+specialNote:'')+'。请根据上方已有的总账和速度数据，直接调create_todo安排今天的任务。'}];
+    var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"模式'+(specialNote?'，特别说明：'+specialNote:'')+'。请根据上方已有的总账和速度数据，直接调create_todo安排今天的任务。注意：你必须同时返回①content文本（一句理由）②create_todo工具调用。两者缺一不可。'}];
     var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-chat', 'required'),
+      callDeepSeek(msgs, 'deepseek-chat', 'auto'),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     if(result && result.error){
