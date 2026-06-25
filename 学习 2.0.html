@@ -5258,7 +5258,7 @@ async function triggerAiArrange(intensity, specialNote){
     var thinkBody = document.getElementById('previewThinkBody');
     var thinkToggle = document.querySelector('#previewThink .preview-think-toggle');
     if(loading) loading.style.display = 'none';
-    if(thinkEl){ thinkEl.classList.remove('hidden'); thinkBody.textContent = ''; thinkBody.classList.add('expanded'); if(thinkToggle) thinkToggle.textContent = '收起'; }
+    if(thinkEl){ thinkEl.classList.remove('hidden'); thinkBody.textContent = ''; }
     var finalContent = '';
     var finalToolCalls = [];
     var streamError = null;
