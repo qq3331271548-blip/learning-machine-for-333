@@ -1365,6 +1365,14 @@ body{
 .preview-task-est{font-size:11px;color:var(--text3);flex-shrink:0;margin-left:2px;white-space:nowrap}
 .preview-task-del{width:28px;height:28px;border-radius:50%;border:none;background:transparent;color:var(--text3);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .preview-task-del:hover{background:#fee2e2;color:#ef4444}
+.preview-think{margin:8px 0;border-radius:8px;background:rgba(139,92,246,.04);border:1px solid rgba(139,92,246,.12);overflow:hidden}
+.preview-think.hidden{display:none}
+.preview-think-header{font-size:11px;color:var(--text3);padding:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.preview-think-header:hover{background:rgba(139,92,246,.06)}
+.preview-think-toggle{font-size:10px;color:var(--tab)}
+.preview-think-body{font-size:11px;color:rgba(128,128,128,.7);padding:0 10px 8px;line-height:1.4;max-height:4.4em;overflow:hidden;white-space:pre-wrap;word-break:break-word;position:relative}
+.preview-think-body.expanded{max-height:none}
+.preview-think-body:not(.expanded)::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1.8em;background:linear-gradient(transparent,rgba(139,92,246,.04))}
 .preview-reason{font-size:13px;color:var(--text2);padding:10px 12px;margin:10px 0 6px;background:var(--bg);border-radius:8px;line-height:1.5}
 .preview-discuss{margin:10px 0;border-top:1px solid var(--border);padding-top:10px}
 .preview-discuss.hidden{display:none}
@@ -1708,6 +1716,10 @@ body{
     <div class="preview-loading" id="previewLoading">
       <div class="preview-spinner"></div>
       <div class="preview-loading-text">小狐正在为你安排…</div>
+    </div>
+    <div class="preview-think hidden" id="previewThink">
+      <div class="preview-think-header" id="previewThinkHeader">💭 思考过程 <span class="preview-think-toggle">展开</span></div>
+      <div class="preview-think-body" id="previewThinkBody"></div>
     </div>
     <div id="previewTaskList"></div>
     <div class="preview-reason hidden" id="previewReason"></div>
@@ -5242,7 +5254,7 @@ async function triggerAiArrange(intensity, specialNote){
     var sysPrompt = arrangePrefix + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag、sourceLedgerId、estimatedMinutes。';
     var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"模式'+(specialNote?'，特别说明：'+specialNote:'')+'。请根据上方已有的总账和速度数据，直接调create_todo安排今天的任务。注意：你必须同时返回①content文本（一句理由）②create_todo工具调用。两者缺一不可。'}];
     var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-v4-pro', 'auto', 'off'),
+      callDeepSeek(msgs, 'deepseek-v4-pro', 'auto', 'on'),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     if(result && result.error){
@@ -5255,6 +5267,17 @@ async function triggerAiArrange(intensity, specialNote){
       var msg = result.choices[0].message;
       // 诊断日志（仅 debug 模式下输出）
       if(window.__dbg){ console.log('[triggerAiArrange] msg.content:', (msg.content||'').substring(0,200)); console.log('[triggerAiArrange] msg.tool_calls:', msg.tool_calls ? msg.tool_calls.length+' calls: '+msg.tool_calls.map(function(tc){return tc.function.name;}).join(', ') : 'undefined/null'); }
+      // 捕获思考过程（v4-pro thinking 模式返回 reasoning_content）
+      var thinkingText = msg.reasoning_content || '';
+      var thinkEl = document.getElementById('previewThink');
+      var thinkBody = document.getElementById('previewThinkBody');
+      if(thinkEl && thinkBody && thinkingText){
+        thinkBody.textContent = thinkingText;
+        thinkBody.classList.remove('expanded');
+        thinkEl.classList.remove('hidden');
+      }else if(thinkEl){
+        thinkEl.classList.add('hidden');
+      }
       var reasonText = msg.content ? msg.content.substring(0,80) : '';
       var previewTasks = [];
       if(msg.tool_calls){
@@ -5582,7 +5605,7 @@ function recordDiscussSignal(userText, aiReply){
   }catch(e){ /* 存储失败不影响功能 */ }
 }
 
-// 绑定讨论区事件
+// 绑定讨论区事件 + 思考区折叠
 (function(){
   var sendBtn = document.getElementById('previewDiscussSend');
   var closeBtn = document.getElementById('previewDiscussClose');
@@ -5590,6 +5613,16 @@ function recordDiscussSignal(userText, aiReply){
   if(sendBtn) sendBtn.addEventListener('click', sendDiscussMessage);
   if(closeBtn) closeBtn.addEventListener('click', closeDiscuss);
   if(input) input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); sendDiscussMessage(); } });
+  // 思考区折叠/展开
+  var thinkHeader = document.getElementById('previewThinkHeader');
+  if(thinkHeader) thinkHeader.addEventListener('click', function(){
+    var body = document.getElementById('previewThinkBody');
+    var toggle = this.querySelector('.preview-think-toggle');
+    if(body){
+      var expanded = body.classList.toggle('expanded');
+      if(toggle) toggle.textContent = expanded ? '收起' : '展开';
+    }
+  });
 })();
 
 setupPreviewOverlay();
