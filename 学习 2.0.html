@@ -2057,8 +2057,8 @@ body{
       <button class="ai-key-toggle" id="aiKeyToggle">⚙️ API Key</button>
       <select class="ai-model-select" id="aiModelSelect">
         <option value="auto">🤖 自动</option>
-        <option value="deepseek-reasoner">🧠 v4pro</option>
-        <option value="deepseek-chat">⚡ flash</option>
+        <option value="deepseek-v4-pro">🧠 v4pro</option>
+        <option value="deepseek-v4-flash">⚡ flash</option>
       </select>
       <button class="ai-think-toggle" id="aiThinkToggle" title="开启后 AI 会展示思考过程">💭 深度思考</button>
     </div>
@@ -5242,7 +5242,7 @@ async function triggerAiArrange(intensity, specialNote){
     var sysPrompt = arrangePrefix + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag、sourceLedgerId、estimatedMinutes。';
     var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"模式'+(specialNote?'，特别说明：'+specialNote:'')+'。请根据上方已有的总账和速度数据，直接调create_todo安排今天的任务。注意：你必须同时返回①content文本（一句理由）②create_todo工具调用。两者缺一不可。'}];
     var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-chat', 'auto'),
+      callDeepSeek(msgs, 'deepseek-v4-pro', 'auto', 'off'),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
     if(result && result.error){
@@ -5499,10 +5499,10 @@ async function sendDiscussMessage(){
     discussMsgsR1.push({role: history[j].role==='assistant'?'assistant':'user', content: history[j].text});
   }
   try{
-    // 第一步：用 deepseek-reasoner 深度思考回文字（不调工具）
+    // 第一步：v4-pro 开 thinking 深度思考回文字（不调工具）
     var result = await Promise.race([
-      callDeepSeek(discussMsgsR1, 'deepseek-reasoner'),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
+      callDeepSeek(discussMsgsR1, 'deepseek-v4-pro', undefined, 'on'),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 25000); })
     ]);
     var reply = '(小狐想了想…)';
     if(result && result.choices && result.choices[0] && result.choices[0].message){
@@ -5510,12 +5510,12 @@ async function sendDiscussMessage(){
     }
     state._arrangePreview.discussMsgs.push({role:'assistant', text:reply});
     renderDiscussMsgs();
-    // 第二步：用 deepseek-chat 判断是否需要调 update_arrange_preview
+    // 第二步：v4-pro 关 thinking 判断是否需要调工具（thinking模式下required不支持）
     var adjustSys = '根据刚才的对话，判断用户的意图是否需要修改当前的任务预览。如果需要，调用 update_arrange_preview 执行。当前预览任务：'+taskSummary;
     var adjustMsgs = [{role:'system',content:adjustSys},{role:'user',content:'用户说：'+userText+'\n小狐回复：'+reply+'\n\n如果需要调整预览，请调用 update_arrange_preview。不需要就回复"无需调整"。'}];
     try{
       var result2 = await Promise.race([
-        callDeepSeek(adjustMsgs, 'deepseek-chat', 'auto'),
+        callDeepSeek(adjustMsgs, 'deepseek-v4-pro', 'auto', 'off'),
         new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 10000); })
       ]);
       if(result2 && result2.choices && result2.choices[0] && result2.choices[0].message && result2.choices[0].message.tool_calls){
@@ -8907,11 +8907,11 @@ function buildAiMessages(userText){
   return msgs;
 }
 
-// 根据用户消息复杂度自动选模型：简单→flash(deepseek-chat)，复杂→v4pro(deepseek-reasoner)
+// 根据用户消息复杂度自动选模型：简单→v4-flash，复杂→v4-pro
 // 手动选择（aiModel != 'auto'）时跳过自动判断
 function pickModel(userText){
   if(state.aiModel && state.aiModel !== 'auto') return state.aiModel;
-  if(!userText) return 'deepseek-chat';
+  if(!userText) return 'deepseek-v4-pro';
   // 复杂分析关键词：触发 v4pro 深度推理
   var complexPatterns = [
     '分析', '梳理', '安排', '计划', '调度', '建议', '怎么', '为什么',
@@ -8921,19 +8921,21 @@ function pickModel(userText){
     '哪科', '先做哪个', '怎么分配', '怎么拆', '如何'
   ];
   for(var i = 0; i < complexPatterns.length; i++){
-    if(userText.indexOf(complexPatterns[i]) !== -1) return 'deepseek-reasoner';
+    if(userText.indexOf(complexPatterns[i]) !== -1) return 'deepseek-v4-pro';
   }
-  return 'deepseek-chat'; // 默认 flash
+  return 'deepseek-v4-flash'; // 默认 flash（更快）
 }
 
-async function callDeepSeek(messages, model, toolChoice){
-  var useModel = model || 'deepseek-chat';
+async function callDeepSeek(messages, model, toolChoice, thinkingMode){
+  // thinkingMode: undefined/'auto'=跟随用户设置, 'on'=强制开启, 'off'=强制关闭
+  var useModel = model || 'deepseek-v4-pro';
   const key = state.aiKey;
   if(!key) return { error: '请先配置 DeepSeek API Key（点击 ⚙️ AI 设置）' };
   try{
     var body = { model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: toolChoice || 'auto' };
-    // deepseek-chat 需要显式开启 thinking；deepseek-reasoner 自带深度思考，不需要传
-    if(state.aiDeepThink && useModel === 'deepseek-chat'){
+    // v4-pro/v4-flash 需要显式传 thinking 参数
+    var shouldThink = thinkingMode === 'on' || (thinkingMode !== 'off' && state.aiDeepThink);
+    if(shouldThink && (useModel === 'deepseek-v4-pro' || useModel === 'deepseek-v4-flash')){
       body.thinking = { type: 'enabled' };
     }
     const res = await fetch('https://api.deepseek.com/chat/completions', {
