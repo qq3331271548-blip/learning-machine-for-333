@@ -1705,9 +1705,12 @@ body{
       <button class="intensity-opt" onclick="var all=document.querySelectorAll('.intensity-opt');for(var i=0;i<all.length;i++)all[i].classList.remove('active');this.classList.add('active')" data-intensity="heavy">多学点</button>
     </div>
     <input type="text" class="intensity-note" id="intensityNote" placeholder="今天有什么特殊情况吗？（可不填）" maxlength="60">
+    <div class="intensity-think-row" id="intensityThinkRow" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:16px;font-size:12px;color:var(--text3);cursor:pointer;user-select:none" onclick="var b=document.getElementById('intensityThinkBtn');var on=b.classList.toggle('on');b.textContent=on?'💭 深度思考: 开':'💭 深度思考: 关';b.style.background=on?'rgba(139,92,246,.15)':'transparent';b.style.color=on?'#8b5cf6':'var(--text3)'">
+      <span id="intensityThinkBtn" style="padding:4px 10px;border-radius:14px;border:1px solid var(--border);font-size:12px;transition:all .15s">💭 深度思考: 关</span>
+    </div>
     <div class="intensity-btns">
       <button class="intensity-cancel" onclick="document.getElementById('intensityOverlay').classList.add('hidden')">取消</button>
-      <button class="intensity-start" onclick="document.getElementById('intensityOverlay').classList.add('hidden');var a=document.querySelector('.intensity-opt.active');var iv=a?a.dataset.intensity:'normal';var n=document.getElementById('intensityNote');triggerAiArrange(iv,n?n.value.trim():'')">开始安排</button>
+      <button class="intensity-start" onclick="document.getElementById('intensityOverlay').classList.add('hidden');var a=document.querySelector('.intensity-opt.active');var iv=a?a.dataset.intensity:'normal';var n=document.getElementById('intensityNote');triggerAiArrange(iv,n?n.value.trim():'',document.getElementById('intensityThinkBtn').classList.contains('on'))">开始安排</button>
     </div>
   </div>
 </div>
@@ -5230,9 +5233,10 @@ function openIntensityOverlay(){
 }
 window.openIntensityOverlay = openIntensityOverlay;
 
-async function triggerAiArrange(intensity, specialNote){
+async function triggerAiArrange(intensity, specialNote, deepThink){
   intensity = intensity || 'normal';
   specialNote = specialNote || '';
+  deepThink = deepThink === undefined ? false : deepThink;
   if(!state.aiKey){ toast('请先配置 AI API Key', 'warn'); return; }
   // 隐藏强度浮层，打开预览面板的加载态
   var io = document.getElementById('intensityOverlay');
@@ -5268,7 +5272,7 @@ async function triggerAiArrange(intensity, specialNote){
     var timeoutReached = false;
     var timeoutId = setTimeout(function(){ timeoutReached = true; }, 25000);
     await new Promise(function(resolve){
-      callDeepSeekStream(msgs, 'deepseek-v4-pro', 'auto', 'on', function(chunk){
+      callDeepSeekStream(msgs, 'deepseek-v4-pro', 'auto', deepThink ? 'on' : 'off', function(chunk){
         if(timeoutReached) return;
         if(chunk.error){ streamError = chunk.error; resolve(); return; }
         if(chunk.done){
