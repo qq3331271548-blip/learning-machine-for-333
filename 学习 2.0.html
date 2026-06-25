@@ -8979,9 +8979,12 @@ async function callDeepSeekStream(messages, model, toolChoice, thinkingMode, onC
   if(!key){ onChunk({done:true, error:'请先配置 DeepSeek API Key'}); return; }
   try{
     var body = { model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: toolChoice || 'auto', stream: true };
+    // thinking: v4-pro/v4-flash 默认开，需显式关
     var shouldThink = thinkingMode === 'on' || (thinkingMode !== 'off' && state.aiDeepThink);
     if(shouldThink && (useModel === 'deepseek-v4-pro' || useModel === 'deepseek-v4-flash')){
       body.thinking = { type: 'enabled' };
+    }else if(thinkingMode === 'off' && (useModel === 'deepseek-v4-pro' || useModel === 'deepseek-v4-flash')){
+      body.thinking = { type: 'disabled' };
     }
     const res = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -9044,10 +9047,12 @@ async function callDeepSeek(messages, model, toolChoice, thinkingMode){
   if(!key) return { error: '请先配置 DeepSeek API Key（点击 ⚙️ AI 设置）' };
   try{
     var body = { model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: toolChoice || 'auto' };
-    // v4-pro/v4-flash 需要显式传 thinking 参数
+    // v4-pro/v4-flash 默认开 thinking，需显式关
     var shouldThink = thinkingMode === 'on' || (thinkingMode !== 'off' && state.aiDeepThink);
     if(shouldThink && (useModel === 'deepseek-v4-pro' || useModel === 'deepseek-v4-flash')){
       body.thinking = { type: 'enabled' };
+    }else if(thinkingMode === 'off' && (useModel === 'deepseek-v4-pro' || useModel === 'deepseek-v4-flash')){
+      body.thinking = { type: 'disabled' };
     }
     const res = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
