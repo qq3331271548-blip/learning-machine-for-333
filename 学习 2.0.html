@@ -5253,41 +5253,52 @@ async function triggerAiArrange(intensity, specialNote){
     var arrangePrefix = '⚠️ 本次是自动排任务——所有总账/速度/休息日数据已附在下方。**禁止调用 get_task_overview / get_today_status / get_recent_behavior 等查询工具**。直接根据已有数据调 create_todo 创建任务。\n\n每条 create_todo 必须填 estimatedMinutes（预估耗时分钟）。估算规则：①参考各科日均(分)——某科日均专注分钟是该科每天的总投入，本条任务的量在其中的占比决定估算时长（如物理日均14分钟、排16页，估40-50分钟；英语日均9分钟、排30个单词，估10-15分钟）；②不同科目、不同量的任务 estimatedMinutes 必须有差异，禁止所有任务同一个值；③若某科日均数据缺失或为0，保守估算——小量任务15-25分钟，中量30-45分钟。\n\n回复时：①先调 create_todo 创建所有任务；②在 content 里给一句理由（≤40字，狐狸口吻）。理由必须引用真实数据（从以下至少选一：用户选的强度、某科剩余量、燃尽图落后情况、用户填的特殊情况、本月剩余天数、用户真实速度）。禁止空泛话（"精心安排""加油"），禁止引用学习理论（"艾宾浩斯""间隔重复"等），只能用用户的真实数字讲道理。';
     var sysPrompt = arrangePrefix + '\n---\n总账(简短):'+ledgerSummaryStr+'\n可用天数:'+(data.availableDays||0)+'\n各科日均(分):'+JSON.stringify(data.subjectDailyAvg7d||{})+' 休息日:'+JSON.stringify(data.restDays||{})+'\n今日强度:'+intensityGuide+(specialNote?'\n用户特殊情况:'+specialNote:'')+'\n请用create_todo建任务，每条带tag、sourceLedgerId、estimatedMinutes。';
     var msgs = [{role:'system',content:sysPrompt},{role:'user',content:'用户选了"'+intensity+'"模式'+(specialNote?'，特别说明：'+specialNote:'')+'。请根据上方已有的总账和速度数据，直接调create_todo安排今天的任务。注意：你必须同时返回①content文本（一句理由）②create_todo工具调用。两者缺一不可。'}];
-    var result = await Promise.race([
-      callDeepSeek(msgs, 'deepseek-v4-pro', 'auto', 'on'),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
-    ]);
-    if(result && result.error){
-      // API 出错：在预览面板里显示错误，不关面板
-      console.error('[triggerAiArrange] API error:', result.error);
-      if(loading) loading.style.display = 'none';
-      if(taskList) taskList.innerHTML = '<div class="preview-empty" style="color:#ef4444;">⚠️ API 错误：'+escHtml(result.error)+'</div>';
+    // 流式调用，实时显示思考过程（代替转圈圈）
+    var thinkEl = document.getElementById('previewThink');
+    var thinkBody = document.getElementById('previewThinkBody');
+    var thinkToggle = document.querySelector('#previewThink .preview-think-toggle');
+    if(loading) loading.style.display = 'none';
+    if(thinkEl){ thinkEl.classList.remove('hidden'); thinkBody.textContent = ''; thinkBody.classList.add('expanded'); if(thinkToggle) thinkToggle.textContent = '收起'; }
+    var finalContent = '';
+    var finalToolCalls = [];
+    var streamError = null;
+    var timeoutReached = false;
+    var timeoutId = setTimeout(function(){ timeoutReached = true; }, 25000);
+    await new Promise(function(resolve){
+      callDeepSeekStream(msgs, 'deepseek-v4-pro', 'auto', 'on', function(chunk){
+        if(timeoutReached) return;
+        if(chunk.error){ streamError = chunk.error; resolve(); return; }
+        if(chunk.done){
+          clearTimeout(timeoutId);
+          finalContent = chunk.finalContent || '';
+          finalToolCalls = chunk.finalToolCalls || [];
+          resolve();
+          return;
+        }
+        if(chunk.reasoning && thinkBody){
+          thinkBody.textContent += chunk.reasoning;
+          thinkBody.scrollTop = thinkBody.scrollHeight;
+        }
+      });
+    });
+    // 流式完成，收起思考区
+    if(thinkBody){ thinkBody.classList.remove('expanded'); if(thinkToggle) thinkToggle.textContent = '展开'; }
+    if(streamError){
+      console.error('[triggerAiArrange] Stream error:', streamError);
+      if(taskList) taskList.innerHTML = '<div class="preview-empty" style="color:#ef4444;">⚠️ '+escHtml(streamError)+'</div>';
       if(reasonEl){ reasonEl.classList.add('hidden'); }
-    }else if(result && result.choices && result.choices[0] && result.choices[0].message){
-      var msg = result.choices[0].message;
-      // 诊断日志（仅 debug 模式下输出）
-      if(window.__dbg){ console.log('[triggerAiArrange] msg.content:', (msg.content||'').substring(0,200)); console.log('[triggerAiArrange] msg.tool_calls:', msg.tool_calls ? msg.tool_calls.length+' calls: '+msg.tool_calls.map(function(tc){return tc.function.name;}).join(', ') : 'undefined/null'); }
-      // 捕获思考过程（v4-pro thinking 模式返回 reasoning_content）
-      var thinkingText = msg.reasoning_content || '';
-      var thinkEl = document.getElementById('previewThink');
-      var thinkBody = document.getElementById('previewThinkBody');
-      if(thinkEl && thinkBody && thinkingText){
-        thinkBody.textContent = thinkingText;
-        thinkBody.classList.remove('expanded');
-        thinkEl.classList.remove('hidden');
-      }else if(thinkEl){
-        thinkEl.classList.add('hidden');
-      }
-      var reasonText = msg.content ? msg.content.substring(0,80) : '';
+      return;
+    }
+    // 用流式收集的 finalToolCalls 处理工具调用
+    var reasonText = finalContent ? finalContent.substring(0,80) : '';
+    if(finalToolCalls.length > 0){
       var previewTasks = [];
-      if(msg.tool_calls){
-        for(var i=0;i<msg.tool_calls.length;i++){
-          var tc = msg.tool_calls[i];
-          if(tc.function.name==='create_todo'){
-            var args = JSON.parse(tc.function.arguments||'{}');
-            var parsed = parseTaskFromToolCall(args, state.ledger || []);
-            previewTasks.push(parsed);
-          }
+      for(var i=0;i<finalToolCalls.length;i++){
+        var tc = finalToolCalls[i];
+        if(tc.name==='create_todo'){
+          var args = JSON.parse(tc.arguments||'{}');
+          var parsed = parseTaskFromToolCall(args, state.ledger || []);
+          previewTasks.push(parsed);
         }
       }
       if(previewTasks.length > 0){
@@ -5308,13 +5319,8 @@ async function triggerAiArrange(intensity, specialNote){
         console.warn('[triggerAiArrange] No create_todo tool calls in response');
         if(loading) loading.style.display = 'none';
         if(taskList) taskList.innerHTML = '<div class="preview-empty">⚠️ AI 没有返回可解析的任务。试试<a href="javascript:void(0)" onclick="document.getElementById(\'arrangePreviewOverlay\').classList.add(\'hidden\');openIntensityOverlay()">重新安排</a></div>';
-        if(msg.content){ addAiBubble('assistant', msg.content); }
+        if(finalContent){ addAiBubble('assistant', finalContent); }
       }
-    }else{
-      // 返回值异常（既没 error 也没 choices）
-      console.error('[triggerAiArrange] Unexpected API response:', JSON.stringify(result).substring(0,500));
-      if(loading) loading.style.display = 'none';
-      if(taskList) taskList.innerHTML = '<div class="preview-empty" style="color:#ef4444;">⚠️ API 返回异常，请重试</div>';
     }
   }catch(e){
     console.error('[triggerAiArrange] Exception:', e);
@@ -8957,6 +8963,71 @@ function pickModel(userText){
     if(userText.indexOf(complexPatterns[i]) !== -1) return 'deepseek-v4-pro';
   }
   return 'deepseek-v4-flash'; // 默认 flash（更快）
+}
+
+// 流式调用 DeepSeek，每个 SSE chunk 回调 onChunk({reasoning, content, done, finalContent, finalToolCalls})
+async function callDeepSeekStream(messages, model, toolChoice, thinkingMode, onChunk){
+  var useModel = model || 'deepseek-v4-pro';
+  const key = state.aiKey;
+  if(!key){ onChunk({done:true, error:'请先配置 DeepSeek API Key'}); return; }
+  try{
+    var body = { model: useModel, messages: messages, tools: AI_TOOLS, tool_choice: toolChoice || 'auto', stream: true };
+    var shouldThink = thinkingMode === 'on' || (thinkingMode !== 'off' && state.aiDeepThink);
+    if(shouldThink && (useModel === 'deepseek-v4-pro' || useModel === 'deepseek-v4-flash')){
+      body.thinking = { type: 'enabled' };
+    }
+    const res = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){
+      const errText = await res.text();
+      var errMsg = errText;
+      try{ var e = JSON.parse(errText); errMsg = e.error?.message || errText; }catch(ex){}
+      onChunk({done:true, error:errMsg}); return;
+    }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+    var fullContent = '';
+    var toolCalls = {}; // index -> {name, arguments}
+    while(true){
+      var r = await reader.read();
+      if(r.done) break;
+      buffer += decoder.decode(r.value, {stream: true});
+      var lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for(var i=0;i<lines.length;i++){
+        var line = lines[i].trim();
+        if(!line.startsWith('data: ')) continue;
+        var data = line.slice(6);
+        if(data === '[DONE]'){ onChunk({done:true, finalContent:fullContent, finalToolCalls:Object.values(toolCalls)}); return; }
+        try{
+          var json = JSON.parse(data);
+          if(json.error){ onChunk({done:true, error:json.error.message||'API error'}); return; }
+          var delta = json.choices && json.choices[0] && json.choices[0].delta;
+          if(!delta) continue;
+          var chunkData = {};
+          if(delta.reasoning_content){ chunkData.reasoning = delta.reasoning_content; }
+          if(delta.content){ fullContent += delta.content; chunkData.content = delta.content; }
+          if(delta.tool_calls){
+            for(var j=0;j<delta.tool_calls.length;j++){
+              var tc = delta.tool_calls[j];
+              var idx = tc.index;
+              if(!toolCalls[idx]) toolCalls[idx] = {id:tc.id||'', name:'', arguments:''};
+              if(tc.function && tc.function.name) toolCalls[idx].name = tc.function.name;
+              if(tc.function && tc.function.arguments) toolCalls[idx].arguments += tc.function.arguments;
+            }
+          }
+          if(chunkData.reasoning || chunkData.content){ onChunk(chunkData); }
+        }catch(ex){ /* skip malformed chunks */ }
+      }
+    }
+    onChunk({done:true, finalContent:fullContent, finalToolCalls:Object.values(toolCalls)});
+  }catch(e){
+    onChunk({done:true, error:'网络错误，请稍后重试'});
+  }
 }
 
 async function callDeepSeek(messages, model, toolChoice, thinkingMode){
