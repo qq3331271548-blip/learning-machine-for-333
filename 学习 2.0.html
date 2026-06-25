@@ -1719,7 +1719,10 @@ body{
         <input type="text" class="preview-discuss-input" id="previewDiscussInput" placeholder="比如：为什么物理排这么多？" maxlength="200">
         <button class="preview-discuss-send" id="previewDiscussSend">发送</button>
       </div>
-      <button class="preview-discuss-close" id="previewDiscussClose">✕ 关闭讨论</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button class="preview-discuss-close" id="previewDiscussClose" style="width:auto;">✕ 关闭讨论</button>
+        <button class="preview-discuss-deepthink" id="previewDiscussDeepThink" title="深度思考模式" style="font-size:14px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;cursor:pointer;font-family:var(--font);">💭</button>
+      </div>
     </div>
     <div class="intensity-btns" style="flex-wrap:wrap;">
       <button id="previewDiscussBtn" class="intensity-cancel" style="flex:1;min-width:0;">💬 和小狐聊聊</button>
@@ -5487,36 +5490,45 @@ async function sendDiscussMessage(){
   // 构建讨论上下文
   var tasks = state._arrangePreview.tasks || [];
   var taskSummary = tasks.map(function(t,i){ return (i+1)+'. '+t.subject+'·'+t.name+' '+t.quantity+t.unit; }).join('\n');
-  var discussSys = '你是小狐，正在和用户讨论今天的任务安排。当前预览里的任务：\n'+taskSummary+'\n用户强度：'+(state._arrangePreview.intensity||'normal')+(state._arrangePreview.specialNote?'\n用户特殊情况：'+state._arrangePreview.specialNote:'')+'\n总账(简短):'+JSON.stringify((state.ledger||[]).map(function(l){return {s:l.subject,t:l.taskName,u:l.unit,r:Math.max(0,l.totalUnits-l.completedUnits)};})).substring(0,1000)+'\n\n约束：①回答必须基于真实数据，禁止引用学习理论（艾宾浩斯、间隔重复等），禁止说教/空泛话；②≤80字，狐狸口吻；③如果用户想调整（"少点""多点""换成X"），在文字回复后调用update_arrange_preview执行调整。';
-  var discussMsgs = [{role:'system',content:discussSys}];
+  var discussSys = '你是小狐，正在和用户讨论今天的任务安排。当前预览里的任务：\n'+taskSummary+'\n用户强度：'+(state._arrangePreview.intensity||'normal')+(state._arrangePreview.specialNote?'\n用户特殊情况：'+state._arrangePreview.specialNote:'')+'\n总账(简短):'+JSON.stringify((state.ledger||[]).map(function(l){return {s:l.subject,t:l.taskName,u:l.unit,r:Math.max(0,l.totalUnits-l.completedUnits)};})).substring(0,1000)+'\n\n约束：①回答必须基于真实数据，禁止引用学习理论（艾宾浩斯、间隔重复等），禁止说教/空泛话；②≤80字，狐狸口吻；③如果用户想调整（"少点""多点""换成X"），明确说明具体怎么调整（改哪条、改成多少），但不要自己尝试调工具。';
+  var discussMsgsR1 = [{role:'system',content:discussSys}];
   // 加入最近6轮对话历史
   var history = state._arrangePreview.discussMsgs;
   var start = Math.max(0, history.length - 7); // 当前消息（最后一条）+ 前3轮
   for(var j=start;j<history.length;j++){
-    discussMsgs.push({role: history[j].role==='assistant'?'assistant':'user', content: history[j].text});
+    discussMsgsR1.push({role: history[j].role==='assistant'?'assistant':'user', content: history[j].text});
   }
   try{
+    // 第一步：用 deepseek-reasoner 深度思考回文字（不调工具）
     var result = await Promise.race([
-      callDeepSeek(discussMsgs, 'deepseek-chat'),
-      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+      callDeepSeek(discussMsgsR1, 'deepseek-reasoner'),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 20000); })
     ]);
+    var reply = '(小狐想了想…)';
     if(result && result.choices && result.choices[0] && result.choices[0].message){
-      var msg = result.choices[0].message;
-      var reply = msg.content || '(小狐想了想…)';
-      state._arrangePreview.discussMsgs.push({role:'assistant', text:reply});
-      // 处理调整
-      if(msg.tool_calls){
-        for(var k=0;k<msg.tool_calls.length;k++){
-          var tc = msg.tool_calls[k];
+      reply = result.choices[0].message.content || reply;
+    }
+    state._arrangePreview.discussMsgs.push({role:'assistant', text:reply});
+    renderDiscussMsgs();
+    // 第二步：用 deepseek-chat 判断是否需要调 update_arrange_preview
+    var adjustSys = '根据刚才的对话，判断用户的意图是否需要修改当前的任务预览。如果需要，调用 update_arrange_preview 执行。当前预览任务：'+taskSummary;
+    var adjustMsgs = [{role:'system',content:adjustSys},{role:'user',content:'用户说：'+userText+'\n小狐回复：'+reply+'\n\n如果需要调整预览，请调用 update_arrange_preview。不需要就回复"无需调整"。'}];
+    try{
+      var result2 = await Promise.race([
+        callDeepSeek(adjustMsgs, 'deepseek-chat', 'auto'),
+        new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 10000); })
+      ]);
+      if(result2 && result2.choices && result2.choices[0] && result2.choices[0].message && result2.choices[0].message.tool_calls){
+        var tcList = result2.choices[0].message.tool_calls;
+        for(var k=0;k<tcList.length;k++){
+          var tc = tcList[k];
           if(tc.function.name==='update_arrange_preview'){
             var args = JSON.parse(tc.function.arguments||'{}');
             executePreviewAdjustment(args);
           }
         }
       }
-    }else{
-      state._arrangePreview.discussMsgs.push({role:'assistant', text:'抱歉，网络不太稳，再说一遍？'});
-    }
+    }catch(e2){ /* 调整失败不影响讨论 */ }
   }catch(e){
     state._arrangePreview.discussMsgs.push({role:'assistant', text:'抱歉，网络不太稳，再说一遍？'});
   }
