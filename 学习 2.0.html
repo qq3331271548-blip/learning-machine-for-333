@@ -5298,6 +5298,20 @@ async function triggerAiArrange(intensity, specialNote, deepThink){
     }
     // 用流式收集的 finalToolCalls 处理工具调用
     var reasonText = finalContent ? finalContent.substring(0,80) : '';
+    // 思考模式下 AI 可能只输出思考不调工具，补一次强制工具调用
+    if(finalToolCalls.length === 0 && deepThink){
+      var fallbackResult = await Promise.race([
+        callDeepSeek(msgs, 'deepseek-v4-pro', 'auto', 'off'),
+        new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 15000); })
+      ]);
+      if(fallbackResult && fallbackResult.choices && fallbackResult.choices[0] && fallbackResult.choices[0].message){
+        var fbMsg = fallbackResult.choices[0].message;
+        if(fbMsg.content && !reasonText){ reasonText = fbMsg.content.substring(0,80); }
+        if(fbMsg.tool_calls){ fbMsg.tool_calls.forEach(function(tc2){
+          if(tc2.function && tc2.function.name==='create_todo'){ finalToolCalls.push({name:'create_todo', arguments:tc2.function.arguments, id:tc2.id}); }
+        });}
+      }
+    }
     if(finalToolCalls.length > 0){
       var previewTasks = [];
       for(var i=0;i<finalToolCalls.length;i++){
