@@ -5549,14 +5549,17 @@ async function sendDiscussMessage(){
     discussMsgsR1.push({role: history[j].role==='assistant'?'assistant':'user', content: history[j].text});
   }
   try{
-    // 第一步：v4-pro 开 thinking 深度思考回文字（不调工具）
+    // 第一步：v4-pro，用讨论区的💭开关控制 thinking
+    var discussThinkOn = document.getElementById('previewDiscussDeepThink') && document.getElementById('previewDiscussDeepThink').classList.contains('on');
+    var thinkMode = discussThinkOn ? 'on' : 'off';
     var result = await Promise.race([
-      callDeepSeek(discussMsgsR1, 'deepseek-v4-pro', undefined, 'on'),
+      callDeepSeek(discussMsgsR1, 'deepseek-v4-pro', undefined, thinkMode),
       new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 25000); })
     ]);
     var reply = '(小狐想了想…)';
     if(result && result.choices && result.choices[0] && result.choices[0].message){
-      reply = result.choices[0].message.content || reply;
+      var msg0 = result.choices[0].message;
+      reply = msg0.content || msg0.reasoning_content || reply;
     }
     state._arrangePreview.discussMsgs.push({role:'assistant', text:reply});
     renderDiscussMsgs();
@@ -5640,6 +5643,14 @@ function recordDiscussSignal(userText, aiReply){
   if(sendBtn) sendBtn.addEventListener('click', sendDiscussMessage);
   if(closeBtn) closeBtn.addEventListener('click', closeDiscuss);
   if(input) input.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); sendDiscussMessage(); } });
+  // 讨论区深度思考开关
+  var dtBtn = document.getElementById('previewDiscussDeepThink');
+  if(dtBtn) dtBtn.addEventListener('click', function(){
+    var on = this.classList.toggle('on');
+    this.style.background = on ? 'rgba(139,92,246,.15)' : 'transparent';
+    this.style.color = on ? '#8b5cf6' : '';
+    this.style.borderColor = on ? '#8b5cf6' : '';
+  });
   // 思考区折叠/展开
   var thinkHeader = document.getElementById('previewThinkHeader');
   if(thinkHeader) thinkHeader.addEventListener('click', function(){
